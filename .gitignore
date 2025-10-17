@@ -1,0 +1,47 @@
+# System files
+.DS_Store
+Thumbs.db
+
+# logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# cache and temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+.cache/
+tmp/
+dist/
+build/
+out/
+
+# Configuration files
+.env
+.env.local
+.env.*.local
+
+# IDE's and editors files
+.vscode/
+.idea/
+*.iml
+
+# Node.js
+node_modules/
+*.local
+.pnpm-store/
+
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# macOS/Linux
+*.bak

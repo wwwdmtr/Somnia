@@ -1,0 +1,29 @@
+{
+  "name": "@somnia/webapp",
+  "version": "1.0.0",
+  "packageManager": "pnpm@10.18.1",
+  
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@somnia/server": "workspace:*",
+    "@tanstack/react-query": "^5.90.3",
+    "@trpc/client": "^11.6.0",
+    "@trpc/react-query": "^11.6.0",
+    "expo": "~54.0.12",
+    "expo-status-bar": "~3.0.8",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-native": "^0.81.4",
+    "react-native-web": "^0.21.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.0",
+    "typescript": "~5.9.2"
+  },
+  "private": true
+}

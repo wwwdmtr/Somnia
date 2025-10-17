@@ -1,0 +1,10 @@
+{
+  "name": "somnia",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.18.1",
+  "scripts": {
+    "dev:server": "pnpm --filter server dev",
+    "dev:webapp": "pnpm --filter app start"
+  }
+}
