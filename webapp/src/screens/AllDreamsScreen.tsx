@@ -1,10 +1,10 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet, Text, View, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { trpc } from '../../lib/trpc';
+import { trpc } from "../lib/trpc";
 
-export const AllDreamsPage = () => {
+export const AllDreamsScreen = () => {
   const { data, isLoading, error } = trpc.getDreams.useQuery();
 
   if (isLoading) {
@@ -41,9 +41,9 @@ export const AllDreamsPage = () => {
 };
 
 const COLORS = {
-  background: '#fff',
-  cardBackground: '#f7f7f7',
-  descriptionColor: '#555',
+  background: "#fff",
+  cardBackground: "#f7f7f7",
+  descriptionColor: "#555",
 };
 
 const styles = StyleSheet.create({
@@ -52,11 +52,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 12,
     padding: 12,
+    paddingBottom: 20,
   },
   container: {
     backgroundColor: COLORS.background,
     flex: 1,
-    padding: 20,
+    padding: 14,
   },
   description: {
     color: COLORS.descriptionColor,
@@ -64,12 +65,12 @@ const styles = StyleSheet.create({
   },
   dreamTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 4,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 16,
   },
 });
