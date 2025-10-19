@@ -15,9 +15,6 @@
   "type": "commonjs",
   "description": "",
   "dependencies": {
-    "@tanstack/react-query": "^5.90.2",
-    "@trpc/client": "^11.6.0",
-    "@trpc/react-query": "^11.6.0",
     "@trpc/server": "^11.6.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
