@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
+
 import { trpc } from '../../lib/trpc';
 
 export const AllDreamsPage = () => {
@@ -31,11 +32,15 @@ export const AllDreamsPage = () => {
   );
 };
 
+const COLORS = {
+  background: '#fff',
+};
+
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#fff',
     alignItems: 'center',
+    backgroundColor: COLORS.background,
+    flex: 1,
     justifyContent: 'center',
   },
 });

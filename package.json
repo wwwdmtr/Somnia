@@ -4,7 +4,26 @@
   "version": "0.0.0",
   "packageManager": "pnpm@10.18.1",
   "scripts": {
-    "dev:server": "pnpm --filter server dev",
-    "dev:webapp": "pnpm --filter app start"
+    "b": "pnpm --filter @somnia/server",
+    "f": "pnpm --filter @somnia/webapp",
+    "types": " concurrently 'pnpm b types && pnpm f types'",
+    "lint": "concurrently 'pnpm b lint && pnpm f lint'",
+    "prettify": "pnpm -r exec prettier --write \"**/*.{js,jsx,ts,tsx,json,md,css,scss,html}\"",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.1",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.0",
+    "eslint-plugin-react-native": "^5.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.4",
+    "prettier": "^3.6.2"
   }
 }

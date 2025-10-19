@@ -2,13 +2,13 @@
   "name": "@somnia/webapp",
   "version": "1.0.0",
   "packageManager": "pnpm@10.18.1",
-  
   "scripts": {
-    "start": "expo start",
+    "dev": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "types": "tsc --noEmit --project ./tsconfig.json"
+    "types": "tsc --noEmit --project ./tsconfig.json",
+    "lint": "eslint --cache --cache-location ./node_modules/.cache/.eslintcache \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
     "@somnia/server": "workspace:*",

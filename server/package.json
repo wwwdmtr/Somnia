@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only ./src/index.ts",
-    "types": "tsc --noEmit --project ./tsconfig.json"
+    "types": "tsc --noEmit --project ./tsconfig.json",
+    "lint": "eslint --cache --cache-location ./node_modules/.cache/.eslintcache \"src/**/*.{ts,tsx}\""
   },
   "keywords": [],
   "author": "",
