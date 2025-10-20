@@ -1,11 +1,29 @@
+import { useNavigation } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, ScrollView } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { trpc } from "../lib/trpc";
 
+import type { RootStackParamList } from "../navigation/RootStackParamList";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Feed">;
+
 export const AllDreamsScreen = () => {
   const { data, isLoading, error } = trpc.getDreams.useQuery();
+
+  const navigation = useNavigation<NavigationProp>();
+
+  const handleOpenDream = (title: string, description: string) => {
+    navigation.navigate("Dream", { title, description });
+  };
 
   if (isLoading) {
     return (
@@ -32,7 +50,12 @@ export const AllDreamsScreen = () => {
         {data.dreams.map((dream) => (
           <View key={dream.nickname} style={styles.card}>
             <Text style={styles.dreamTitle}>{dream.title}</Text>
-            <Text style={styles.description}>{dream.description}</Text>
+            <Text style={styles.description}>{dream.nickname}</Text>
+            <TouchableOpacity
+              onPress={() => handleOpenDream(dream.title, dream.description)}
+            >
+              <Text>read more...</Text>
+            </TouchableOpacity>
           </View>
         ))}
       </ScrollView>
@@ -68,6 +91,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginBottom: 4,
   },
+
   title: {
     fontSize: 28,
     fontWeight: "bold",

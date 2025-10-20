@@ -4,7 +4,7 @@ import React from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { TrpcProvider } from "./src/lib/trpc";
-import { AppNav } from "./src/navigation";
+import { AppNav } from "./src/navigation/navigation";
 
 export default function App() {
   return (

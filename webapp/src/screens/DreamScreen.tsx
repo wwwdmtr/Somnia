@@ -1,11 +1,17 @@
+import { useRoute, RouteProp } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { trpc } from "../lib/trpc";
 
+import type { RootStackParamList } from "../navigation/RootStackParamList";
+
+type DreamScreenRouteProp = RouteProp<RootStackParamList, "Dream">;
+
 export const DreamScreen = () => {
   const { isLoading, error } = trpc.getDreams.useQuery();
+  const route = useRoute<DreamScreenRouteProp>();
 
   if (isLoading) {
     return (
@@ -27,7 +33,8 @@ export const DreamScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.description}>Dreams</Text>
+      <Text style={styles.description}>{route.params.title}</Text>
+      <Text style={styles.description}>{route.params.description}</Text>
     </SafeAreaView>
   );
 };
