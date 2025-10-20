@@ -1,6 +1,6 @@
 # 🌙 Somnia
 
-**Somnia** — mobile app based on **React Native (Expo)** with server technology **tRPC**, created for people who want to share dreams and thoughts.
+**Somnia** — is a mobile app built with **React Native (Expo)** and **tRPC**, created for people who want to share their dreams and thoughts.
 
 The project is built in a monorepository and is divided into:
 
