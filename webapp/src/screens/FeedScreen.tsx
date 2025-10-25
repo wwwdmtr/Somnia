@@ -21,8 +21,8 @@ export const AllDreamsScreen = () => {
 
   const navigation = useNavigation<NavigationProp>();
 
-  const handleOpenDream = (title: string, description: string) => {
-    navigation.navigate("Dream", { title, description });
+  const handleOpenDream = (id: number) => {
+    navigation.navigate("Dream", { id });
   };
 
   if (isLoading) {
@@ -51,9 +51,7 @@ export const AllDreamsScreen = () => {
           <View key={dream.nickname} style={styles.card}>
             <Text style={styles.dreamTitle}>{dream.title}</Text>
             <Text style={styles.description}>{dream.nickname}</Text>
-            <TouchableOpacity
-              onPress={() => handleOpenDream(dream.title, dream.description)}
-            >
+            <TouchableOpacity onPress={() => handleOpenDream(dream.id)}>
               <Text>read more...</Text>
             </TouchableOpacity>
           </View>

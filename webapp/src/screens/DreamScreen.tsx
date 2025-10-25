@@ -10,8 +10,10 @@ import type { RootStackParamList } from "../navigation/RootStackParamList";
 type DreamScreenRouteProp = RouteProp<RootStackParamList, "Dream">;
 
 export const DreamScreen = () => {
-  const { isLoading, error } = trpc.getDreams.useQuery();
   const route = useRoute<DreamScreenRouteProp>();
+  const { data, isLoading, error } = trpc.getDream.useQuery({
+    id: route.params.id,
+  });
 
   if (isLoading) {
     return (
@@ -31,10 +33,23 @@ export const DreamScreen = () => {
     );
   }
 
+  if (!data.dream) {
+    return (
+      <View style={styles.container}>
+        <Text>Dream not found.</Text>
+        <StatusBar style="auto" />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.description}>{route.params.title}</Text>
-      <Text style={styles.description}>{route.params.description}</Text>
+      <Text style={styles.description}>Dream id: {data.dream.id}</Text>
+      <Text style={styles.description}>{data.dream.nickname}</Text>
+      <Text style={styles.description}>{data.dream.title}</Text>
+      <Text style={styles.description}>{data.dream.description}</Text>
+      <Text style={styles.description}>{data.dream.text}</Text>
+      <StatusBar style="auto" />
     </SafeAreaView>
   );
 };
@@ -55,5 +70,6 @@ const styles = StyleSheet.create({
   description: {
     color: COLORS.descriptionColor,
     fontSize: 16,
+    margin: 12,
   },
 });
