@@ -14,7 +14,7 @@ The project is built in a monorepository and is divided into:
 ### 1. Clone repo
 
 ```bash
-git clone https://github.com/твоя_ссылка/somnia.git
+git clone https://github.com/wwwdmtr/somnia.git
 cd somnia
 ```
 
