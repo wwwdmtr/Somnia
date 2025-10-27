@@ -3,14 +3,13 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AddDreamForm } from "../components/AddDreamForm";
 import { trpc } from "../lib/trpc";
 
 //import type { UserDreamStackParamList } from '../navigation/UserDreamStackParamList';
 
 //type DreamScreenRouteProp = RouteProp<UserDreamStackParamList, 'UserDreams'>;
 
-export const UserDreamScreen = () => {
+export const ProfileScreen = () => {
   const { isLoading, error } = trpc.getDreams.useQuery();
 
   //  const navigation = useNavigation<DreamScreenRouteProp>();
@@ -35,8 +34,7 @@ export const UserDreamScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.description}>your dreams</Text>
-      <AddDreamForm />
+      <Text style={styles.description}>your profile</Text>
       <StatusBar style="auto" />
     </SafeAreaView>
   );

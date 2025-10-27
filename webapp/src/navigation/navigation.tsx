@@ -1,4 +1,4 @@
-// src/navigation/navigation.tsx
+import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
@@ -7,9 +7,17 @@ import ScreenName from "../constants/ScreenName";
 import TabName from "../constants/TabName";
 import { DreamScreen } from "../screens/DreamScreen";
 import { AllDreamsScreen } from "../screens/FeedScreen";
+import { ProfileScreen } from "../screens/ProfileScreen";
 import { UserDreamScreen } from "../screens/UserDreams";
 
-const FeedStack = createNativeStackNavigator();
+import { FeedStackParamList } from "./FeedStackParamList";
+import { ProfileStackParamList } from "./ProfileStackParamList";
+import { RootTabParamList } from "./RootTabParamList";
+import { UserDreamStackParamList } from "./UserDreamStackParamList";
+
+import type { ComponentProps } from "react";
+
+const FeedStack = createNativeStackNavigator<FeedStackParamList>();
 function FeedStackNav() {
   return (
     <FeedStack.Navigator>
@@ -19,7 +27,7 @@ function FeedStackNav() {
   );
 }
 
-const UserDreamStack = createNativeStackNavigator();
+const UserDreamStack = createNativeStackNavigator<UserDreamStackParamList>();
 function UserDreamStackNav() {
   return (
     <UserDreamStack.Navigator>
@@ -32,13 +40,58 @@ function UserDreamStackNav() {
   );
 }
 
-const Tab = createBottomTabNavigator();
+const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
+function ProfileStackNav() {
+  return (
+    <ProfileStack.Navigator>
+      <ProfileStack.Screen
+        name={ScreenName.Profile}
+        component={ProfileScreen}
+      />
+    </ProfileStack.Navigator>
+  );
+}
+
+const Tab = createBottomTabNavigator<RootTabParamList>();
 
 export function AppNav() {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+      initialRouteName={TabName.FeedTab}
+      screenOptions={({ route }) => {
+        type IoniconName = ComponentProps<typeof Ionicons>["name"];
+        const iconMap: Record<
+          string,
+          { active: IoniconName; inactive: IoniconName }
+        > = {
+          [TabName.FeedTab]: { active: "home", inactive: "home-outline" },
+          [TabName.UserDreamTab]: {
+            active: "clipboard",
+            inactive: "clipboard-outline",
+          },
+          [TabName.ProfileTab]: {
+            active: "person",
+            inactive: "person-outline",
+          }, // <— новый
+        };
+        return {
+          headerShown: false,
+          tabBarShowLabel: false,
+          tabBarIcon: ({ focused, size }) => {
+            const pair = iconMap[route.name] ?? {
+              active: "ellipse",
+              inactive: "ellipse-outline",
+            };
+            const name = focused ? pair.active : pair.inactive;
+            return <Ionicons name={name} size={size} />;
+          },
+        };
+      }}
+    >
       <Tab.Screen name={TabName.FeedTab} component={FeedStackNav} />
       <Tab.Screen name={TabName.UserDreamTab} component={UserDreamStackNav} />
+      <Tab.Screen name={TabName.ProfileTab} component={ProfileStackNav} />
+      {/* <— новый */}
     </Tab.Navigator>
   );
 }

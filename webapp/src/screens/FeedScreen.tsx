@@ -7,7 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { trpc } from "../lib/trpc";
 
@@ -44,7 +43,7 @@ export const AllDreamsScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView style={styles.container}>
         <Text style={styles.title}>All Dreams</Text>
         {data.dreams.map((dream) => (
@@ -57,7 +56,7 @@ export const AllDreamsScreen = () => {
           </View>
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

@@ -1,7 +1,6 @@
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import ScreenName from "../constants/ScreenName";
 import { trpc } from "../lib/trpc";
@@ -48,14 +47,14 @@ export const DreamScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.description}>Dream id: {data.dream.id}</Text>
       <Text style={styles.description}>{data.dream.nickname}</Text>
       <Text style={styles.description}>{data.dream.title}</Text>
       <Text style={styles.description}>{data.dream.description}</Text>
       <Text style={styles.description}>{data.dream.text}</Text>
       <StatusBar style="auto" />
-    </SafeAreaView>
+    </View>
   );
 };
 
