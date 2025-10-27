@@ -3,11 +3,16 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import ScreenName from "../constants/ScreenName";
 import { trpc } from "../lib/trpc";
 
-import type { RootStackParamList } from "../navigation/RootStackParamList";
+import type { FeedStackParamList } from "../navigation/FeedStackParamList";
+import type { UserDreamStackParamList } from "../navigation/UserDreamStackParamList";
 
-type DreamScreenRouteProp = RouteProp<RootStackParamList, "Dream">;
+type DreamScreenRouteProp = RouteProp<
+  FeedStackParamList & UserDreamStackParamList,
+  ScreenName.Dream
+>;
 
 export const DreamScreen = () => {
   const route = useRoute<DreamScreenRouteProp>();

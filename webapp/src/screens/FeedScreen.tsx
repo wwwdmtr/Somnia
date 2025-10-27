@@ -11,10 +11,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { trpc } from "../lib/trpc";
 
-import type { RootStackParamList } from "../navigation/RootStackParamList";
+import type { FeedStackParamList } from "../navigation/FeedStackParamList";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Feed">;
+type NavigationProp = NativeStackNavigationProp<FeedStackParamList, "Feed">;
 
 export const AllDreamsScreen = () => {
   const { data, isLoading, error } = trpc.getDreams.useQuery();
