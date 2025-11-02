@@ -1,35 +1,30 @@
-import { useFormik } from 'formik';
-import React from 'react';
-import { View, TextInput, Button, Text } from 'react-native';
-import { z } from 'zod';
-import { toFormikValidationSchema } from 'zod-formik-adapter';
+import { zCreateDreamTrpcInput } from "@somnia/server/src/router/createDream/input";
+import { useFormik } from "formik";
+import React from "react";
+import { View, TextInput, Button, Text } from "react-native";
+import { z } from "zod";
+import { toFormikValidationSchema } from "zod-formik-adapter";
 
-const dreamSchema = z.object({
-  title: z
-    .string({ message: 'Title is required' })
-    .trim()
-    .min(1, 'Title is required'),
-  description: z
-    .string({ message: 'Description is required' })
-    .trim()
-    .min(1, 'Description is required'),
-  text: z
-    .string({ message: 'Text is required' })
-    .trim()
-    .min(100, 'Dream text should be at least 100 characters long'),
-});
-type DreamFormValues = z.infer<typeof dreamSchema>;
+import { trpc } from "../lib/trpc";
+
+type DreamFormValues = z.infer<typeof zCreateDreamTrpcInput>;
 
 export const AddDreamForm = () => {
+  const utils = trpc.useUtils();
+  const createDream = trpc.createDream.useMutation({
+    onSuccess: () => {
+      utils.getDreams.invalidate();
+    },
+  });
   const formik = useFormik<DreamFormValues>({
     initialValues: {
-      title: '',
-      description: '',
-      text: '',
+      title: "",
+      description: "",
+      text: "",
     },
-    validationSchema: toFormikValidationSchema(dreamSchema),
-    onSubmit: (values, { resetForm }) => {
-      console.info('Dream submitted:', values);
+    validationSchema: toFormikValidationSchema(zCreateDreamTrpcInput),
+    onSubmit: async (values, { resetForm }) => {
+      await createDream.mutateAsync(values);
       resetForm();
     },
   });
@@ -39,8 +34,8 @@ export const AddDreamForm = () => {
       <TextInput
         placeholder="Dream title"
         value={formik.values.title}
-        onChangeText={(text) => formik.setFieldValue('title', text)}
-        onBlur={() => formik.setFieldTouched('title')}
+        onChangeText={(text) => formik.setFieldValue("title", text)}
+        onBlur={() => formik.setFieldTouched("title")}
         style={[
           styles.input,
           formik.touched.title && formik.errors.title
@@ -55,8 +50,8 @@ export const AddDreamForm = () => {
       <TextInput
         placeholder="Dream description"
         value={formik.values.description}
-        onChangeText={(text) => formik.setFieldValue('description', text)}
-        onBlur={() => formik.setFieldTouched('description')}
+        onChangeText={(text) => formik.setFieldValue("description", text)}
+        onBlur={() => formik.setFieldTouched("description")}
         style={[
           styles.input,
           formik.touched.description && formik.errors.description
@@ -71,8 +66,8 @@ export const AddDreamForm = () => {
       <TextInput
         placeholder="Dream text"
         value={formik.values.text}
-        onChangeText={(text) => formik.setFieldValue('text', text)}
-        onBlur={() => formik.setFieldTouched('text')}
+        onChangeText={(text) => formik.setFieldValue("text", text)}
+        onBlur={() => formik.setFieldTouched("text")}
         multiline
         style={[
           styles.textArea,
@@ -84,7 +79,7 @@ export const AddDreamForm = () => {
       )}
 
       <Button
-        title={formik.isSubmitting ? 'Submitting...' : 'Submit Dream'}
+        title={formik.isSubmitting ? "Submitting..." : "Submit Dream"}
         onPress={() => formik.handleSubmit()}
         disabled={formik.isSubmitting || !formik.isValid}
       />
@@ -107,13 +102,13 @@ const styles = {
     padding: 10,
     borderRadius: 8,
     height: 200,
-    textAlignVertical: 'top' as const,
+    textAlignVertical: "top" as const,
   },
   inputError: {
-    borderColor: 'red',
+    borderColor: "red",
   },
   errorText: {
-    color: 'red',
+    color: "red",
     fontSize: 12,
     marginBottom: 4,
   },
