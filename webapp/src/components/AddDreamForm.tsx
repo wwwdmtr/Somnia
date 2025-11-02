@@ -1,16 +1,36 @@
-import { useFormik } from "formik";
-import React from "react";
-import { View, TextInput, Button } from "react-native";
+import { useFormik } from 'formik';
+import React from 'react';
+import { View, TextInput, Button, Text } from 'react-native';
+import { z } from 'zod';
+import { toFormikValidationSchema } from 'zod-formik-adapter';
+
+const dreamSchema = z.object({
+  title: z
+    .string({ message: 'Title is required' })
+    .trim()
+    .min(1, 'Title is required'),
+  description: z
+    .string({ message: 'Description is required' })
+    .trim()
+    .min(1, 'Description is required'),
+  text: z
+    .string({ message: 'Text is required' })
+    .trim()
+    .min(100, 'Dream text should be at least 100 characters long'),
+});
+type DreamFormValues = z.infer<typeof dreamSchema>;
 
 export const AddDreamForm = () => {
-  const { values, setFieldValue, handleSubmit } = useFormik({
+  const formik = useFormik<DreamFormValues>({
     initialValues: {
-      title: "",
-      description: "",
-      text: "",
+      title: '',
+      description: '',
+      text: '',
     },
-    onSubmit: (values) => {
-      console.info("Dream submitted:", values);
+    validationSchema: toFormikValidationSchema(dreamSchema),
+    onSubmit: (values, { resetForm }) => {
+      console.info('Dream submitted:', values);
+      resetForm();
     },
   });
 
@@ -18,24 +38,56 @@ export const AddDreamForm = () => {
     <View style={styles.container}>
       <TextInput
         placeholder="Dream title"
-        value={values.title}
-        onChangeText={(text) => setFieldValue("title", text)}
-        style={styles.input}
+        value={formik.values.title}
+        onChangeText={(text) => formik.setFieldValue('title', text)}
+        onBlur={() => formik.setFieldTouched('title')}
+        style={[
+          styles.input,
+          formik.touched.title && formik.errors.title
+            ? styles.inputError
+            : null,
+        ]}
       />
+      {formik.touched.title && formik.errors.title && (
+        <Text style={styles.errorText}>{formik.errors.title}</Text>
+      )}
+
       <TextInput
         placeholder="Dream description"
-        value={values.description}
-        onChangeText={(text) => setFieldValue("description", text)}
-        style={styles.input}
+        value={formik.values.description}
+        onChangeText={(text) => formik.setFieldValue('description', text)}
+        onBlur={() => formik.setFieldTouched('description')}
+        style={[
+          styles.input,
+          formik.touched.description && formik.errors.description
+            ? styles.inputError
+            : null,
+        ]}
       />
+      {formik.touched.description && formik.errors.description && (
+        <Text style={styles.errorText}>{formik.errors.description}</Text>
+      )}
+
       <TextInput
         placeholder="Dream text"
-        value={values.text}
-        onChangeText={(text) => setFieldValue("text", text)}
+        value={formik.values.text}
+        onChangeText={(text) => formik.setFieldValue('text', text)}
+        onBlur={() => formik.setFieldTouched('text')}
         multiline
-        style={styles.textArea}
+        style={[
+          styles.textArea,
+          formik.touched.text && formik.errors.text ? styles.inputError : null,
+        ]}
       />
-      <Button title="Submit Dream" onPress={() => handleSubmit()} />
+      {formik.touched.text && formik.errors.text && (
+        <Text style={styles.errorText}>{formik.errors.text}</Text>
+      )}
+
+      <Button
+        title={formik.isSubmitting ? 'Submitting...' : 'Submit Dream'}
+        onPress={() => formik.handleSubmit()}
+        disabled={formik.isSubmitting || !formik.isValid}
+      />
     </View>
   );
 };
@@ -54,6 +106,15 @@ const styles = {
     borderWidth: 1,
     padding: 10,
     borderRadius: 8,
-    height: 100,
+    height: 200,
+    textAlignVertical: 'top' as const,
+  },
+  inputError: {
+    borderColor: 'red',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginBottom: 4,
   },
 };
