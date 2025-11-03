@@ -1,19 +1,23 @@
-import { initTRPC } from "@trpc/server";
-import * as trpcExpress from "@trpc/server/adapters/express";
-import { type Express } from "express";
+import { initTRPC } from '@trpc/server';
+import * as trpcExpress from '@trpc/server/adapters/express';
+import { type Express } from 'express';
 
-import { type TrpcRouter } from "../router";
+import { type TrpcRouter } from '../router';
 
-export const trpc = initTRPC.create();
+import { AppContext } from './ctx';
+
+export const trpc = initTRPC.context<AppContext>().create();
 
 export const applyTrpcToExpressApp = (
   expressApp: Express,
-  trpcRouter: TrpcRouter,
+  appContext: AppContext,
+  trpcRouter: TrpcRouter
 ) => {
   expressApp.use(
-    "/trpc",
+    '/trpc',
     trpcExpress.createExpressMiddleware({
       router: trpcRouter,
-    }),
+      createContext: () => appContext,
+    })
   );
 };

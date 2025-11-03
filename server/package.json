@@ -5,16 +5,23 @@
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --transpile-only ./src/index.ts",
+    "dev": "ts-node-dev --watch ./.env --respawn --exit-child --transpile-only ./src/index.ts",
     "types": "tsc --noEmit --project ./tsconfig.json",
-    "lint": "eslint --cache --cache-location ./node_modules/.cache/.eslintcache \"src/**/*.{ts,tsx}\""
+    "lint": "eslint --cache --cache-location ./node_modules/.cache/.eslintcache \"src/**/*.{ts,tsx}\"",
+    "pmd": "prisma migrate dev",
+    "pgc": "prisma generate",
+    "prepare": "pnpm pgc"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "description": "",
+  "prisma": {
+    "schema": "./src/prisma/schema.prisma"
+  },
   "dependencies": {
+    "@prisma/client": "^6.18.0",
     "@trpc/server": "^11.6.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
@@ -25,6 +32,7 @@
     "@types/express": "^5.0.3",
     "@types/lodash": "^4.17.20",
     "@types/node": "^24.7.2",
+    "prisma": "^6.18.0",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"

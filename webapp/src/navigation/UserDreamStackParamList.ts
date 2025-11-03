@@ -1,4 +1,4 @@
 export type UserDreamStackParamList = {
   UserDreams: undefined;
-  Dream: { id: number };
+  Dream: { id: string };
 };

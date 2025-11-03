@@ -20,7 +20,7 @@ export const AllDreamsScreen = () => {
 
   const navigation = useNavigation<NavigationProp>();
 
-  const handleOpenDream = (id: number) => {
+  const handleOpenDream = (id: string) => {
     navigation.navigate("Dream", { id });
   };
 
@@ -47,7 +47,7 @@ export const AllDreamsScreen = () => {
       <ScrollView style={styles.container}>
         <Text style={styles.title}>All Dreams</Text>
         {data.dreams.map((dream) => (
-          <View key={dream.nickname} style={styles.card}>
+          <View key={dream.id} style={styles.card}>
             <Text style={styles.dreamTitle}>{dream.title}</Text>
             <Text style={styles.description}>{dream.nickname}</Text>
             <TouchableOpacity onPress={() => handleOpenDream(dream.id)}>

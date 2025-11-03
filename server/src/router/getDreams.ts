@@ -1,6 +1,13 @@
-import { dreams } from "../lib/dreams";
-import { trpc } from "../lib/trpc";
+import { trpc } from '../lib/trpc';
 
-export const getDreamsTrpcRoute = trpc.procedure.query(() => {
+export const getDreamsTrpcRoute = trpc.procedure.query(async ({ ctx }) => {
+  const dreams = await ctx.prisma.dream.findMany({
+    select: {
+      id: true,
+      title: true,
+      nickname: true,
+    },
+  });
+
   return { dreams };
 });

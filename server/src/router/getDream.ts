@@ -1,15 +1,17 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-import { dreams } from "../lib/dreams";
-import { trpc } from "../lib/trpc";
+import { trpc } from '../lib/trpc';
 
 export const getDreamTrpcRoute = trpc.procedure
   .input(
     z.object({
-      id: z.number(),
-    }),
+      id: z.string(),
+    })
   )
-  .query(({ input }) => {
-    const dream = dreams.find((dream) => dream.id === input.id);
-    return { dream: dream || null };
+  .query(async ({ ctx, input }) => {
+    const dream = await ctx.prisma.dream.findUnique({
+      where: { id: input.id },
+    });
+    console.info('Fetched dream:', dream);
+    return { dream };
   });

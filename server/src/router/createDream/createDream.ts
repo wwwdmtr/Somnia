@@ -1,24 +1,17 @@
-import { dreams } from "../../lib/dreams";
-import { trpc } from "../../lib/trpc";
+import { trpc } from '../../lib/trpc';
 
-import { zCreateDreamTrpcInput } from "./input";
-
-let lastId = dreams.at(-1)?.id ?? 0;
+import { zCreateDreamTrpcInput } from './input';
 
 export const createDreamTrpcRoute = trpc.procedure
   .input(zCreateDreamTrpcInput)
-  .mutation(({ input }) => {
-    lastId += 1;
+  .mutation(async ({ ctx, input }) => {
+    const dream = await ctx.prisma.dream.create({
+      data: {
+        title: input.title,
+        description: input.description,
+        text: input.text,
+      },
+    });
 
-    const newDream = {
-      id: lastId,
-      nickname: `user${lastId}`,
-      title: input.title,
-      description: input.description,
-      text: input.text,
-    };
-
-    dreams.unshift(newDream);
-
-    return true;
+    return dream;
   });

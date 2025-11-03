@@ -1,12 +1,22 @@
-import express from "express";
+import express from 'express';
 
-import { applyTrpcToExpressApp } from "./lib/trpc";
-import { trpcRouter } from "./router/index";
+import { AppContext, createAppContext } from './lib/ctx';
+import { applyTrpcToExpressApp } from './lib/trpc';
+import { trpcRouter } from './router/index';
 
-const expressApp = express();
+void (async () => {
+  let ctx: AppContext | null = null;
+  try {
+    ctx = createAppContext();
+    const expressApp = express();
 
-applyTrpcToExpressApp(expressApp, trpcRouter);
+    applyTrpcToExpressApp(expressApp, ctx, trpcRouter);
 
-expressApp.listen(3000, () => {
-  console.info("Server is running on http://localhost:3000");
-});
+    expressApp.listen(3000, () => {
+      console.info('Server is running on http://localhost:3000');
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    await ctx?.stop();
+  }
+})();
