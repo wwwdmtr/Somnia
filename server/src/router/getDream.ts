@@ -12,6 +12,5 @@ export const getDreamTrpcRoute = trpc.procedure
     const dream = await ctx.prisma.dream.findUnique({
       where: { id: input.id },
     });
-    console.info('Fetched dream:', dream);
     return { dream };
   });

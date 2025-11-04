@@ -1,12 +1,13 @@
-import { useRoute, RouteProp } from "@react-navigation/native";
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { useRoute, RouteProp } from '@react-navigation/native';
+import { format } from 'date-fns/format';
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View } from 'react-native';
 
-import ScreenName from "../constants/ScreenName";
-import { trpc } from "../lib/trpc";
+import ScreenName from '../constants/ScreenName';
+import { trpc } from '../lib/trpc';
 
-import type { FeedStackParamList } from "../navigation/FeedStackParamList";
-import type { UserDreamStackParamList } from "../navigation/UserDreamStackParamList";
+import type { FeedStackParamList } from '../navigation/FeedStackParamList';
+import type { UserDreamStackParamList } from '../navigation/UserDreamStackParamList';
 
 type DreamScreenRouteProp = RouteProp<
   FeedStackParamList & UserDreamStackParamList,
@@ -53,15 +54,18 @@ export const DreamScreen = () => {
       <Text style={styles.description}>{data.dream.title}</Text>
       <Text style={styles.description}>{data.dream.description}</Text>
       <Text style={styles.description}>{data.dream.text}</Text>
+      <Text style={styles.description}>
+        Created At: {format(new Date(data.dream.createdAt), 'yyyy-MM-dd')}
+      </Text>
       <StatusBar style="auto" />
     </View>
   );
 };
 
 const COLORS = {
-  background: "#fff",
-  cardBackground: "#f7f7f7",
-  descriptionColor: "#555",
+  background: '#fff',
+  cardBackground: '#f7f7f7',
+  descriptionColor: '#555',
 };
 
 const styles = StyleSheet.create({
