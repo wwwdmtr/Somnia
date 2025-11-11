@@ -27,6 +27,7 @@
     "express": "^5.1.0",
     "lodash": "^4.17.21",
     "superjson": "^2.2.5",
+    "trpc-playground": "^1.0.4",
     "zod": "^4.1.12"
   },
   "devDependencies": {

@@ -22,7 +22,8 @@ const allowedOrigins: string[] =
   explicitOrigins && explicitOrigins.length > 0
     ? explicitOrigins
     : [...DEFAULT_ALLOWED_ORIGINS];
-const allowAllInDev = !explicitOrigins?.length && process.env.NODE_ENV !== 'production';
+const allowAllInDev =
+  !explicitOrigins?.length && process.env.NODE_ENV !== 'production';
 
 void (async () => {
   let ctx: AppContext | null = null;
@@ -45,15 +46,15 @@ void (async () => {
 
           callback(
             new Error(
-              `Origin ${origin} is not allowed. Set CORS_ORIGINS to configure allowed origins.`,
-            ),
+              `Origin ${origin} is not allowed. Set CORS_ORIGINS to configure allowed origins.`
+            )
           );
         },
         credentials: true,
-      }),
+      })
     );
 
-    applyTrpcToExpressApp(expressApp, ctx, trpcRouter);
+    await applyTrpcToExpressApp(expressApp, ctx, trpcRouter);
 
     expressApp.listen(3000, () => {
       console.info('Server is running on http://localhost:3000');

@@ -1,13 +1,14 @@
-import { initTRPC } from "@trpc/server";
-import * as trpcExpress from "@trpc/server/adapters/express";
-import { type Express } from "express";
-import superjson from "superjson";
+import { initTRPC } from '@trpc/server';
+import * as trpcExpress from '@trpc/server/adapters/express';
+import { type Express } from 'express';
+import superjson from 'superjson';
+import { expressHandler } from 'trpc-playground/handlers/express';
 
-import { type TrpcRouter } from "../router";
+import { type TrpcRouter } from '../router';
 
-import { AppContext } from "./ctx";
+import { AppContext } from './ctx';
 
-import type { DataTransformerOptions } from "@trpc/server/unstable-core-do-not-import";
+import type { DataTransformerOptions } from '@trpc/server/unstable-core-do-not-import';
 
 const dataTransformer: DataTransformerOptions = superjson;
 
@@ -15,16 +16,27 @@ export const trpc = initTRPC.context<AppContext>().create({
   transformer: dataTransformer,
 });
 
-export const applyTrpcToExpressApp = (
+export const applyTrpcToExpressApp = async (
   expressApp: Express,
   appContext: AppContext,
-  trpcRouter: TrpcRouter,
+  trpcRouter: TrpcRouter
 ) => {
   expressApp.use(
-    "/trpc",
+    '/trpc',
     trpcExpress.createExpressMiddleware({
       router: trpcRouter,
       createContext: () => appContext,
-    }),
+    })
+  );
+  expressApp.use(
+    '/trpc-playground',
+    await expressHandler({
+      trpcApiEndpoint: '/trpc',
+      playgroundEndpoint: '/trpc-playground',
+      router: trpcRouter,
+      request: {
+        superjson: true,
+      },
+    })
   );
 };
