@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { SignUpForm } from "../components/SignUpForm";
 import { trpc } from "../lib/trpc";
 
 //import type { UserDreamStackParamList } from '../navigation/UserDreamStackParamList';
@@ -34,7 +35,8 @@ export const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.description}>your profile</Text>
+      <Text style={styles.description}>registration</Text>
+      <SignUpForm />
       <StatusBar style="auto" />
     </SafeAreaView>
   );
