@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { SignUpForm } from "../components/SignUpForm";
+import { SignInForm } from "../components/signInForm";
 import { trpc } from "../lib/trpc";
 
 //import type { UserDreamStackParamList } from '../navigation/UserDreamStackParamList';
@@ -37,6 +38,8 @@ export const ProfileScreen = () => {
     <SafeAreaView style={styles.container}>
       <Text style={styles.description}>registration</Text>
       <SignUpForm />
+      <Text style={styles.description}>Sign In</Text>
+      <SignInForm />
       <StatusBar style="auto" />
     </SafeAreaView>
   );
