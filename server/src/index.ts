@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 
 import { AppContext, createAppContext } from './lib/ctx';
+import { applyPassportToExpressApp } from './lib/passport';
 import { applyTrpcToExpressApp } from './lib/trpc';
 import { trpcRouter } from './router/index';
 
@@ -53,7 +54,7 @@ void (async () => {
         credentials: true,
       })
     );
-
+    applyPassportToExpressApp(expressApp, ctx);
     await applyTrpcToExpressApp(expressApp, ctx, trpcRouter);
 
     expressApp.listen(3000, () => {

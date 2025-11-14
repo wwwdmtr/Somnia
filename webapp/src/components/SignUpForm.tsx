@@ -1,31 +1,33 @@
-import { zSignUpTrpcInput } from "@somnia/server/src/router/signUp/input";
-import { useFormik } from "formik";
-import React from "react";
-import { View, TextInput, Button, Text } from "react-native";
-import { z } from "zod";
-import { toFormikValidationSchema } from "zod-formik-adapter";
+import { zSignUpTrpcInput } from '@somnia/server/src/router/signUp/input';
+import * as SecureStore from 'expo-secure-store';
+import { useFormik } from 'formik';
+import React from 'react';
+import { View, TextInput, Button, Text } from 'react-native';
+import { z } from 'zod';
+import { toFormikValidationSchema } from 'zod-formik-adapter';
 
-import { trpc } from "../lib/trpc";
+import { trpc } from '../lib/trpc';
 
 const signUpFormSchema = zSignUpTrpcInput
   .extend({
     passwordConfirmation: z
-      .string({ message: "Password confirmation is required" })
-      .min(1, "Password confirmation is required"),
+      .string({ message: 'Password confirmation is required' })
+      .min(1, 'Password confirmation is required'),
   })
   .refine((data) => data.password === data.passwordConfirmation, {
-    message: "Passwords do not match",
-    path: ["passwordConfirmation"],
+    message: 'Passwords do not match',
+    path: ['passwordConfirmation'],
   });
 
 type SignUpFormValues = z.infer<typeof signUpFormSchema>;
 
 export const SignUpForm = () => {
+  const trpcUtils = trpc.useUtils();
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   const signUp = trpc.signUp.useMutation({
     onSuccess: () => {
-      console.info("Sign up successful");
+      console.info('Sign up successful');
       setErrorMessage(null);
 
       // You can add additional logic here, such as navigation or displaying a success message
@@ -36,14 +38,17 @@ export const SignUpForm = () => {
   });
   const formik = useFormik<SignUpFormValues>({
     initialValues: {
-      nickname: "",
-      password: "",
-      passwordConfirmation: "",
+      nickname: '',
+      password: '',
+      passwordConfirmation: '',
     },
     validationSchema: toFormikValidationSchema(signUpFormSchema),
     onSubmit: async (values, { resetForm }) => {
       const { nickname, password } = values;
-      await signUp.mutateAsync({ nickname, password });
+      const { token } = await signUp.mutateAsync({ nickname, password });
+      await SecureStore.setItemAsync('token', token);
+
+      void trpcUtils.invalidate();
       resetForm();
     },
   });
@@ -53,8 +58,8 @@ export const SignUpForm = () => {
       <TextInput
         placeholder="Your nickname"
         value={formik.values.nickname}
-        onChangeText={(text) => formik.setFieldValue("nickname", text)}
-        onBlur={() => formik.setFieldTouched("nickname")}
+        onChangeText={(text) => formik.setFieldValue('nickname', text)}
+        onBlur={() => formik.setFieldTouched('nickname')}
         style={[
           styles.input,
           formik.touched.nickname && formik.errors.nickname
@@ -69,8 +74,8 @@ export const SignUpForm = () => {
       <TextInput
         placeholder="Your password"
         value={formik.values.password}
-        onChangeText={(text) => formik.setFieldValue("password", text)}
-        onBlur={() => formik.setFieldTouched("password")}
+        onChangeText={(text) => formik.setFieldValue('password', text)}
+        onBlur={() => formik.setFieldTouched('password')}
         secureTextEntry
         style={[
           styles.input,
@@ -87,9 +92,9 @@ export const SignUpForm = () => {
         placeholder="Confirm your password"
         value={formik.values.passwordConfirmation}
         onChangeText={(text) =>
-          formik.setFieldValue("passwordConfirmation", text)
+          formik.setFieldValue('passwordConfirmation', text)
         }
-        onBlur={() => formik.setFieldTouched("passwordConfirmation")}
+        onBlur={() => formik.setFieldTouched('passwordConfirmation')}
         secureTextEntry
         style={[
           styles.input,
@@ -129,13 +134,13 @@ const styles = {
     padding: 10,
     borderRadius: 8,
     height: 200,
-    textAlignVertical: "top" as const,
+    textAlignVertical: 'top' as const,
   },
   inputError: {
-    borderColor: "red",
+    borderColor: 'red',
   },
   errorText: {
-    color: "red",
+    color: 'red',
     fontSize: 12,
     marginBottom: 4,
   },

@@ -8,6 +8,7 @@ import TabName from "../constants/TabName";
 import { DreamScreen } from "../screens/DreamScreen";
 import { AllDreamsScreen } from "../screens/FeedScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
+import { SignOutScreen } from "../screens/SignOutScreen";
 import { UserDreamScreen } from "../screens/UserDreams";
 
 import { FeedStackParamList } from "./FeedStackParamList";
@@ -48,6 +49,10 @@ function ProfileStackNav() {
         name={ScreenName.Profile}
         component={ProfileScreen}
       />
+      <ProfileStack.Screen
+        name={ScreenName.SignOut}
+        component={SignOutScreen}
+      />
     </ProfileStack.Navigator>
   );
 }
@@ -72,7 +77,7 @@ export function AppNav() {
           [TabName.ProfileTab]: {
             active: "person",
             inactive: "person-outline",
-          }, // <— новый
+          },
         };
         return {
           headerShown: false,
@@ -91,7 +96,6 @@ export function AppNav() {
       <Tab.Screen name={TabName.FeedTab} component={FeedStackNav} />
       <Tab.Screen name={TabName.UserDreamTab} component={UserDreamStackNav} />
       <Tab.Screen name={TabName.ProfileTab} component={ProfileStackNav} />
-      {/* <— новый */}
     </Tab.Navigator>
   );
 }
