@@ -1,17 +1,19 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { httpBatchLink } from '@trpc/client';
-import { createTRPCReact } from '@trpc/react-query';
-import * as SecureStore from 'expo-secure-store';
-import superjson from 'superjson';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { httpBatchLink } from "@trpc/client";
+import { createTRPCReact } from "@trpc/react-query";
+import superjson from "superjson";
 
-import type { AppRouter as ServerAppRouter } from '@somnia/server/src/router-types';
+import { env } from "./env";
+import { getToken } from "./tokenStorage";
 
-type AppRouter = Omit<ServerAppRouter, '_def'> & {
-  _def: Omit<ServerAppRouter['_def'], '_config'> & {
-    _config: Omit<ServerAppRouter['_def']['_config'], '$types'> & {
+import type { AppRouter as ServerAppRouter } from "@somnia/server/src/router-types";
+
+type AppRouter = Omit<ServerAppRouter, "_def"> & {
+  _def: Omit<ServerAppRouter["_def"], "_config"> & {
+    _config: Omit<ServerAppRouter["_def"]["_config"], "$types"> & {
       $types: Omit<
-        ServerAppRouter['_def']['_config']['$types'],
-        'transformer'
+        ServerAppRouter["_def"]["_config"]["$types"],
+        "transformer"
       > & { transformer: true };
     };
   };
@@ -31,11 +33,11 @@ const queryClient = new QueryClient({
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: 'http://localhost:3000/trpc',
+      url: env.BACKEND_TRPC_URL,
       transformer: superjson,
 
       async fetch(url, options) {
-        const token = await SecureStore.getItemAsync('token');
+        const token = await getToken();
 
         return fetch(url, {
           ...options,

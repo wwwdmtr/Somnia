@@ -15,7 +15,14 @@ module.exports = [
   ...compat.config({
     root: true,
     parser: '@typescript-eslint/parser',
-    plugins: ['@typescript-eslint', 'react', 'react-hooks', 'react-native', 'import'],
+    plugins: [
+      '@typescript-eslint',
+      'react',
+      'react-hooks',
+      'react-native',
+      'import',
+      'node',
+    ],
     extends: [
       'eslint:recommended',
       'plugin:@typescript-eslint/recommended',
@@ -81,6 +88,7 @@ module.exports = [
         },
       ],
       'react/react-in-jsx-scope': 'off',
+      'node/no-process-env': 'error',
     },
   }),
 ];

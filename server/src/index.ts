@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 
 import { AppContext, createAppContext } from './lib/ctx';
+import { env } from './lib/env';
 import { applyPassportToExpressApp } from './lib/passport';
 import { applyTrpcToExpressApp } from './lib/trpc';
 import { trpcRouter } from './router/index';
@@ -12,6 +13,7 @@ const parseList = (value: string | undefined): string[] | undefined =>
     .map((item) => item.trim())
     .filter(Boolean);
 
+//eslint-disable-next-line node/no-process-env
 const explicitOrigins = parseList(process.env.CORS_ORIGINS);
 const DEFAULT_ALLOWED_ORIGINS = [
   'http://localhost:3000',
@@ -24,6 +26,7 @@ const allowedOrigins: string[] =
     ? explicitOrigins
     : [...DEFAULT_ALLOWED_ORIGINS];
 const allowAllInDev =
+  //eslint-disable-next-line node/no-process-env
   !explicitOrigins?.length && process.env.NODE_ENV !== 'production';
 
 void (async () => {
@@ -57,8 +60,8 @@ void (async () => {
     applyPassportToExpressApp(expressApp, ctx);
     await applyTrpcToExpressApp(expressApp, ctx, trpcRouter);
 
-    expressApp.listen(3000, () => {
-      console.info('Server is running on http://localhost:3000');
+    expressApp.listen(env.PORT, () => {
+      console.info(`Server is running on http://localhost:${env.PORT}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
