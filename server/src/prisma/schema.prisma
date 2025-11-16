@@ -12,13 +12,15 @@ model User {
     nickname  String   @unique
     password  String
     createdAt DateTime @default(now())
+    dreams    Dream[]
 }
 
 model Dream {
     id          String   @id @default(uuid())
-    nickname    String?
     title       String
     description String
     text        String
     createdAt   DateTime @default(now())
+    authorId    String
+    author      User     @relation(fields: [authorId], references: [id])
 }

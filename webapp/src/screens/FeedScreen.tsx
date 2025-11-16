@@ -49,7 +49,7 @@ export const AllDreamsScreen = () => {
         {data.dreams.map((dream) => (
           <View key={dream.id} style={styles.card}>
             <Text style={styles.dreamTitle}>{dream.title}</Text>
-            <Text style={styles.description}>{dream.nickname}</Text>
+            <Text style={styles.description}>{dream.author.nickname}</Text>
             <TouchableOpacity onPress={() => handleOpenDream(dream.id)}>
               <Text>read more...</Text>
             </TouchableOpacity>
