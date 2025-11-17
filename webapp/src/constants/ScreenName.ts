@@ -4,6 +4,7 @@ export enum ScreenName {
   UserDreams = 'UserDreams',
   Profile = 'Profile',
   SignOut = 'SignOut',
+  EditDream = 'EditDream',
 }
 
 export default ScreenName;

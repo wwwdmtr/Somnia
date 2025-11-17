@@ -162,6 +162,9 @@ importers:
       expo-status-bar:
         specifier: ~3.0.8
         version: 3.0.8(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
       react:
         specifier: 19.1.0
         version: 19.1.0
@@ -196,6 +199,9 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0(formik@2.4.6(@types/react@19.1.17)(react@19.1.0))(zod@4.1.12)
     devDependencies:
+      '@types/lodash':
+        specifier: ^4.17.20
+        version: 4.17.20
       '@types/react':
         specifier: ~19.1.0
         version: 19.1.17

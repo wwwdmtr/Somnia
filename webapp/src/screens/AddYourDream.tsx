@@ -35,7 +35,7 @@ export const UserDreamScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.description}>your dreams</Text>
+      <Text style={styles.description}>Add your dream</Text>
       <AddDreamForm />
       <StatusBar style="auto" />
     </SafeAreaView>
