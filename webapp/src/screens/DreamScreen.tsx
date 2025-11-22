@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, ScrollView, Button } from 'react-native';
 
 import ScreenName from '../constants/ScreenName';
+import { useMe } from '../lib/ctx';
 import { trpc } from '../lib/trpc';
 
 import type { FeedStackParamList } from '../navigation/FeedStackParamList';
@@ -26,7 +27,7 @@ export const DreamScreen = () => {
   const { data, isLoading, error } = trpc.getDream.useQuery({
     id: route.params.id,
   });
-  const { data: meData } = trpc.getMe.useQuery();
+  const me = useMe();
 
   if (isLoading) {
     return (
@@ -65,7 +66,7 @@ export const DreamScreen = () => {
       <Text style={styles.description}>
         Created At: {format(new Date(data.dream.createdAt), 'dd-MM-yyyy HH:mm')}
       </Text>
-      {meData?.me?.id === data.dream.author.id ? (
+      {me?.id === data.dream.author.id ? (
         <Button
           title="Edit dream"
           onPress={() =>
