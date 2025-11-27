@@ -29,8 +29,6 @@ export const SignUpForm = () => {
     onSuccess: () => {
       console.info("Sign up successful");
       setErrorMessage(null);
-
-      // You can add additional logic here, such as navigation or displaying a success message
     },
     onError: (err) => {
       setErrorMessage(err.message);

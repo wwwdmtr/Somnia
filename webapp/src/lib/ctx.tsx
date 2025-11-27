@@ -2,12 +2,12 @@ import { createContext, useContext } from "react";
 
 import { trpc } from "./trpc";
 
-import type { TrpcRouterOutput } from "@somnia/server/src/router/index.ts";
+import type { ClientMe } from "@somnia/server/src/lib/models";
 
 type GetMeError = ReturnType<typeof trpc.getMe.useQuery>["error"];
 
 export type AppContext = {
-  me: TrpcRouterOutput["getMe"]["me"];
+  me: ClientMe;
   isLoading: boolean;
   isError: boolean;
   error: GetMeError | null;

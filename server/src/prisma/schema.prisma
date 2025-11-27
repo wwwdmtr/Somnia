@@ -10,6 +10,7 @@ datasource db {
 model User {
     id        String   @id @default(uuid())
     nickname  String   @unique
+    name      String   @default("")
     password  String
     createdAt DateTime @default(now())
     dreams    Dream[]

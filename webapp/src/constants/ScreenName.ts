@@ -1,10 +1,11 @@
 export enum ScreenName {
-  Feed = 'Feed',
-  Dream = 'Dream',
-  UserDreams = 'UserDreams',
-  Profile = 'Profile',
-  SignOut = 'SignOut',
-  EditDream = 'EditDream',
+  Feed = "Feed",
+  Dream = "Dream",
+  UserDreams = "UserDreams",
+  Profile = "Profile",
+  SignOut = "SignOut",
+  EditDream = "EditDream",
+  UpdateProfile = "UpdateProfile",
 }
 
 export default ScreenName;
