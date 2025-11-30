@@ -1,15 +1,15 @@
-import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
-import { format } from 'date-fns/format';
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, ScrollView, Button } from 'react-native';
+import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
+import { format } from "date-fns/format";
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet, Text, ScrollView, Button } from "react-native";
 
-import ScreenName from '../constants/ScreenName';
-import { useMe } from '../lib/ctx';
-import { trpc } from '../lib/trpc';
+import ScreenName from "../../constants/ScreenName";
+import { useMe } from "../../lib/ctx";
+import { trpc } from "../../lib/trpc";
 
-import type { FeedStackParamList } from '../navigation/FeedStackParamList';
-import type { UserDreamStackParamList } from '../navigation/UserDreamStackParamList';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { FeedStackParamList } from "../../navigation/FeedStackParamList";
+import type { UserDreamStackParamList } from "../../navigation/UserDreamStackParamList";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type DreamScreenRouteProp = RouteProp<
   FeedStackParamList & UserDreamStackParamList,
@@ -64,7 +64,7 @@ export const DreamScreen = () => {
       <Text style={styles.description}>{data.dream.description}</Text>
       <Text style={styles.description}>{data.dream.text}</Text>
       <Text style={styles.description}>
-        Created At: {format(new Date(data.dream.createdAt), 'dd-MM-yyyy HH:mm')}
+        Created At: {format(new Date(data.dream.createdAt), "dd-MM-yyyy HH:mm")}
       </Text>
       {me?.id === data.dream.author.id ? (
         <Button
@@ -82,9 +82,9 @@ export const DreamScreen = () => {
 };
 
 const COLORS = {
-  background: '#fff',
-  cardBackground: '#f7f7f7',
-  descriptionColor: '#555',
+  background: "#fff",
+  cardBackground: "#f7f7f7",
+  descriptionColor: "#555",
 };
 
 const styles = StyleSheet.create({

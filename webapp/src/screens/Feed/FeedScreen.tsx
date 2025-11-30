@@ -8,9 +8,9 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-import { trpc } from "../lib/trpc";
+import { trpc } from "../../lib/trpc";
 
-import type { FeedStackParamList } from "../navigation/FeedStackParamList";
+import type { FeedStackParamList } from "../../navigation/FeedStackParamList";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type NavigationProp = NativeStackNavigationProp<FeedStackParamList, "Feed">;

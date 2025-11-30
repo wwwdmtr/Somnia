@@ -6,6 +6,9 @@ export enum ScreenName {
   SignOut = "SignOut",
   EditDream = "EditDream",
   UpdateProfile = "UpdateProfile",
+  Onboarding = "Onboarding",
+  SignIn = "SignIn",
+  SignUp = "SignUp",
 }
 
 export default ScreenName;

@@ -3,12 +3,12 @@
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { ScrollView, StyleSheet, Text } from "react-native";
 
-import { UpdateDreamForm } from "../components/UpdateDreamForm";
-import ScreenName from "../constants/ScreenName";
-import { trpc } from "../lib/trpc";
+import { UpdateDreamForm } from "../../components/UpdateDreamForm";
+import ScreenName from "../../constants/ScreenName";
+import { trpc } from "../../lib/trpc";
 
-import type { FeedStackParamList } from "../navigation/FeedStackParamList";
-import type { UserDreamStackParamList } from "../navigation/UserDreamStackParamList";
+import type { FeedStackParamList } from "../../navigation/FeedStackParamList";
+import type { UserDreamStackParamList } from "../../navigation/UserDreamStackParamList";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type RootStackParamList = FeedStackParamList & UserDreamStackParamList;

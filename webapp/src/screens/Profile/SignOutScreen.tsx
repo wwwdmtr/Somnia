@@ -3,13 +3,13 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 
-import ScreenName from "../constants/ScreenName";
-import TabName from "../constants/TabName";
-import { clearToken } from "../lib/tokenStorage";
-import { trpc } from "../lib/trpc";
+import ScreenName from "../../constants/ScreenName";
+import TabName from "../../constants/TabName";
+import { clearToken } from "../../lib/tokenStorage";
+import { trpc } from "../../lib/trpc";
 
-import type { ProfileStackParamList } from "../navigation/ProfileStackParamList";
-import type { RootTabParamList } from "../navigation/RootTabParamList";
+import type { ProfileStackParamList } from "../../navigation/ProfileStackParamList";
+import type { RootTabParamList } from "../../navigation/RootTabParamList";
 
 type Props = NativeStackScreenProps<ProfileStackParamList, ScreenName.SignOut>;
 

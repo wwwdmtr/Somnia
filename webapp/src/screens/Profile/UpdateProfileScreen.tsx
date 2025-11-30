@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet } from "react-native";
 
-import { UpdateProfileForm } from "../components/UpdateProfileForm";
+import { UpdateProfileForm } from "../../components/UpdateProfileForm";
 
 export const UpdateProfileScreen = () => {
   return (

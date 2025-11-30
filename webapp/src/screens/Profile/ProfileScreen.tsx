@@ -5,12 +5,10 @@ import { StatusBar } from "expo-status-bar";
 import { Button, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { SignUpForm } from "../components/SignUpForm";
-import { SignInForm } from "../components/signInForm";
-import ScreenName from "../constants/ScreenName";
-import { useAppContext } from "../lib/ctx";
+import ScreenName from "../../constants/ScreenName";
+import { useAppContext } from "../../lib/ctx";
 
-import type { ProfileStackParamList } from "../navigation/ProfileStackParamList";
+import type { ProfileStackParamList } from "../../navigation/ProfileStackParamList";
 
 //import type { UserDreamStackParamList } from '../navigation/UserDreamStackParamList';
 
@@ -40,10 +38,7 @@ export const ProfileScreen = () => {
         title="Update profile"
         onPress={() => navigation.navigate(ScreenName.UpdateProfile)}
       />
-      <Text style={styles.description}>registration</Text>
-      <SignUpForm />
-      <Text style={styles.description}>Sign In</Text>
-      <SignInForm />
+
       {me ? (
         <Button
           title="Sign Out"
@@ -67,10 +62,5 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 24,
     padding: 14,
-  },
-  description: {
-    color: COLORS.descriptionColor,
-    fontSize: 16,
-    margin: 12,
   },
 });

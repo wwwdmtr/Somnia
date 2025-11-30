@@ -5,7 +5,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AppContextProvider } from "./src/lib/ctx";
 import { TrpcProvider } from "./src/lib/trpc";
-import { AppNav } from "./src/navigation/navigation";
+import { RootNavigation } from "./src/navigation/navigation";
 
 export default function App() {
   return (
@@ -13,7 +13,7 @@ export default function App() {
       <AppContextProvider>
         <SafeAreaProvider>
           <NavigationContainer>
-            <AppNav />
+            <RootNavigation />
           </NavigationContainer>
         </SafeAreaProvider>
       </AppContextProvider>

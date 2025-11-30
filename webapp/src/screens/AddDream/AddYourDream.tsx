@@ -3,8 +3,8 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AddDreamForm } from "../components/AddDreamForm";
-import { trpc } from "../lib/trpc";
+import { AddDreamForm } from "../../components/AddDreamForm";
+import { trpc } from "../../lib/trpc";
 
 //import type { UserDreamStackParamList } from '../navigation/UserDreamStackParamList';
 

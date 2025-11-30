@@ -5,14 +5,19 @@ import React from "react";
 
 import ScreenName from "../constants/ScreenName";
 import TabName from "../constants/TabName";
-import { UserDreamScreen } from "../screens/AddYourDream";
-import { DreamScreen } from "../screens/DreamScreen";
-import { AllDreamsScreen } from "../screens/FeedScreen";
-import { ProfileScreen } from "../screens/ProfileScreen";
-import { SignOutScreen } from "../screens/SignOutScreen";
-import { UpdateDreamScreen } from "../screens/UpdateDreamModalScreen";
-import { UpdateProfileScreen } from "../screens/UpdateProfileScreen";
+import { useAppContext } from "../lib/ctx";
+import { UserDreamScreen } from "../screens/AddDream/AddYourDream";
+import { DreamScreen } from "../screens/Dream/DreamScreen";
+import { UpdateDreamScreen } from "../screens/Dream/UpdateDreamModalScreen";
+import { AllDreamsScreen } from "../screens/Feed/FeedScreen";
+import { OnboardingScreen } from "../screens/Onboarding/OnboardingScreen";
+import { SignInScreen } from "../screens/Onboarding/SignInScreen";
+import { SignUpScreen } from "../screens/Onboarding/SignUpScreen";
+import { ProfileScreen } from "../screens/Profile/ProfileScreen";
+import { SignOutScreen } from "../screens/Profile/SignOutScreen";
+import { UpdateProfileScreen } from "../screens/Profile/UpdateProfileScreen";
 
+import { AuthStackParamList } from "./AuthStackParamList";
 import { FeedStackParamList } from "./FeedStackParamList";
 import { ProfileStackParamList } from "./ProfileStackParamList";
 import { RootTabParamList } from "./RootTabParamList";
@@ -112,4 +117,38 @@ export function AppNav() {
       <Tab.Screen name={TabName.ProfileTab} component={ProfileStackNav} />
     </Tab.Navigator>
   );
+}
+
+const AuthStack = createNativeStackNavigator<AuthStackParamList>();
+
+function AuthStackNav() {
+  return (
+    <AuthStack.Navigator>
+      <AuthStack.Screen
+        name={ScreenName.Onboarding}
+        component={OnboardingScreen}
+        options={{ headerShown: false }}
+      />
+      <AuthStack.Screen
+        name={ScreenName.SignIn}
+        component={SignInScreen}
+        options={{ title: "Sign in" }}
+      />
+      <AuthStack.Screen
+        name={ScreenName.SignUp}
+        component={SignUpScreen}
+        options={{ title: "Sign up" }}
+      />
+    </AuthStack.Navigator>
+  );
+}
+
+export function RootNavigation() {
+  const { me, isLoading } = useAppContext();
+
+  if (isLoading) {
+    return null;
+  }
+
+  return me ? <AppNav /> : <AuthStackNav />;
 }
