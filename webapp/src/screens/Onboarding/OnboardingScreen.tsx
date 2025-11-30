@@ -1,11 +1,13 @@
-import { useNavigation } from "@react-navigation/native";
-import { StyleSheet, Text, Button } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from '@react-navigation/native';
+import { StyleSheet, Text, ImageBackground, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import ScreenName from "../../constants/ScreenName";
+import { AppButton } from '../../components/ui/AppButton';
+import ScreenName from '../../constants/ScreenName';
+import { typography } from '../../theme/typography';
 
-import type { AuthStackParamList } from "../../navigation/AuthStackParamList";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { AuthStackParamList } from '../../navigation/AuthStackParamList';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type OnboardingScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -16,40 +18,47 @@ export const OnboardingScreen = () => {
   const navigation = useNavigation<OnboardingScreenNavigationProp>();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.description}>Добро пожаловать в Somnia ✨</Text>
-      <Text style={styles.description}>
-        Здесь ты можешь сохранять и анализировать свои сны.
-      </Text>
+    <ImageBackground
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      source={require('../../assets/backgrounds/onboarding-main.png')}
+      style={styles.BackgroundImage}
+    >
+      <SafeAreaView style={styles.container}>
+        <View style={styles.logo}>
+          <Text style={typography.h1_white100}>Somnia</Text>
+          <Text style={typography.body_white85}>
+            Облако для ваших сноведений
+          </Text>
+        </View>
 
-      <Button
-        title="Войти"
-        onPress={() => navigation.navigate(ScreenName.SignIn)}
-      />
-      <Button
-        title="Создать аккаунт"
-        onPress={() => navigation.navigate(ScreenName.SignUp)}
-      />
-    </SafeAreaView>
+        <AppButton
+          title="Начать"
+          onPress={() => navigation.navigate(ScreenName.SignIn)}
+          style={styles.startButton}
+        />
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
 
-const COLORS = {
-  background: "#fff",
-  cardBackground: "#f7f7f7",
-  descriptionColor: "#555",
-};
-
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: COLORS.background,
+  BackgroundImage: {
     flex: 1,
-    marginTop: 24,
-    padding: 14,
   },
-  description: {
-    color: COLORS.descriptionColor,
-    fontSize: 16,
-    margin: 12,
+  container: {
+    flex: 1,
+  },
+  logo: {
+    height: 78,
+    justifyContent: 'space-between',
+    marginLeft: 16,
+    marginTop: 490,
+    width: 244,
+  },
+  startButton: {
+    height: 40,
+    marginHorizontal: 16,
+    marginTop: 120,
+    width: 'auto',
   },
 });

@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet } from "react-native";
 
-import { SignInForm } from "../../components/SignInForm";
+import { SignInForm } from "../../components/forms/SignInForm";
 
 export const SignInScreen = () => {
   return (

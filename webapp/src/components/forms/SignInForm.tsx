@@ -1,52 +1,41 @@
-import { zSignUpTrpcInput } from "@somnia/server/src/router/signUp/input";
+import { zSignInTrpcInput } from "@somnia/server/src/router/signIn/input";
 import { useFormik } from "formik";
 import React from "react";
 import { View, TextInput, Button, Text } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
-import { setToken } from "../lib/tokenStorage";
-import { trpc } from "../lib/trpc";
+import { setToken } from "../../lib/tokenStorage";
+import { trpc } from "../../lib/trpc";
 
-const signUpFormSchema = zSignUpTrpcInput
-  .extend({
-    passwordConfirmation: z
-      .string({ message: "Password confirmation is required" })
-      .min(1, "Password confirmation is required"),
-  })
-  .refine((data) => data.password === data.passwordConfirmation, {
-    message: "Passwords do not match",
-    path: ["passwordConfirmation"],
-  });
+type SignInFormValues = z.infer<typeof zSignInTrpcInput>;
 
-type SignUpFormValues = z.infer<typeof signUpFormSchema>;
-
-export const SignUpForm = () => {
+export const SignInForm = () => {
   const trpcUtils = trpc.useUtils();
+
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  const signUp = trpc.signUp.useMutation({
+  const signIn = trpc.signIn.useMutation({
     onSuccess: () => {
-      console.info("Sign up successful");
+      console.info("Sign in successful");
       setErrorMessage(null);
+      // You can add additional logic here, such as navigation or displaying a success message
     },
     onError: (err) => {
       setErrorMessage(err.message);
     },
   });
-  const formik = useFormik<SignUpFormValues>({
+  const formik = useFormik<SignInFormValues>({
     initialValues: {
       nickname: "",
       password: "",
-      passwordConfirmation: "",
     },
-    validationSchema: toFormikValidationSchema(signUpFormSchema),
+    validationSchema: toFormikValidationSchema(zSignInTrpcInput),
     onSubmit: async (values, { resetForm }) => {
       const { nickname, password } = values;
-      const { token } = await signUp.mutateAsync({ nickname, password });
+      const { token } = await signIn.mutateAsync({ nickname, password });
       await setToken(token);
-
-      void trpcUtils.invalidate();
+      trpcUtils.invalidate();
       resetForm();
     },
   });
@@ -71,10 +60,10 @@ export const SignUpForm = () => {
 
       <TextInput
         placeholder="Your password"
+        secureTextEntry
         value={formik.values.password}
         onChangeText={(text) => formik.setFieldValue("password", text)}
         onBlur={() => formik.setFieldTouched("password")}
-        secureTextEntry
         style={[
           styles.input,
           formik.touched.password && formik.errors.password
@@ -86,32 +75,12 @@ export const SignUpForm = () => {
         <Text style={styles.errorText}>{formik.errors.password}</Text>
       )}
 
-      <TextInput
-        placeholder="Confirm your password"
-        value={formik.values.passwordConfirmation}
-        onChangeText={(text) =>
-          formik.setFieldValue("passwordConfirmation", text)
-        }
-        onBlur={() => formik.setFieldTouched("passwordConfirmation")}
-        secureTextEntry
-        style={[
-          styles.input,
-          formik.touched.passwordConfirmation &&
-          formik.errors.passwordConfirmation
-            ? styles.inputError
-            : null,
-        ]}
-      />
-      {formik.touched.passwordConfirmation &&
-        formik.errors.passwordConfirmation && (
-          <Text style={styles.errorText}>
-            {formik.errors.passwordConfirmation}
-          </Text>
-        )}
-
       {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
 
-      <Button title="Sign Up" onPress={() => formik.handleSubmit()} />
+      <Button
+        title={formik.isSubmitting ? "Signing In..." : "Sign In"}
+        onPress={() => formik.handleSubmit()}
+      />
     </View>
   );
 };

@@ -3,7 +3,7 @@
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { ScrollView, StyleSheet, Text } from "react-native";
 
-import { UpdateDreamForm } from "../../components/UpdateDreamForm";
+import { UpdateDreamForm } from "../../components/forms/UpdateDreamForm";
 import ScreenName from "../../constants/ScreenName";
 import { trpc } from "../../lib/trpc";
 

@@ -1,29 +1,32 @@
-import { Ionicons } from "@expo/vector-icons";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import React from "react";
+/* eslint-disable @typescript-eslint/no-require-imports */
+import { Ionicons } from '@expo/vector-icons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useFonts } from 'expo-font';
+import React from 'react';
+import { Text } from 'react-native';
 
-import ScreenName from "../constants/ScreenName";
-import TabName from "../constants/TabName";
-import { useAppContext } from "../lib/ctx";
-import { UserDreamScreen } from "../screens/AddDream/AddYourDream";
-import { DreamScreen } from "../screens/Dream/DreamScreen";
-import { UpdateDreamScreen } from "../screens/Dream/UpdateDreamModalScreen";
-import { AllDreamsScreen } from "../screens/Feed/FeedScreen";
-import { OnboardingScreen } from "../screens/Onboarding/OnboardingScreen";
-import { SignInScreen } from "../screens/Onboarding/SignInScreen";
-import { SignUpScreen } from "../screens/Onboarding/SignUpScreen";
-import { ProfileScreen } from "../screens/Profile/ProfileScreen";
-import { SignOutScreen } from "../screens/Profile/SignOutScreen";
-import { UpdateProfileScreen } from "../screens/Profile/UpdateProfileScreen";
+import ScreenName from '../constants/ScreenName';
+import TabName from '../constants/TabName';
+import { useAppContext } from '../lib/ctx';
+import { UserDreamScreen } from '../screens/AddDream/AddYourDream';
+import { DreamScreen } from '../screens/Dream/DreamScreen';
+import { UpdateDreamScreen } from '../screens/Dream/UpdateDreamModalScreen';
+import { AllDreamsScreen } from '../screens/Feed/FeedScreen';
+import { OnboardingScreen } from '../screens/Onboarding/OnboardingScreen';
+import { SignInScreen } from '../screens/Onboarding/SignInScreen';
+import { SignUpScreen } from '../screens/Onboarding/SignUpScreen';
+import { ProfileScreen } from '../screens/Profile/ProfileScreen';
+import { SignOutScreen } from '../screens/Profile/SignOutScreen';
+import { UpdateProfileScreen } from '../screens/Profile/UpdateProfileScreen';
 
-import { AuthStackParamList } from "./AuthStackParamList";
-import { FeedStackParamList } from "./FeedStackParamList";
-import { ProfileStackParamList } from "./ProfileStackParamList";
-import { RootTabParamList } from "./RootTabParamList";
-import { UserDreamStackParamList } from "./UserDreamStackParamList";
+import { AuthStackParamList } from './AuthStackParamList';
+import { FeedStackParamList } from './FeedStackParamList';
+import { ProfileStackParamList } from './ProfileStackParamList';
+import { RootTabParamList } from './RootTabParamList';
+import { UserDreamStackParamList } from './UserDreamStackParamList';
 
-import type { ComponentProps } from "react";
+import type { ComponentProps } from 'react';
 
 const FeedStack = createNativeStackNavigator<FeedStackParamList>();
 function FeedStackNav() {
@@ -35,8 +38,8 @@ function FeedStackNav() {
         name={ScreenName.EditDream}
         component={UpdateDreamScreen}
         options={{
-          presentation: "modal",
-          title: "Edit dream",
+          presentation: 'modal',
+          title: 'Edit dream',
         }}
       />
     </FeedStack.Navigator>
@@ -83,19 +86,19 @@ export function AppNav() {
     <Tab.Navigator
       initialRouteName={TabName.FeedTab}
       screenOptions={({ route }) => {
-        type IoniconName = ComponentProps<typeof Ionicons>["name"];
+        type IoniconName = ComponentProps<typeof Ionicons>['name'];
         const iconMap: Record<
           string,
           { active: IoniconName; inactive: IoniconName }
         > = {
-          [TabName.FeedTab]: { active: "home", inactive: "home-outline" },
+          [TabName.FeedTab]: { active: 'home', inactive: 'home-outline' },
           [TabName.UserDreamTab]: {
-            active: "clipboard",
-            inactive: "clipboard-outline",
+            active: 'clipboard',
+            inactive: 'clipboard-outline',
           },
           [TabName.ProfileTab]: {
-            active: "person",
-            inactive: "person-outline",
+            active: 'person',
+            inactive: 'person-outline',
           },
         };
         return {
@@ -103,8 +106,8 @@ export function AppNav() {
           tabBarShowLabel: false,
           tabBarIcon: ({ focused, size }) => {
             const pair = iconMap[route.name] ?? {
-              active: "ellipse",
-              inactive: "ellipse-outline",
+              active: 'ellipse',
+              inactive: 'ellipse-outline',
             };
             const name = focused ? pair.active : pair.inactive;
             return <Ionicons name={name} size={size} />;
@@ -132,12 +135,12 @@ function AuthStackNav() {
       <AuthStack.Screen
         name={ScreenName.SignIn}
         component={SignInScreen}
-        options={{ title: "Sign in" }}
+        options={{ title: 'Sign in' }}
       />
       <AuthStack.Screen
         name={ScreenName.SignUp}
         component={SignUpScreen}
-        options={{ title: "Sign up" }}
+        options={{ title: 'Sign up' }}
       />
     </AuthStack.Navigator>
   );
@@ -145,6 +148,17 @@ function AuthStackNav() {
 
 export function RootNavigation() {
   const { me, isLoading } = useAppContext();
+
+  const [fontsLoaded] = useFonts({
+    'SFProText-Regular': require('../assets/fonts/SFProText-Regular.ttf'),
+    'SFProText-Medium': require('../assets/fonts/SFProText-Medium.ttf'),
+    'SFProText-Semibold': require('../assets/fonts/SFProText-Semibold.ttf'),
+    'SFProText-Bold': require('../assets/fonts/SFProText-Bold.ttf'),
+  });
+
+  if (!fontsLoaded) {
+    return <Text>Loading...</Text>;
+  }
 
   if (isLoading) {
     return null;

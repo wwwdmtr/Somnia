@@ -5,8 +5,8 @@ import { View, TextInput, Button, Text } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
-import { useMe } from "../lib/ctx";
-import { trpc } from "../lib/trpc";
+import { useMe } from "../../lib/ctx";
+import { trpc } from "../../lib/trpc";
 
 type UpdatePorfileFormValues = z.infer<typeof zUpadteProfileTrpcInput>;
 

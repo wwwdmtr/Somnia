@@ -5,7 +5,7 @@ import { View, TextInput, Button, Text } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
-import { trpc } from "../lib/trpc";
+import { trpc } from "../../lib/trpc";
 
 type DreamFormValues = z.infer<typeof zCreateDreamTrpcInput>;
 

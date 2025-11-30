@@ -1,10 +1,10 @@
 //import { RouteProp } from '@react-navigation/native';
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AddDreamForm } from "../../components/AddDreamForm";
-import { trpc } from "../../lib/trpc";
+import { AddDreamForm } from '../../components/forms/AddDreamForm';
+import { trpc } from '../../lib/trpc';
 
 //import type { UserDreamStackParamList } from '../navigation/UserDreamStackParamList';
 
@@ -43,9 +43,9 @@ export const UserDreamScreen = () => {
 };
 
 const COLORS = {
-  background: "#fff",
-  cardBackground: "#f7f7f7",
-  descriptionColor: "#555",
+  background: '#fff',
+  cardBackground: '#f7f7f7',
+  descriptionColor: '#555',
 };
 
 const styles = StyleSheet.create({
