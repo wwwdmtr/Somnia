@@ -1,12 +1,16 @@
+import { Ionicons } from "@expo/vector-icons";
 import { zSignUpTrpcInput } from "@somnia/server/src/router/signUp/input";
 import { useFormik } from "formik";
 import React from "react";
-import { View, TextInput, Button, Text } from "react-native";
+import { View, TextInput, Text, Pressable } from "react-native";
+import { StyleSheet } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
 import { setToken } from "../../lib/tokenStorage";
 import { trpc } from "../../lib/trpc";
+import { COLORS, typography } from "../../theme/typography";
+import { AppButton } from "../ui/AppButton";
 
 const signUpFormSchema = zSignUpTrpcInput
   .extend({
@@ -24,6 +28,9 @@ type SignUpFormValues = z.infer<typeof signUpFormSchema>;
 export const SignUpForm = () => {
   const trpcUtils = trpc.useUtils();
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
+  const [isRepeatPasswordVisible, setIsRepeatPasswordVisible] =
+    React.useState(false);
 
   const signUp = trpc.signUp.useMutation({
     onSuccess: () => {
@@ -53,8 +60,10 @@ export const SignUpForm = () => {
 
   return (
     <View>
+      <Text style={typography.caption_white85}>Введите Имя пользователя</Text>
       <TextInput
-        placeholder="Your nickname"
+        placeholder="Имя пользователя"
+        placeholderTextColor={COLORS.white25}
         value={formik.values.nickname}
         onChangeText={(text) => formik.setFieldValue("nickname", text)}
         onBlur={() => formik.setFieldTouched("nickname")}
@@ -64,82 +73,145 @@ export const SignUpForm = () => {
             ? styles.inputError
             : null,
         ]}
+        autoCapitalize="none"
       />
-      {formik.touched.nickname && formik.errors.nickname && (
+
+      <Text style={typography.caption_white85}>Введите Пароль</Text>
+      <View style={styles.passwordContainer}>
+        <TextInput
+          placeholder="Пароль"
+          placeholderTextColor={COLORS.white25}
+          secureTextEntry={!isPasswordVisible}
+          value={formik.values.password}
+          onChangeText={(text) => formik.setFieldValue("password", text)}
+          onBlur={() => formik.setFieldTouched("password")}
+          style={[
+            styles.input,
+            styles.passwordInput,
+            formik.touched.password && formik.errors.password
+              ? styles.inputError
+              : null,
+          ]}
+        />
+
+        <Pressable
+          onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+          style={styles.passwordIcon}
+          hitSlop={10}
+        >
+          <Ionicons
+            name={isPasswordVisible ? "eye-off-outline" : "eye-outline"}
+            size={20}
+            color={COLORS.white25}
+          />
+        </Pressable>
+      </View>
+
+      <Text style={typography.caption_white85}>Повторите Пароль</Text>
+      <View style={styles.passwordContainer}>
+        <TextInput
+          placeholder="Пароль"
+          placeholderTextColor={COLORS.white25}
+          secureTextEntry={!isRepeatPasswordVisible}
+          value={formik.values.passwordConfirmation}
+          onChangeText={(text) =>
+            formik.setFieldValue("passwordConfirmation", text)
+          }
+          onBlur={() => formik.setFieldTouched("passwordConfirmation")}
+          style={[
+            styles.input,
+            styles.passwordInput,
+            formik.touched.passwordConfirmation &&
+            formik.errors.passwordConfirmation
+              ? styles.inputError
+              : null,
+          ]}
+        />
+        <Pressable
+          onPress={() => setIsRepeatPasswordVisible(!isRepeatPasswordVisible)}
+          style={styles.passwordIcon}
+          hitSlop={10}
+        >
+          <Ionicons
+            name={isRepeatPasswordVisible ? "eye-off-outline" : "eye-outline"}
+            size={20}
+            color={COLORS.white25}
+          />
+        </Pressable>
+      </View>
+
+      {(formik.touched.nickname && formik.errors.nickname && (
         <Text style={styles.errorText}>{formik.errors.nickname}</Text>
-      )}
+      )) ||
+        (formik.touched.password && formik.errors.password && (
+          <Text style={styles.errorText}>{formik.errors.password}</Text>
+        )) ||
+        (formik.touched.passwordConfirmation &&
+          formik.errors.passwordConfirmation && (
+            <Text style={styles.errorText}>
+              {formik.errors.passwordConfirmation}
+            </Text>
+          ))}
 
-      <TextInput
-        placeholder="Your password"
-        value={formik.values.password}
-        onChangeText={(text) => formik.setFieldValue("password", text)}
-        onBlur={() => formik.setFieldTouched("password")}
-        secureTextEntry
-        style={[
-          styles.input,
-          formik.touched.password && formik.errors.password
-            ? styles.inputError
-            : null,
-        ]}
-      />
-      {formik.touched.password && formik.errors.password && (
+      {/* {formik.touched.password && formik.errors.password && (
         <Text style={styles.errorText}>{formik.errors.password}</Text>
-      )}
+      )} */}
 
-      <TextInput
-        placeholder="Confirm your password"
-        value={formik.values.passwordConfirmation}
-        onChangeText={(text) =>
-          formik.setFieldValue("passwordConfirmation", text)
-        }
-        onBlur={() => formik.setFieldTouched("passwordConfirmation")}
-        secureTextEntry
-        style={[
-          styles.input,
-          formik.touched.passwordConfirmation &&
-          formik.errors.passwordConfirmation
-            ? styles.inputError
-            : null,
-        ]}
-      />
-      {formik.touched.passwordConfirmation &&
+      {/* {formik.touched.passwordConfirmation &&
         formik.errors.passwordConfirmation && (
           <Text style={styles.errorText}>
             {formik.errors.passwordConfirmation}
           </Text>
-        )}
+        )} */}
 
       {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
 
-      <Button title="Sign Up" onPress={() => formik.handleSubmit()} />
+      <AppButton
+        title={formik.isSubmitting ? "Регистрация..." : "Регистрация"}
+        onPress={() => formik.handleSubmit()}
+        style={styles.startButton}
+      />
     </View>
   );
 };
 
-const styles = {
-  container: {
-    padding: 20,
-    gap: 10,
-  },
-  input: {
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  textArea: {
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 8,
-    height: 200,
-    textAlignVertical: "top" as const,
-  },
-  inputError: {
-    borderColor: "red",
-  },
+const styles = StyleSheet.create({
   errorText: {
-    color: "red",
+    color: COLORS.white100,
     fontSize: 12,
     marginBottom: 4,
   },
-};
+  input: {
+    backgroundColor: COLORS.inputBackgroundColor,
+    borderColor: COLORS.inputBorderColor,
+    borderRadius: 99,
+    borderWidth: 1,
+    color: COLORS.white100,
+    marginBottom: 28,
+    marginTop: 12,
+    padding: 11,
+  },
+  inputError: {
+    borderColor: COLORS.inputErrorBorderColor,
+  },
+  passwordContainer: {
+    justifyContent: "center",
+    position: "relative",
+  },
+
+  passwordIcon: {
+    bottom: 7,
+    height: "100%",
+    justifyContent: "center",
+    position: "absolute",
+    right: 16,
+  },
+  passwordInput: {
+    paddingRight: 48,
+  },
+  startButton: {
+    height: 40,
+    marginTop: 212,
+    width: "auto",
+  },
+});

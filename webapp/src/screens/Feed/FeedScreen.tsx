@@ -6,7 +6,9 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
+  ImageBackground,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { trpc } from "../../lib/trpc";
 
@@ -43,20 +45,26 @@ export const AllDreamsScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.container}>
-        <Text style={styles.title}>All Dreams</Text>
-        {data.dreams.map((dream) => (
-          <View key={dream.id} style={styles.card}>
-            <Text style={styles.dreamTitle}>{dream.title}</Text>
-            <Text style={styles.description}>{dream.author.nickname}</Text>
-            <TouchableOpacity onPress={() => handleOpenDream(dream.id)}>
-              <Text>read more...</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
-      </ScrollView>
-    </View>
+    <ImageBackground
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      source={require("../../assets/backgrounds/application-bg.png")}
+      style={styles.BackgroundImage}
+    >
+      <SafeAreaView style={styles.container}>
+        <ScrollView style={styles.container}>
+          <Text style={styles.title}>All Dreams</Text>
+          {data.dreams.map((dream) => (
+            <View key={dream.id} style={styles.card}>
+              <Text style={styles.dreamTitle}>{dream.title}</Text>
+              <Text style={styles.description}>{dream.author.nickname}</Text>
+              <TouchableOpacity onPress={() => handleOpenDream(dream.id)}>
+                <Text>read more...</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </ScrollView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
 
@@ -67,15 +75,16 @@ const COLORS = {
 };
 
 const styles = StyleSheet.create({
+  BackgroundImage: {
+    flex: 1,
+  },
   card: {
-    backgroundColor: COLORS.cardBackground,
     borderRadius: 10,
     marginBottom: 12,
     padding: 12,
     paddingBottom: 20,
   },
   container: {
-    backgroundColor: COLORS.background,
     flex: 1,
     padding: 14,
   },
