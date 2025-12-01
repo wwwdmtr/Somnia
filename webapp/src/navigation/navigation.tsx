@@ -108,6 +108,31 @@ export function AppNav() {
         return {
           headerShown: false,
           tabBarShowLabel: false,
+          tabBarStyle: {
+            position: "absolute",
+            left: 16,
+            right: 16,
+            bottom: 34,
+            height: 60,
+            borderRadius: 999,
+            backgroundColor: "#CCC",
+            borderTopWidth: 0,
+            elevation: 0, // Android
+            shadowOpacity: 0, // iOS
+            paddingTop: 0,
+            paddingBottom: 0,
+          },
+          tabBarItemStyle: {
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          },
+          tabBarIconStyle: {
+            margin: 0,
+            padding: 0,
+          },
+          tabBarActiveTintColor: "#3B82F6",
+          tabBarInactiveTintColor: "rgba(255,255,255,0.35)",
           tabBarIcon: ({ focused, size }) => {
             const pair = iconMap[route.name] ?? {
               active: "ellipse",
