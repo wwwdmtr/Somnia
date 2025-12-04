@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { Ionicons } from "@expo/vector-icons";
+
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useFonts } from "expo-font";
 import React from "react";
-import { Text } from "react-native";
+import { Text, View, Image, ImageSourcePropType } from "react-native";
 
 import ScreenName from "../constants/ScreenName";
 import TabName from "../constants/TabName";
@@ -25,8 +25,6 @@ import { FeedStackParamList } from "./FeedStackParamList";
 import { ProfileStackParamList } from "./ProfileStackParamList";
 import { RootTabParamList } from "./RootTabParamList";
 import { UserDreamStackParamList } from "./UserDreamStackParamList";
-
-import type { ComponentProps } from "react";
 
 const FeedStack = createNativeStackNavigator<FeedStackParamList>();
 function FeedStackNav() {
@@ -85,26 +83,31 @@ function ProfileStackNav() {
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
+type IconPairs = {
+  active: ImageSourcePropType;
+  inactive: ImageSourcePropType;
+};
+
+const iconMap: Record<string, IconPairs> = {
+  [TabName.FeedTab]: {
+    active: require("../assets/Icons/tabIcons/feed-active.png"),
+    inactive: require("../assets/Icons/tabIcons/feed-inactive.png"),
+  },
+  [TabName.UserDreamTab]: {
+    active: require("../assets/Icons/tabIcons/add-dream-button.png"),
+    inactive: require("../assets/Icons/tabIcons/add-dream-button.png"),
+  },
+  [TabName.ProfileTab]: {
+    active: require("../assets/Icons/tabIcons/profile-active.png"),
+    inactive: require("../assets/Icons/tabIcons/profile-inactive.png"),
+  },
+};
+
 export function AppNav() {
   return (
     <Tab.Navigator
       initialRouteName={TabName.FeedTab}
       screenOptions={({ route }) => {
-        type IoniconName = ComponentProps<typeof Ionicons>["name"];
-        const iconMap: Record<
-          string,
-          { active: IoniconName; inactive: IoniconName }
-        > = {
-          [TabName.FeedTab]: { active: "home", inactive: "home-outline" },
-          [TabName.UserDreamTab]: {
-            active: "clipboard",
-            inactive: "clipboard-outline",
-          },
-          [TabName.ProfileTab]: {
-            active: "person",
-            inactive: "person-outline",
-          },
-        };
         return {
           headerShown: false,
           tabBarShowLabel: false,
@@ -115,7 +118,7 @@ export function AppNav() {
             bottom: 34,
             height: 60,
             borderRadius: 999,
-            backgroundColor: "#CCC",
+            backgroundColor: "#070F32",
             borderTopWidth: 0,
             elevation: 0, // Android
             shadowOpacity: 0, // iOS
@@ -131,15 +134,40 @@ export function AppNav() {
             margin: 0,
             padding: 0,
           },
-          tabBarActiveTintColor: "#3B82F6",
-          tabBarInactiveTintColor: "rgba(255,255,255,0.35)",
           tabBarIcon: ({ focused, size }) => {
-            const pair = iconMap[route.name] ?? {
-              active: "ellipse",
-              inactive: "ellipse-outline",
-            };
-            const name = focused ? pair.active : pair.inactive;
-            return <Ionicons name={name} size={size} />;
+            const pair = iconMap[route.name];
+            const source = focused ? pair.active : pair.inactive;
+            const isCenter = route.name === TabName.UserDreamTab;
+
+            if (isCenter) {
+              return (
+                <View
+                  // eslint-disable-next-line react-native/no-inline-styles
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 32,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Image
+                    source={source}
+                    // eslint-disable-next-line react-native/no-inline-styles
+                    style={{ width: 44, height: 44 }}
+                    resizeMode="contain"
+                  />
+                </View>
+              );
+            }
+
+            return (
+              <Image
+                source={source}
+                style={{ width: size, height: size }}
+                resizeMode="contain"
+              />
+            );
           },
         };
       }}
