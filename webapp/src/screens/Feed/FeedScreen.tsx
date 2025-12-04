@@ -1,17 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { format } from "date-fns/format";
+import { format } from "date-fns";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
   StyleSheet,
   Text,
   View,
-  ScrollView,
   TouchableOpacity,
   ImageBackground,
   Image,
   RefreshControl,
+  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -46,21 +46,123 @@ export const AllDreamsScreen = () => {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <View style={styles.centered}>
         <Text>Loading...</Text>
         <StatusBar style="auto" />
       </View>
     );
   }
 
-  if (error) {
+  if (error || !data) {
     return (
-      <View style={styles.container}>
-        <Text>Error: {error.message}</Text>
+      <View style={styles.centered}>
+        <Text>Error: {error?.message ?? "Unknown error"}</Text>
         <StatusBar style="auto" />
       </View>
     );
   }
+
+  const dreams = activeTab === "feed" ? data.dreams : [];
+
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <TouchableOpacity
+        onPress={() => setActiveTab("feed")}
+        style={[
+          styles.segmentLeft,
+          activeTab === "feed" && styles.segmentActive,
+        ]}
+      >
+        <Text style={typography.caption_white85}>Лента</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => setActiveTab("subs")}
+        style={[
+          styles.segmentRight,
+          activeTab === "subs" && styles.segmentActive,
+        ]}
+      >
+        <Text style={typography.caption_white85}>Подписки</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderItem = ({ item: dream }: { item: (typeof dreams)[number] }) => (
+    <View style={styles.card}>
+      <View style={styles.postHeader}>
+        <Image
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          source={require("../../assets/defaults/user-avatar.png")}
+          style={styles.cardImage}
+        />
+        <View style={styles.postHeaderInfo}>
+          <Text style={typography.body_white85}>@{dream.author.nickname}</Text>
+          <Text style={typography.additionalInfo_white25}>
+            {format(new Date(dream.createdAt), "dd.MM.yyyy")}
+          </Text>
+        </View>
+      </View>
+
+      <Text style={typography.h3_white_85}>{dream.title}</Text>
+
+      <Text style={typography.body_white100} numberOfLines={3}>
+        {dream.text}...
+      </Text>
+
+      <TouchableOpacity
+        onPress={() => handleOpenDream(dream.id)}
+        style={styles.read_more}
+      >
+        <Text style={typography.caption_link}>Читать далее...</Text>
+      </TouchableOpacity>
+
+      <View style={styles.actions}>
+        <View style={styles.action}>
+          <TouchableOpacity onPress={() => setLike(!isLikeSet)}>
+            {isLikeSet ? (
+              <Ionicons name="star" size={20} color="red" />
+            ) : (
+              <Ionicons
+                name="star-outline"
+                size={20}
+                color="rgba(255,255,255, 0.45)"
+              />
+            )}
+          </TouchableOpacity>
+          <Text style={typography.caption_white85}>нравится</Text>
+        </View>
+
+        <View style={styles.action}>
+          <Image
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            source={require("../../assets/Icons/Activity/comments.png")}
+            style={styles.action_img}
+          />
+          <Text style={typography.caption_white85}>комментариев</Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderEmpty = () => {
+    if (activeTab === "subs") {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={typography.h2_white100}>
+            Модуль находится в разработке ✨
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={typography.body_white85}>
+          В ленте пока нет снов. Будь первым, кто поделится 💫
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <ImageBackground
@@ -68,11 +170,16 @@ export const AllDreamsScreen = () => {
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.BackgroundImage}
     >
-      <SafeAreaView style={styles.container}>
-        <ScrollView
+      <SafeAreaView style={styles.safeArea}>
+        <FlatList
+          data={dreams}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          ListHeaderComponent={renderHeader}
+          ListEmptyComponent={renderEmpty}
+          style={styles.list}
+          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          // eslint-disable-next-line react-native/no-inline-styles
-          contentContainerStyle={{ paddingBottom: 60 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -80,89 +187,7 @@ export const AllDreamsScreen = () => {
               tintColor="#ffffff"
             />
           }
-        >
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => setActiveTab("feed")}
-              style={[
-                styles.segmentLeft,
-                activeTab === "feed" && styles.segmentActive,
-              ]}
-            >
-              <Text style={typography.caption_white85}>Лента</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setActiveTab("subs")}
-              style={[
-                styles.segmentRight,
-                activeTab === "subs" && styles.segmentActive,
-              ]}
-            >
-              <Text style={typography.caption_white85}>Подписки</Text>
-            </TouchableOpacity>
-          </View>
-          {activeTab === "feed" ? (
-            data.dreams.map((dream) => (
-              <View key={dream.id} style={styles.card}>
-                <View style={styles.postHeader}>
-                  <Image
-                    // eslint-disable-next-line @typescript-eslint/no-require-imports
-                    source={require("../../assets/defaults/user-avatar.png")}
-                    style={styles.cardImage}
-                  />
-                  <View style={styles.postHeaderInfo}>
-                    <Text style={typography.body_white85}>
-                      @{dream.author.nickname}
-                    </Text>
-                    <Text style={typography.additionalInfo_white25}>
-                      {format(new Date(dream.createdAt), "dd.MM.yyyy")}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={typography.h3_white_85}>{dream.title}</Text>
-                <Text style={typography.body_white100} numberOfLines={3}>
-                  {dream.text}...
-                </Text>
-                <TouchableOpacity
-                  onPress={() => handleOpenDream(dream.id)}
-                  style={styles.read_more}
-                >
-                  <Text style={typography.caption_link}>Читать далее...</Text>
-                </TouchableOpacity>
-                <View style={styles.actions}>
-                  <View style={styles.action}>
-                    <TouchableOpacity onPress={() => setLike(!isLikeSet)}>
-                      {isLikeSet ? (
-                        <Ionicons name="star" size={20} color="red" />
-                      ) : (
-                        <Ionicons
-                          name="star-outline"
-                          size={20}
-                          color="rgba(255,255,255, 0.45)"
-                        />
-                      )}
-                    </TouchableOpacity>
-                    <Text style={typography.caption_white85}>нравится</Text>
-                  </View>
-                  <View style={styles.action}>
-                    <Image
-                      // eslint-disable-next-line @typescript-eslint/no-require-imports
-                      source={require("../../assets/Icons/Activity/comments.png")}
-                      style={styles.action_img}
-                    />
-                    <Text style={typography.caption_white85}>комментариев</Text>
-                  </View>
-                </View>
-              </View>
-            ))
-          ) : (
-            <View style={styles.container}>
-              <Text style={typography.h2_white100}>
-                Модуль находится в разработке ✨
-              </Text>
-            </View>
-          )}
-        </ScrollView>
+        />
       </SafeAreaView>
     </ImageBackground>
   );
@@ -172,6 +197,8 @@ const styles = StyleSheet.create({
   BackgroundImage: {
     flex: 1,
   },
+
+  // ACTIONS
   action: {
     flexDirection: "row",
     gap: 7,
@@ -187,6 +214,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
     width: 277,
   },
+
   card: {
     backgroundColor: COLORS.postsCardBackground,
     borderRadius: 32,
@@ -197,10 +225,18 @@ const styles = StyleSheet.create({
     height: 48,
     width: 48,
   },
-  container: {
+
+  centered: {
+    alignItems: "center",
     flex: 1,
-    padding: 14,
+    justifyContent: "center",
   },
+
+  emptyContainer: {
+    alignItems: "center",
+    marginTop: 32,
+  },
+
   header: {
     alignItems: "center",
     backgroundColor: COLORS.navBarBackground,
@@ -209,7 +245,17 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: "space-between",
     marginBottom: 20,
+    paddingHorizontal: 8,
   },
+  list: {
+    flex: 1,
+  },
+
+  listContent: {
+    padding: 14,
+    paddingBottom: 70,
+  },
+
   postHeader: {
     alignItems: "center",
     flexDirection: "row",
@@ -226,16 +272,20 @@ const styles = StyleSheet.create({
   read_more: {
     marginTop: 8,
   },
+
+  safeArea: {
+    flex: 1,
+    marginBottom: 20,
+  },
   segmentActive: {
     backgroundColor: COLORS.buttonBackground,
   },
   segmentLeft: {
     alignItems: "center",
-
     borderRadius: 99,
     height: 32,
     justifyContent: "center",
-    marginLeft: 40.5,
+    marginLeft: 32,
     width: 120,
   },
   segmentRight: {
@@ -243,7 +293,7 @@ const styles = StyleSheet.create({
     borderRadius: 99,
     height: 32,
     justifyContent: "center",
-    marginRight: 40.5,
+    marginRight: 32,
     width: 120,
   },
 });
