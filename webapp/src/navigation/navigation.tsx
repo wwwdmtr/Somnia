@@ -113,8 +113,8 @@ export function AppNav() {
           tabBarShowLabel: false,
           tabBarStyle: {
             position: "absolute",
-            marginHorizontal: 16,
-            bottom: 34,
+            marginHorizontal: 13,
+            bottom: 28,
             height: 60,
 
             borderRadius: 999,

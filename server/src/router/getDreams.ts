@@ -6,6 +6,8 @@ export const getDreamsTrpcRoute = trpc.procedure.query(async ({ ctx }) => {
       id: true,
       title: true,
       author: { select: { nickname: true } },
+      createdAt: true,
+      text: true,
     },
     orderBy: {
       createdAt: "desc",

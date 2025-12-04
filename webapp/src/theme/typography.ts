@@ -16,10 +16,18 @@ export const COLORS = {
   inputErrorBorderColor: "RED",
   linkColor: "rgba(22, 104, 220, 1)",
   navBarBackground: "rgba(7, 15, 50, 1)",
+  postsCardBackground: "rgba(7, 15, 50, 0.6)",
 };
 
 export const typography = StyleSheet.create({
-  body: {
+  additionalInfo_white25: {
+    color: COLORS.white25,
+    fontFamily: "SFProText-Regular",
+    fontSize: 12,
+    lineHeight: 20,
+  },
+  body_white100: {
+    color: COLORS.white100,
     fontFamily: "SFProText-Regular",
     fontSize: 16,
     lineHeight: 24,
@@ -37,6 +45,12 @@ export const typography = StyleSheet.create({
     lineHeight: 24,
   },
   caption_link: {
+    color: COLORS.linkColor,
+    fontFamily: "SFProText-Regular",
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  caption_link_underline: {
     color: COLORS.linkColor,
     fontFamily: "SFProText-Regular",
     fontSize: 14,
@@ -60,6 +74,12 @@ export const typography = StyleSheet.create({
     fontFamily: "SFProText-Semibold",
     fontSize: 30,
     lineHeight: 38,
+  },
+  h3_white_85: {
+    color: COLORS.white85,
+    fontFamily: "SFProText-Semibold",
+    fontSize: 20,
+    lineHeight: 28,
   },
   subtitle: {
     fontFamily: "SFProText-Medium",

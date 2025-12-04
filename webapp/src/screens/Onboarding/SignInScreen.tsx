@@ -40,7 +40,9 @@ export const SignInScreen = () => {
         <View style={styles.bottomRow}>
           <Text style={typography.caption_white85}>Еще нет аккаунта?</Text>
           <Pressable onPress={() => navigation.navigate(ScreenName.SignUp)}>
-            <Text style={typography.caption_link}>Зарегистрироваться</Text>
+            <Text style={typography.caption_link_underline}>
+              Зарегистрироваться
+            </Text>
           </Pressable>
         </View>
       </SafeAreaView>
