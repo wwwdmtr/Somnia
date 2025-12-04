@@ -113,10 +113,10 @@ export function AppNav() {
           tabBarShowLabel: false,
           tabBarStyle: {
             position: "absolute",
-            left: 16,
-            right: 16,
+            marginHorizontal: 16,
             bottom: 34,
             height: 60,
+
             borderRadius: 999,
             backgroundColor: "#070F32",
             borderTopWidth: 0,
@@ -124,6 +124,8 @@ export function AppNav() {
             shadowOpacity: 0, // iOS
             paddingTop: 0,
             paddingBottom: 0,
+            paddingLeft: 0,
+            paddingRight: 0,
           },
           tabBarItemStyle: {
             flex: 1,

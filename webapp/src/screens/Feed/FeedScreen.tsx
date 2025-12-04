@@ -1,5 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
+import { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -11,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { trpc } from "../../lib/trpc";
+import { typography, COLORS } from "../../theme/typography";
 
 import type { FeedStackParamList } from "../../navigation/FeedStackParamList";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -19,6 +21,7 @@ type NavigationProp = NativeStackNavigationProp<FeedStackParamList, "Feed">;
 
 export const AllDreamsScreen = () => {
   const { data, isLoading, error } = trpc.getDreams.useQuery();
+  const [activeTab, setActiveTab] = useState<"feed" | "subs">("feed");
 
   const navigation = useNavigation<NavigationProp>();
 
@@ -51,24 +54,52 @@ export const AllDreamsScreen = () => {
       style={styles.BackgroundImage}
     >
       <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => setActiveTab("feed")}
+            style={[
+              styles.segmentLeft,
+              activeTab === "feed" && styles.segmentActive,
+            ]}
+          >
+            <Text style={typography.caption_white85}>Лента</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setActiveTab("subs")}
+            style={[
+              styles.segmentRight,
+              activeTab === "subs" && styles.segmentActive,
+            ]}
+          >
+            <Text style={typography.caption_white85}>Подписки</Text>
+          </TouchableOpacity>
+        </View>
         <ScrollView style={styles.container}>
-          <Text style={styles.title}>All Dreams</Text>
-          {data.dreams.map((dream) => (
-            <View key={dream.id} style={styles.card}>
-              <Text style={styles.dreamTitle}>{dream.title}</Text>
-              <Text style={styles.description}>{dream.author.nickname}</Text>
-              <TouchableOpacity onPress={() => handleOpenDream(dream.id)}>
-                <Text>read more...</Text>
-              </TouchableOpacity>
+          {activeTab === "feed" ? (
+            // 👉 здесь рендерим ЛЕНТУ
+            data.dreams.map((dream) => (
+              <View key={dream.id} style={styles.card}>
+                <Text style={styles.dreamTitle}>{dream.title}</Text>
+                <Text style={styles.description}>{dream.author.nickname}</Text>
+                <TouchableOpacity onPress={() => handleOpenDream(dream.id)}>
+                  <Text>read more...</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          ) : (
+            <View style={styles.container}>
+              <Text style={typography.h2_white100}>
+                Модуль находится в разработке ✨
+              </Text>
             </View>
-          ))}
+          )}
         </ScrollView>
       </SafeAreaView>
     </ImageBackground>
   );
 };
 
-const COLORS = {
+const COLORS_mock = {
   background: "#fff",
   cardBackground: "#f7f7f7",
   descriptionColor: "#555",
@@ -89,7 +120,7 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   description: {
-    color: COLORS.descriptionColor,
+    color: COLORS_mock.descriptionColor,
     fontSize: 16,
   },
   dreamTitle: {
@@ -97,10 +128,33 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginBottom: 4,
   },
+  header: {
+    alignItems: "center",
+    backgroundColor: COLORS.navBarBackground,
+    borderRadius: 99,
+    flexDirection: "row",
+    height: 44,
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  segmentActive: {
+    backgroundColor: COLORS.buttonBackground,
+  },
+  segmentLeft: {
+    alignItems: "center",
 
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 16,
+    borderRadius: 99,
+    height: 32,
+    justifyContent: "center",
+    marginLeft: 40.5,
+    width: 120,
+  },
+  segmentRight: {
+    alignItems: "center",
+    borderRadius: 99,
+    height: 32,
+    justifyContent: "center",
+    marginRight: 40.5,
+    width: 120,
   },
 });

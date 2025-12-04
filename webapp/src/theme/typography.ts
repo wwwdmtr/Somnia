@@ -15,6 +15,7 @@ export const COLORS = {
   inputBorderColor: "rgba(255, 255, 255, 0.25)",
   inputErrorBorderColor: "RED",
   linkColor: "rgba(22, 104, 220, 1)",
+  navBarBackground: "rgba(7, 15, 50, 1)",
 };
 
 export const typography = StyleSheet.create({
