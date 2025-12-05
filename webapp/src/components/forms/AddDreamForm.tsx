@@ -82,7 +82,6 @@ const styles = {
     gap: 14,
     marginTop: 28,
     flex: 1,
-    // добавляем нижний паддинг, чтобы поля не перекрывались плавающей кнопкой
     paddingBottom: 190,
   },
   input: {
@@ -90,6 +89,7 @@ const styles = {
     borderRadius: 32,
     backgroundColor: COLORS.postsCardBackground,
     height: 60,
+    color: COLORS.white100,
   },
   textArea: {
     backgroundColor: COLORS.postsCardBackground,
@@ -97,6 +97,7 @@ const styles = {
     borderRadius: 32,
     height: 200,
     textAlignVertical: "top" as const,
+    color: COLORS.white100,
   },
   inputError: {
     borderColor: "white",

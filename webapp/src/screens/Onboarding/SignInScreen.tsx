@@ -69,6 +69,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   form: {
+    flex: 1,
     marginTop: 40,
   },
   header: {

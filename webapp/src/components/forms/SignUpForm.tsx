@@ -59,7 +59,7 @@ export const SignUpForm = () => {
   });
 
   return (
-    <View>
+    <View style={styles.container}>
       <Text style={typography.caption_white85}>Введите Имя пользователя</Text>
       <TextInput
         placeholder="Имя пользователя"
@@ -176,6 +176,10 @@ export const SignUpForm = () => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingBottom: 120,
+  },
   errorText: {
     color: COLORS.white100,
     fontSize: 12,
@@ -210,8 +214,10 @@ const styles = StyleSheet.create({
     paddingRight: 48,
   },
   startButton: {
+    bottom: 1,
     height: 40,
-    marginTop: 212,
-    width: "auto",
+    left: 0,
+    position: "absolute" as const,
+    right: 0,
   },
 });
