@@ -1,3 +1,4 @@
+import { useNavigation } from "@react-navigation/native";
 import { zCreateDreamTrpcInput } from "@somnia/server/src/router/createDream/input";
 import { useFormik } from "formik";
 import React from "react";
@@ -9,10 +10,19 @@ import { trpc } from "../../lib/trpc";
 import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
 
+import type { AddDreamStackParamList } from "../../navigation/AddDreamStackParamList";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
 type DreamFormValues = z.infer<typeof zCreateDreamTrpcInput>;
+
+type AddDreamNavProp = NativeStackNavigationProp<
+  AddDreamStackParamList,
+  "AddDream"
+>;
 
 export const AddDreamForm = () => {
   const utils = trpc.useUtils();
+  const navigation = useNavigation<AddDreamNavProp>();
   const createDream = trpc.createDream.useMutation({
     onSuccess: () => {
       utils.getDreams.invalidate();
@@ -28,6 +38,7 @@ export const AddDreamForm = () => {
     onSubmit: async (values, { resetForm }) => {
       await createDream.mutateAsync(values);
       resetForm();
+      navigation.goBack();
     },
   });
 
