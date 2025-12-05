@@ -32,6 +32,12 @@ export const typography = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
   },
+  body_white25: {
+    color: COLORS.white25,
+    fontFamily: "SFProText-Regular",
+    fontSize: 16,
+    lineHeight: 24,
+  },
   body_white85: {
     color: COLORS.white85,
     fontFamily: "SFProText-Regular",

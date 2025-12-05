@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import {
+  getFocusedRouteNameFromRoute,
+  RouteProp,
+} from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useFonts } from "expo-font";
 import React from "react";
@@ -26,6 +30,8 @@ import { ProfileStackParamList } from "./ProfileStackParamList";
 import { RootTabParamList } from "./RootTabParamList";
 import { UserDreamStackParamList } from "./UserDreamStackParamList";
 
+import type { BottomTabNavigationOptions } from "@react-navigation/bottom-tabs";
+
 const FeedStack = createNativeStackNavigator<FeedStackParamList>();
 function FeedStackNav() {
   return (
@@ -35,7 +41,11 @@ function FeedStackNav() {
         component={AllDreamsScreen}
         options={{ headerShown: false }}
       />
-      <FeedStack.Screen name={ScreenName.Dream} component={DreamScreen} />
+      <FeedStack.Screen
+        name={ScreenName.Dream}
+        component={DreamScreen}
+        options={{ headerShown: false }}
+      />
       <FeedStack.Screen
         name={ScreenName.EditDream}
         component={UpdateDreamScreen}
@@ -103,6 +113,51 @@ const iconMap: Record<string, IconPairs> = {
   },
 };
 
+export const BASE_TAB_BAR_STYLE = {
+  position: "absolute",
+  marginHorizontal: 13,
+  bottom: 28,
+  height: 60,
+
+  borderRadius: 999,
+  backgroundColor: "#070F32",
+  borderTopWidth: 0,
+  elevation: 0, // Android
+  shadowOpacity: 0, // iOS
+  paddingTop: 0,
+  paddingBottom: 0,
+  paddingLeft: 0,
+  paddingRight: 0,
+} satisfies BottomTabNavigationOptions["tabBarStyle"];
+
+const HIDE_TABBAR_SCREENS: ScreenName[] = [
+  ScreenName.Dream,
+  ScreenName.EditDream,
+];
+
+function getTabBarStyleForRoute(
+  route: RouteProp<RootTabParamList, keyof RootTabParamList>,
+): BottomTabNavigationOptions["tabBarStyle"] {
+  const focusedRouteName = getFocusedRouteNameFromRoute(route) ?? route.name;
+
+  const shouldHide = HIDE_TABBAR_SCREENS.includes(
+    focusedRouteName as ScreenName,
+  );
+
+  if (shouldHide) {
+    return {
+      ...BASE_TAB_BAR_STYLE,
+      // визуально убираем таббар, но не размонтируем
+      opacity: 0,
+      transform: [{ translateY: 80 }],
+      // можно добавить, чтобы не ловил клики
+      pointerEvents: "none",
+    };
+  }
+
+  return BASE_TAB_BAR_STYLE;
+}
+
 export function AppNav() {
   return (
     <Tab.Navigator
@@ -111,22 +166,7 @@ export function AppNav() {
         return {
           headerShown: false,
           tabBarShowLabel: false,
-          tabBarStyle: {
-            position: "absolute",
-            marginHorizontal: 13,
-            bottom: 28,
-            height: 60,
-
-            borderRadius: 999,
-            backgroundColor: "#070F32",
-            borderTopWidth: 0,
-            elevation: 0, // Android
-            shadowOpacity: 0, // iOS
-            paddingTop: 0,
-            paddingBottom: 0,
-            paddingLeft: 0,
-            paddingRight: 0,
-          },
+          tabBarStyle: getTabBarStyleForRoute(route),
           tabBarItemStyle: {
             flex: 1,
             justifyContent: "center",

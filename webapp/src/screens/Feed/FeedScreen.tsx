@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { format } from "date-fns";
@@ -91,7 +92,6 @@ export const AllDreamsScreen = () => {
     <View style={styles.card}>
       <View style={styles.postHeader}>
         <Image
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
           source={require("../../assets/defaults/user-avatar.png")}
           style={styles.cardImage}
         />
@@ -103,11 +103,13 @@ export const AllDreamsScreen = () => {
         </View>
       </View>
 
-      <Text style={typography.h3_white_85}>{dream.title}</Text>
+      <View style={styles.dream_info}>
+        <Text style={typography.h3_white_85}>{dream.title}</Text>
 
-      <Text style={typography.body_white100} numberOfLines={3}>
-        {dream.text}...
-      </Text>
+        <Text style={typography.body_white100} numberOfLines={3}>
+          {dream.text}...
+        </Text>
+      </View>
 
       <TouchableOpacity
         onPress={() => handleOpenDream(dream.id)}
@@ -134,7 +136,6 @@ export const AllDreamsScreen = () => {
 
         <View style={styles.action}>
           <Image
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
             source={require("../../assets/Icons/Activity/comments.png")}
             style={styles.action_img}
           />
@@ -166,7 +167,6 @@ export const AllDreamsScreen = () => {
 
   return (
     <ImageBackground
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.BackgroundImage}
     >
@@ -189,6 +189,19 @@ export const AllDreamsScreen = () => {
           }
         />
       </SafeAreaView>
+      <View pointerEvents="none" style={styles.tabBarStub}>
+        <Image
+          source={require("../../assets/Icons/tabIcons/feed-active.png")}
+          style={styles.tabBarStubIcon}
+        ></Image>
+        <Image
+          source={require("../../assets/Icons/tabIcons/add-dream-button.png")}
+        ></Image>
+        <Image
+          source={require("../../assets/Icons/tabIcons/profile-inactive.png")}
+          style={styles.tabBarStubIcon}
+        ></Image>
+      </View>
     </ImageBackground>
   );
 };
@@ -231,7 +244,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
   },
-
+  dream_info: {
+    gap: 12,
+  },
   emptyContainer: {
     alignItems: "center",
     marginTop: 32,
@@ -295,5 +310,29 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 32,
     width: 120,
+  },
+  tabBarStub: {
+    alignItems: "center",
+    backgroundColor: COLORS.navBarBackground,
+    borderRadius: 999,
+    borderTopWidth: 0,
+    bottom: 28,
+    elevation: 0,
+    flexDirection: "row",
+    height: 60,
+    justifyContent: "space-between",
+    left: 13,
+    paddingBottom: 0,
+    paddingLeft: 0,
+    paddingRight: 0,
+    paddingTop: 0,
+    position: "absolute",
+    right: 13,
+    shadowOpacity: 0,
+  },
+  tabBarStubIcon: {
+    height: 24,
+    marginHorizontal: 51,
+    width: 24,
   },
 });
