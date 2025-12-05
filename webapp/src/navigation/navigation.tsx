@@ -13,7 +13,7 @@ import { Text, View, Image, ImageSourcePropType } from "react-native";
 import ScreenName from "../constants/ScreenName";
 import TabName from "../constants/TabName";
 import { useAppContext } from "../lib/ctx";
-import { UserDreamScreen } from "../screens/AddDream/AddYourDream";
+import { AddDreamScreen } from "../screens/AddDream/AddYourDream";
 import { DreamScreen } from "../screens/Dream/DreamScreen";
 import { UpdateDreamScreen } from "../screens/Dream/UpdateDreamModalScreen";
 import { AllDreamsScreen } from "../screens/Feed/FeedScreen";
@@ -24,11 +24,11 @@ import { ProfileScreen } from "../screens/Profile/ProfileScreen";
 import { SignOutScreen } from "../screens/Profile/SignOutScreen";
 import { UpdateProfileScreen } from "../screens/Profile/UpdateProfileScreen";
 
+import { AddDreamStackParamList } from "./AddDreamStackParamList";
 import { AuthStackParamList } from "./AuthStackParamList";
 import { FeedStackParamList } from "./FeedStackParamList";
 import { ProfileStackParamList } from "./ProfileStackParamList";
 import { RootTabParamList } from "./RootTabParamList";
-import { UserDreamStackParamList } from "./UserDreamStackParamList";
 
 import type { BottomTabNavigationOptions } from "@react-navigation/bottom-tabs";
 
@@ -58,16 +58,16 @@ function FeedStackNav() {
   );
 }
 
-const UserDreamStack = createNativeStackNavigator<UserDreamStackParamList>();
-function UserDreamStackNav() {
+const AddDreamStack = createNativeStackNavigator<AddDreamStackParamList>();
+function AddDreamStackNav() {
   return (
-    <UserDreamStack.Navigator>
-      <UserDreamStack.Screen
-        name={ScreenName.UserDreams}
-        component={UserDreamScreen}
+    <AddDreamStack.Navigator>
+      <AddDreamStack.Screen
+        name={ScreenName.AddDream}
+        component={AddDreamScreen}
+        options={{ headerShown: false }}
       />
-      <UserDreamStack.Screen name={ScreenName.Dream} component={DreamScreen} />
-    </UserDreamStack.Navigator>
+    </AddDreamStack.Navigator>
   );
 }
 
@@ -103,7 +103,7 @@ const iconMap: Record<string, IconPairs> = {
     active: require("../assets/Icons/tabIcons/feed-active.png"),
     inactive: require("../assets/Icons/tabIcons/feed-inactive.png"),
   },
-  [TabName.UserDreamTab]: {
+  [TabName.AddDreamTab]: {
     active: require("../assets/Icons/tabIcons/add-dream-button.png"),
     inactive: require("../assets/Icons/tabIcons/add-dream-button.png"),
   },
@@ -130,15 +130,21 @@ export const BASE_TAB_BAR_STYLE = {
   paddingRight: 0,
 } satisfies BottomTabNavigationOptions["tabBarStyle"];
 
-const HIDE_TABBAR_SCREENS: ScreenName[] = [
+const HIDE_TABBAR_SCREENS: Array<ScreenName | TabName> = [
   ScreenName.Dream,
   ScreenName.EditDream,
+  ScreenName.AddDream,
+  TabName.AddDreamTab,
 ];
 
 function getTabBarStyleForRoute(
   route: RouteProp<RootTabParamList, keyof RootTabParamList>,
 ): BottomTabNavigationOptions["tabBarStyle"] {
-  const focusedRouteName = getFocusedRouteNameFromRoute(route) ?? route.name;
+  const focusedRouteName =
+    getFocusedRouteNameFromRoute(route) ??
+    // when stack не инициализировался, getFocusedRouteNameFromRoute вернет undefined.
+    // для AddDream берем имя таба, чтобы скрыть кнопку.
+    route.name;
 
   const shouldHide = HIDE_TABBAR_SCREENS.includes(
     focusedRouteName as ScreenName,
@@ -179,7 +185,7 @@ export function AppNav() {
           tabBarIcon: ({ focused, size }) => {
             const pair = iconMap[route.name];
             const source = focused ? pair.active : pair.inactive;
-            const isCenter = route.name === TabName.UserDreamTab;
+            const isCenter = route.name === TabName.AddDreamTab;
 
             if (isCenter) {
               return (
@@ -215,7 +221,7 @@ export function AppNav() {
       }}
     >
       <Tab.Screen name={TabName.FeedTab} component={FeedStackNav} />
-      <Tab.Screen name={TabName.UserDreamTab} component={UserDreamStackNav} />
+      <Tab.Screen name={TabName.AddDreamTab} component={AddDreamStackNav} />
       <Tab.Screen name={TabName.ProfileTab} component={ProfileStackNav} />
     </Tab.Navigator>
   );

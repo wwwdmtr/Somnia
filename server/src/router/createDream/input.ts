@@ -5,10 +5,7 @@ export const zCreateDreamTrpcInput = z.object({
     .string({ message: "Title is required" })
     .trim()
     .min(1, "Title is required"),
-  description: z
-    .string({ message: "Description is required" })
-    .trim()
-    .min(1, "Description is required"),
+  description: z.string({ message: "Description is required" }).trim(),
   text: z
     .string({ message: "Text is required" })
     .trim()

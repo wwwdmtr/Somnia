@@ -1,19 +1,32 @@
-//import { RouteProp } from '@react-navigation/native';
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+/* eslint-disable @typescript-eslint/no-require-imports */
+import { useNavigation } from "@react-navigation/native";
+import { StatusBar } from "expo-status-bar";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ImageBackground,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AddDreamForm } from '../../components/forms/AddDreamForm';
-import { trpc } from '../../lib/trpc';
+import { AddDreamForm } from "../../components/forms/AddDreamForm";
+import { trpc } from "../../lib/trpc";
+import { typography, COLORS } from "../../theme/typography";
 
-//import type { UserDreamStackParamList } from '../navigation/UserDreamStackParamList';
+import type { AddDreamStackParamList } from "../../navigation/AddDreamStackParamList";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-//type DreamScreenRouteProp = RouteProp<UserDreamStackParamList, 'UserDreams'>;
+type AddDreamNavProp = NativeStackNavigationProp<
+  AddDreamStackParamList,
+  "AddDream"
+>;
 
-export const UserDreamScreen = () => {
+export const AddDreamScreen = () => {
   const { isLoading, error } = trpc.getDreams.useQuery();
 
-  //  const navigation = useNavigation<DreamScreenRouteProp>();
+  const navigation = useNavigation<AddDreamNavProp>();
 
   if (isLoading) {
     return (
@@ -34,30 +47,64 @@ export const UserDreamScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.description}>Add your dream</Text>
-      <AddDreamForm />
-      <StatusBar style="auto" />
-    </SafeAreaView>
+    <ImageBackground
+      source={require("../../assets/backgrounds/application-bg.png")}
+      style={styles.BackgroundImage}
+    >
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.goBackWrapper}
+          >
+            <Image
+              source={require("../../assets/Icons/navIcons/goBack.png")}
+            ></Image>
+            <Text style={typography.body_white85}>Назад</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.add_dream_header}>
+          <Text style={typography.h2_white85}>Новый сон</Text>
+          <Image
+            source={require("../../assets/Icons/decorIcons/edit-outline.png")}
+          ></Image>
+        </View>
+
+        <AddDreamForm />
+        <StatusBar style="auto" />
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
 
-const COLORS = {
-  background: '#fff',
-  cardBackground: '#f7f7f7',
-  descriptionColor: '#555',
-};
-
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: COLORS.background,
+  BackgroundImage: {
     flex: 1,
-    marginTop: 24,
+  },
+  add_dream_header: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 20,
+    marginTop: 40,
+  },
+  container: {
+    flex: 1,
     padding: 14,
   },
-  description: {
-    color: COLORS.descriptionColor,
-    fontSize: 16,
-    margin: 12,
+
+  goBackWrapper: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  header: {
+    alignItems: "center",
+    backgroundColor: COLORS.navBarBackground,
+    borderRadius: 99,
+    flexDirection: "row",
+    height: 44,
+    justifyContent: "space-between",
+    marginBottom: 20,
+    paddingHorizontal: 16,
   },
 });

@@ -21,15 +21,15 @@ import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
 import { typography, COLORS } from "../../theme/typography";
 
+import type { AddDreamStackParamList } from "../../navigation/AddDreamStackParamList";
 import type { FeedStackParamList } from "../../navigation/FeedStackParamList";
-import type { UserDreamStackParamList } from "../../navigation/UserDreamStackParamList";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type DreamScreenRouteProp = RouteProp<
-  FeedStackParamList & UserDreamStackParamList,
+  FeedStackParamList & AddDreamStackParamList,
   ScreenName.Dream
 >;
-type DreamScreenStackParamList = FeedStackParamList & UserDreamStackParamList;
+type DreamScreenStackParamList = FeedStackParamList & AddDreamStackParamList;
 type DreamScreenNavProp = NativeStackNavigationProp<
   DreamScreenStackParamList,
   ScreenName.Dream

@@ -7,11 +7,11 @@ import { UpdateDreamForm } from "../../components/forms/UpdateDreamForm";
 import ScreenName from "../../constants/ScreenName";
 import { trpc } from "../../lib/trpc";
 
+import type { AddDreamStackParamList } from "../../navigation/AddDreamStackParamList";
 import type { FeedStackParamList } from "../../navigation/FeedStackParamList";
-import type { UserDreamStackParamList } from "../../navigation/UserDreamStackParamList";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-type RootStackParamList = FeedStackParamList & UserDreamStackParamList;
+type RootStackParamList = FeedStackParamList & AddDreamStackParamList;
 
 type EditDreamRouteProp = RouteProp<RootStackParamList, ScreenName.EditDream>;
 type EditDreamNavProp = NativeStackNavigationProp<

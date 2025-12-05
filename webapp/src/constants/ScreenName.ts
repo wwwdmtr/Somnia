@@ -1,7 +1,7 @@
 export enum ScreenName {
   Feed = "Feed",
   Dream = "Dream",
-  UserDreams = "UserDreams",
+  AddDream = "AddDream",
   Profile = "Profile",
   SignOut = "SignOut",
   EditDream = "EditDream",

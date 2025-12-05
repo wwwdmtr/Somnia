@@ -211,7 +211,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // ACTIONS
   action: {
     flexDirection: "row",
     gap: 7,

@@ -1,10 +1,10 @@
+import type { AddDreamStackParamList } from "./AddDreamStackParamList";
 import type { FeedStackParamList } from "./FeedStackParamList";
 import type { ProfileStackParamList } from "./ProfileStackParamList";
-import type { UserDreamStackParamList } from "./UserDreamStackParamList";
 import type { NavigatorScreenParams } from "@react-navigation/native";
 
 export type RootTabParamList = {
   FeedTab: NavigatorScreenParams<FeedStackParamList>;
-  UserDreamTab: NavigatorScreenParams<UserDreamStackParamList>;
+  AddDreamTab: NavigatorScreenParams<AddDreamStackParamList>;
   ProfileTab: NavigatorScreenParams<ProfileStackParamList>;
 };

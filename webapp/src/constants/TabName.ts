@@ -1,6 +1,6 @@
 enum TabName {
   FeedTab = "FeedTab",
-  UserDreamTab = "UserDreamTab",
+  AddDreamTab = "AddDreamTab",
   ProfileTab = "ProfileTab",
 }
 

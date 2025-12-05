@@ -81,6 +81,12 @@ export const typography = StyleSheet.create({
     fontSize: 30,
     lineHeight: 38,
   },
+  h2_white85: {
+    color: COLORS.white85,
+    fontFamily: "SFProText-Semibold",
+    fontSize: 30,
+    lineHeight: 38,
+  },
   h3_white_85: {
     color: COLORS.white85,
     fontFamily: "SFProText-Semibold",
