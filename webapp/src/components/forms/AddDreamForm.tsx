@@ -58,6 +58,10 @@ export const AddDreamForm = () => {
         ]}
       />
 
+      {formik.touched.title && formik.errors.title && (
+        <Text style={styles.errorText}>{formik.errors.title}</Text>
+      )}
+
       <TextInput
         placeholder="Опишите, что вам снилось ..."
         placeholderTextColor={COLORS.white25}
@@ -71,12 +75,9 @@ export const AddDreamForm = () => {
         ]}
       />
 
-      {(formik.touched.title && formik.errors.title && (
-        <Text style={styles.errorText}>{formik.errors.title}</Text>
-      )) ||
-        (formik.touched.text && formik.errors.text && (
-          <Text style={styles.errorText}>{formik.errors.text}</Text>
-        ))}
+      {formik.touched.text && formik.errors.text && (
+        <Text style={styles.errorText}>{formik.errors.text}</Text>
+      )}
 
       <AppButton
         title={formik.isSubmitting ? "Публикуем..." : "Опубликовать"}

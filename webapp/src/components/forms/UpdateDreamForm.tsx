@@ -1,11 +1,13 @@
 import { zUpdateDreamTrpcInput } from "@somnia/server/src/router/updateDream/input";
 import { useFormik } from "formik";
 import React from "react";
-import { View, TextInput, Button, Text } from "react-native";
+import { View, TextInput, Text } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
 import { trpc } from "../../lib/trpc";
+import { COLORS } from "../../theme/typography";
+import { AppButton } from "../ui/AppButton";
 
 import type { TrpcRouter } from "@somnia/server/src/router";
 import type { inferRouterOutputs } from "@trpc/server";
@@ -55,7 +57,8 @@ export const UpdateDreamForm = ({ dream, onSuccess }: UpdateDreamFormProps) => {
   return (
     <View style={styles.container}>
       <TextInput
-        placeholder="Dream title"
+        placeholder="Придумайте заголовок"
+        placeholderTextColor={COLORS.white25}
         value={formik.values.title}
         onChangeText={(text) => formik.setFieldValue("title", text)}
         onBlur={() => formik.setFieldTouched("title")}
@@ -71,23 +74,8 @@ export const UpdateDreamForm = ({ dream, onSuccess }: UpdateDreamFormProps) => {
       )}
 
       <TextInput
-        placeholder="Dream description"
-        value={formik.values.description}
-        onChangeText={(text) => formik.setFieldValue("description", text)}
-        onBlur={() => formik.setFieldTouched("description")}
-        style={[
-          styles.input,
-          formik.touched.description && formik.errors.description
-            ? styles.inputError
-            : null,
-        ]}
-      />
-      {formik.touched.description && formik.errors.description && (
-        <Text style={styles.errorText}>{formik.errors.description}</Text>
-      )}
-
-      <TextInput
-        placeholder="Dream text"
+        placeholder="Опишите, что вам снилось ..."
+        placeholderTextColor={COLORS.white25}
         value={formik.values.text}
         onChangeText={(text) => formik.setFieldValue("text", text)}
         onBlur={() => formik.setFieldTouched("text")}
@@ -101,9 +89,10 @@ export const UpdateDreamForm = ({ dream, onSuccess }: UpdateDreamFormProps) => {
         <Text style={styles.errorText}>{formik.errors.text}</Text>
       )}
 
-      <Button
-        title={formik.isSubmitting ? "Saving..." : "Save changes"}
+      <AppButton
+        title={formik.isSubmitting ? "Сохранение..." : "Сохранить изменения"}
         onPress={() => formik.handleSubmit()}
+        style={styles.startButton}
         disabled={formik.isSubmitting || !formik.isValid}
       />
     </View>
@@ -112,27 +101,37 @@ export const UpdateDreamForm = ({ dream, onSuccess }: UpdateDreamFormProps) => {
 
 const styles = {
   container: {
-    padding: 20,
-    gap: 10,
+    gap: 14,
+    flex: 1,
+    height: 680,
   },
   input: {
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 8,
+    padding: 20,
+    borderRadius: 32,
+    backgroundColor: COLORS.postsCardBackground,
+    height: 60,
+    color: COLORS.white100,
   },
   textArea: {
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 8,
+    backgroundColor: COLORS.postsCardBackground,
+    padding: 20,
+    borderRadius: 32,
     height: 200,
     textAlignVertical: "top" as const,
+    color: COLORS.white100,
   },
   inputError: {
-    borderColor: "red",
+    borderColor: "white",
   },
   errorText: {
-    color: "red",
+    color: "white",
     fontSize: 12,
     marginBottom: 4,
   },
+  startButton: {
+    height: 40,
+    position: "absolute",
+    width: "100%",
+    bottom: 40,
+  } as const,
 };

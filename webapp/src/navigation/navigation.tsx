@@ -51,7 +51,7 @@ function FeedStackNav() {
         component={UpdateDreamScreen}
         options={{
           presentation: "modal",
-          title: "Edit dream",
+          headerShown: false,
         }}
       />
     </FeedStack.Navigator>

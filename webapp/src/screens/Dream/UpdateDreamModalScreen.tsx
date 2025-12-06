@@ -1,11 +1,19 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // src/screens/EditDreamScreen.tsx
 
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
-import { ScrollView, StyleSheet, Text } from "react-native";
+import {
+  ImageBackground,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { UpdateDreamForm } from "../../components/forms/UpdateDreamForm";
 import ScreenName from "../../constants/ScreenName";
 import { trpc } from "../../lib/trpc";
+import { typography } from "../../theme/typography";
 
 import type { AddDreamStackParamList } from "../../navigation/AddDreamStackParamList";
 import type { FeedStackParamList } from "../../navigation/FeedStackParamList";
@@ -52,19 +60,34 @@ export const UpdateDreamScreen = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <UpdateDreamForm
-        dream={data.dream}
-        onSuccess={() => navigation.goBack()}
-      />
-    </ScrollView>
+    <ImageBackground
+      source={require("../../assets/backgrounds/application-bg.png")}
+      style={styles.BackgroundImage}
+    >
+      <ScrollView style={styles.container}>
+        <Text style={typography.h2_white100}>Изменение сна</Text>
+        <View style={styles.form_container}>
+          <UpdateDreamForm
+            dream={data.dream}
+            onSuccess={() => navigation.goBack()}
+          />
+        </View>
+      </ScrollView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  BackgroundImage: {
+    flex: 1,
+  },
   container: {
     flex: 1,
+    gap: 28,
     marginTop: 24,
     padding: 14,
+  },
+  form_container: {
+    marginTop: 40,
   },
 });

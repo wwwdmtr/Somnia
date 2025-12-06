@@ -2,15 +2,12 @@ import { z } from "zod";
 
 export const zSignUpTrpcInput = z.object({
   nickname: z
-    .string({ message: "Nickname is required" })
-    .min(3, "Nickname must be atleast 3 characters long")
+    .string({ message: "Никнейм не может быть пустым" })
+    .min(3, "Никнейм должен быть не менее 3 символов")
     .max(30)
-    .regex(
-      /^[a-z0-9-]+$/,
-      "Nickname can only contain lowercase letters, numbers, and hyphens.",
-    ),
+    .regex(/^[a-z0-9-]+$/, "Никнейм содержит недопустимые символы."),
   password: z
-    .string({ message: "Password is required" })
-    .min(6, "Password must be atleast 6 characters long")
+    .string({ message: "Пароль не может быть пустым" })
+    .min(6, "Пароль должен содержать минимум 6 символов")
     .max(100),
 });

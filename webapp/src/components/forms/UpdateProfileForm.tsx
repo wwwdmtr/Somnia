@@ -60,6 +60,7 @@ export const UpdateProfileForm = () => {
             ? styles.inputError
             : null,
         ]}
+        autoCapitalize="none"
       />
       {formik.touched.nickname && formik.errors.nickname && (
         <Text style={styles.errorText}>{formik.errors.nickname}</Text>
@@ -103,9 +104,7 @@ const styles = {
     padding: 11,
   },
 
-  inputError: {
-    borderColor: "red",
-  },
+  inputError: {},
   errorText: {
     color: "white",
     fontSize: 12,

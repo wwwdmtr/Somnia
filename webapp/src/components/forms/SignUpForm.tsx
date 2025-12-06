@@ -15,11 +15,11 @@ import { AppButton } from "../ui/AppButton";
 const signUpFormSchema = zSignUpTrpcInput
   .extend({
     passwordConfirmation: z
-      .string({ message: "Password confirmation is required" })
-      .min(1, "Password confirmation is required"),
+      .string({ message: "Необходимо подтвердить пароль" })
+      .min(1, "Необходимо подтвердить пароль"),
   })
   .refine((data) => data.password === data.passwordConfirmation, {
-    message: "Passwords do not match",
+    message: "Пароли не совпадают",
     path: ["passwordConfirmation"],
   });
 
@@ -152,17 +152,6 @@ export const SignUpForm = () => {
               {formik.errors.passwordConfirmation}
             </Text>
           ))}
-
-      {/* {formik.touched.password && formik.errors.password && (
-        <Text style={styles.errorText}>{formik.errors.password}</Text>
-      )} */}
-
-      {/* {formik.touched.passwordConfirmation &&
-        formik.errors.passwordConfirmation && (
-          <Text style={styles.errorText}>
-            {formik.errors.passwordConfirmation}
-          </Text>
-        )} */}
 
       {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
 

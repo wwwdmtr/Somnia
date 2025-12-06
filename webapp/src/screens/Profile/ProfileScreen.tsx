@@ -175,6 +175,7 @@ export const ProfileScreen = () => {
           renderItem={renderItem}
           ListHeaderComponent={renderHeader}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -245,7 +246,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     width: 321,
   },
-
   header: {
     alignItems: "center",
     gap: 20,
@@ -256,6 +256,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: 10,
+  },
+
+  listContent: {
+    paddingBottom: 70,
   },
 
   postHeader: {
@@ -273,51 +277,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     marginBottom: 20,
-    marginHorizontal: 16,
+    marginHorizontal: 14,
   },
-
-  // tabBarStub: {
-  //   alignItems: 'center',
-  //   backgroundColor: COLORS.navBarBackground,
-  //   borderRadius: 999,
-  //   borderTopWidth: 0,
-  //   bottom: 28,
-  //   elevation: 0,
-  //   flexDirection: 'row',
-  //   height: 60,
-  //   justifyContent: 'space-between',
-  //   left: 13,
-  //   paddingBottom: 0,
-  //   paddingLeft: 0,
-  //   paddingRight: 0,
-  //   paddingTop: 0,
-  //   position: 'absolute',
-  //   right: 13,
-  //   shadowOpacity: 0,
-  // },
-  // tabBarStubIcon: {
-  //   height: 24,
-  //   marginHorizontal: 51,
-  //   width: 24,
-  // },
 });
-
-// <Text>
-//   {isLoading
-//     ? 'Загрузка...'
-//     : me
-//       ? `Вы авторизованы — ${me.nickname} (name: ${me.name === '' ? 'not set' : me.name})`
-//       : 'Вы не авторизованы'}
-// </Text>
-// <Button
-//   title="Update profile"
-//   onPress={() => navigation.navigate(ScreenName.UpdateProfile)}
-// />
-
-// {me ? (
-//   <Button
-//     title="Sign Out"
-//     onPress={() => navigation.navigate(ScreenName.SignOut)}
-//   />
-// ) : null}
-// <StatusBar style="auto" />

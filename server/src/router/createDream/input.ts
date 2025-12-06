@@ -2,12 +2,12 @@ import { z } from "zod";
 
 export const zCreateDreamTrpcInput = z.object({
   title: z
-    .string({ message: "Title is required" })
+    .string({ message: "Заголовок не может быть пустым" })
     .trim()
-    .min(1, "Title is required"),
-  description: z.string({ message: "Description is required" }).trim(),
+    .min(1, "Заголовок не может быть пустым"),
+  description: z.string({ message: "Описание не может быть пустым" }).trim(),
   text: z
-    .string({ message: "Text is required" })
+    .string({ message: "Текст не может быть пустым" })
     .trim()
-    .min(100, "Dream text should be at least 100 characters long"),
+    .min(100, "Текст должен содержать минимум 100 символов"),
 });
