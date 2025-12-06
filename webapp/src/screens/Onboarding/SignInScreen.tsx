@@ -60,6 +60,7 @@ const styles = StyleSheet.create({
     gap: 8,
     height: 22,
     justifyContent: "center",
+    marginBottom: 10,
     marginHorizontal: 40.5,
     marginTop: 18,
     width: 280,

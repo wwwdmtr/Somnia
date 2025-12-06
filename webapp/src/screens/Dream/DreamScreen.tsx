@@ -111,7 +111,7 @@ export const DreamScreen = () => {
           </View>
 
           <View style={styles.dream_info}>
-            <Text style={typography.h3_white_85}>{data.dream.title}</Text>
+            <Text style={typography.h4_white_85}>{data.dream.title}</Text>
 
             <Text style={typography.body_white100}>{data.dream.text}</Text>
           </View>

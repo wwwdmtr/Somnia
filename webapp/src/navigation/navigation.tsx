@@ -78,6 +78,7 @@ function ProfileStackNav() {
       <ProfileStack.Screen
         name={ScreenName.Profile}
         component={ProfileScreen}
+        options={{ headerShown: false }}
       />
       <ProfileStack.Screen
         name={ScreenName.SignOut}
@@ -86,6 +87,19 @@ function ProfileStackNav() {
       <ProfileStack.Screen
         name={ScreenName.UpdateProfile}
         component={UpdateProfileScreen}
+      />
+      <FeedStack.Screen
+        name={ScreenName.Dream}
+        component={DreamScreen}
+        options={{ headerShown: false }}
+      />
+      <FeedStack.Screen
+        name={ScreenName.EditDream}
+        component={UpdateDreamScreen}
+        options={{
+          presentation: "modal",
+          title: "Edit dream",
+        }}
       />
     </ProfileStack.Navigator>
   );

@@ -44,6 +44,7 @@ export const typography = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
   },
+
   button: {
     color: COLORS.white100,
     fontFamily: "SFProText-Regular",
@@ -87,7 +88,13 @@ export const typography = StyleSheet.create({
     fontSize: 30,
     lineHeight: 38,
   },
-  h3_white_85: {
+  h3_white85: {
+    color: COLORS.white85,
+    fontFamily: "SFProText-Semibold",
+    fontSize: 24,
+    lineHeight: 32,
+  },
+  h4_white_85: {
     color: COLORS.white85,
     fontFamily: "SFProText-Semibold",
     fontSize: 20,
