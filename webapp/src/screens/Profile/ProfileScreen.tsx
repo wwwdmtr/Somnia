@@ -79,8 +79,10 @@ export const ProfileScreen = () => {
         source={require("../../assets/defaults/user-avatar.png")}
         style={styles.avatar}
       ></Image>
+      {me.name ? <Text style={typography.h3_white85}>{me.name}</Text> : null}
+
       <View style={styles.header_user_name}>
-        <Text style={typography.h3_white85}>{me.name}</Text>
+        <Text style={typography.body_white85}>@{me.nickname}</Text>
         <TouchableOpacity
           onPress={() => navigation.navigate(ScreenName.UpdateProfile)}
         >
@@ -90,8 +92,6 @@ export const ProfileScreen = () => {
           ></Image>
         </TouchableOpacity>
       </View>
-
-      <Text style={typography.body_white85}>@{me.nickname}</Text>
 
       <View style={styles.game_info_bar_wrapper}>
         <View style={styles.game_dreams}>

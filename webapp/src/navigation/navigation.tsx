@@ -87,6 +87,7 @@ function ProfileStackNav() {
       <ProfileStack.Screen
         name={ScreenName.UpdateProfile}
         component={UpdateProfileScreen}
+        options={{ headerShown: false }}
       />
       <FeedStack.Screen
         name={ScreenName.Dream}
@@ -149,6 +150,7 @@ const HIDE_TABBAR_SCREENS: Array<ScreenName | TabName> = [
   ScreenName.EditDream,
   ScreenName.AddDream,
   TabName.AddDreamTab,
+  ScreenName.UpdateProfile,
 ];
 
 function getTabBarStyleForRoute(

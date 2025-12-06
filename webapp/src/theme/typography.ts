@@ -44,7 +44,6 @@ export const typography = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
   },
-
   button: {
     color: COLORS.white100,
     fontFamily: "SFProText-Regular",

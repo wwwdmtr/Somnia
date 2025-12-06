@@ -1,12 +1,14 @@
 import { zUpadteProfileTrpcInput } from "@somnia/server/src/router/updateProfile/input";
 import { useFormik } from "formik";
 import React from "react";
-import { View, TextInput, Button, Text } from "react-native";
+import { View, TextInput, Text } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
 import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
+import { COLORS } from "../../theme/typography";
+import { AppButton } from "../ui/AppButton";
 
 type UpdatePorfileFormValues = z.infer<typeof zUpadteProfileTrpcInput>;
 
@@ -21,9 +23,19 @@ export const UpdateProfileForm = () => {
     },
     enableReinitialize: true,
     validationSchema: toFormikValidationSchema(zUpadteProfileTrpcInput),
-    onSubmit: async (values) => {
-      const updatedMe = await updateProfile.mutateAsync(values);
-      trpcUtils.getMe.setData(undefined, { me: updatedMe });
+    onSubmit: async (values, { setFieldError }) => {
+      try {
+        const updatedMe = await updateProfile.mutateAsync(values);
+        trpcUtils.getMe.setData(undefined, { me: updatedMe });
+      } catch (err) {
+        const msg = err?.message || "";
+
+        if (msg.includes("already exists")) {
+          setFieldError("nickname", "Такой никнейм уже занят");
+        } else {
+          setFieldError("nickname", "Ошибка обновления профиля");
+        }
+      }
     },
   });
   if (!me) {
@@ -37,7 +49,8 @@ export const UpdateProfileForm = () => {
   return (
     <View style={styles.container}>
       <TextInput
-        placeholder="Nickname"
+        placeholder="Ваш Никнейм"
+        placeholderTextColor={COLORS.white25}
         value={formik.values.nickname}
         onChangeText={(text) => formik.setFieldValue("nickname", text)}
         onBlur={() => formik.setFieldTouched("nickname")}
@@ -53,7 +66,7 @@ export const UpdateProfileForm = () => {
       )}
 
       <TextInput
-        placeholder="Name"
+        placeholder="Ваше имя"
         value={formik.values.name}
         onChangeText={(text) => formik.setFieldValue("name", text)}
         onBlur={() => formik.setFieldTouched("name")}
@@ -66,9 +79,10 @@ export const UpdateProfileForm = () => {
         <Text style={styles.errorText}>{formik.errors.name}</Text>
       )}
 
-      <Button
-        title={formik.isSubmitting ? "Saving..." : "Update Profile"}
+      <AppButton
+        title={formik.isSubmitting ? "Сохраняем..." : "Обновить профиль"}
         onPress={() => formik.handleSubmit()}
+        style={styles.startButton}
         disabled={formik.isSubmitting || !formik.isValid}
       />
     </View>
@@ -77,27 +91,28 @@ export const UpdateProfileForm = () => {
 
 const styles = {
   container: {
-    padding: 20,
-    gap: 10,
+    gap: 20,
   },
   input: {
+    backgroundColor: COLORS.inputBackgroundColor,
+    borderColor: COLORS.inputBorderColor,
+    borderRadius: 99,
     borderWidth: 1,
-    padding: 10,
-    borderRadius: 8,
+    color: COLORS.white100,
+
+    padding: 11,
   },
-  textArea: {
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 8,
-    height: 200,
-    textAlignVertical: "top" as const,
-  },
+
   inputError: {
     borderColor: "red",
   },
   errorText: {
-    color: "red",
+    color: "white",
     fontSize: 12,
     marginBottom: 4,
+  },
+  startButton: {
+    height: 40,
+    marginTop: 20,
   },
 };

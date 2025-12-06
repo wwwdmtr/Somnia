@@ -2,12 +2,9 @@ import { z } from "zod";
 
 export const zUpadteProfileTrpcInput = z.object({
   nickname: z
-    .string()
-    .min(1, "Nickname is required")
-    .max(50, "Nickname is too long")
-    .regex(
-      /^[a-z0-9-]+$/,
-      "Nickname can only contain lowercase letters, numbers, and dashes",
-    ),
-  name: z.string().max(100, "Name is too long").default(""),
+    .string("Никнейм не может быть пустым")
+    .min(1, "Никнейм не может быть пустым")
+    .max(50, "Никнейм слишком длинный")
+    .regex(/^[a-z0-9-]+$/, "Никнейм содержит недопустимые символы"),
+  name: z.string().max(100, "Имя слишком длинное").default(""),
 });
