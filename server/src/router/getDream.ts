@@ -9,7 +9,7 @@ export const getDreamTrpcRoute = trpc.procedure
     }),
   )
   .query(async ({ ctx, input }) => {
-    const dream = await ctx.prisma.dream.findUnique({
+    const post = await ctx.prisma.post.findUnique({
       where: { id: input.id },
       include: {
         author: {
@@ -20,5 +20,5 @@ export const getDreamTrpcRoute = trpc.procedure
         },
       },
     });
-    return { dream };
+    return { post };
   });

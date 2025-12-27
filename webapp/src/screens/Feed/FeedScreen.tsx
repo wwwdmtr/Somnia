@@ -63,7 +63,7 @@ export const AllDreamsScreen = () => {
     );
   }
 
-  const dreams = activeTab === "feed" ? data.dreams : [];
+  const posts = activeTab === "feed" ? data.posts : [];
 
   const renderHeader = () => (
     <View style={styles.header}>
@@ -88,7 +88,7 @@ export const AllDreamsScreen = () => {
     </View>
   );
 
-  const renderItem = ({ item: dream }: { item: (typeof dreams)[number] }) => (
+  const renderItem = ({ item: post }: { item: (typeof posts)[number] }) => (
     <View style={styles.card}>
       <View style={styles.postHeader}>
         <Image
@@ -96,23 +96,23 @@ export const AllDreamsScreen = () => {
           style={styles.cardImage}
         />
         <View style={styles.postHeaderInfo}>
-          <Text style={typography.body_white85}>@{dream.author.nickname}</Text>
+          <Text style={typography.body_white85}>@{post.author.nickname}</Text>
           <Text style={typography.additionalInfo_white25}>
-            {format(new Date(dream.createdAt), "dd.MM.yyyy")}
+            {format(new Date(post.createdAt), "dd.MM.yyyy")}
           </Text>
         </View>
       </View>
 
       <View style={styles.dream_info}>
-        <Text style={typography.h4_white_85}>{dream.title}</Text>
+        <Text style={typography.h4_white_85}>{post.title}</Text>
 
         <Text style={typography.body_white100} numberOfLines={3}>
-          {dream.text}...
+          {post.text}...
         </Text>
       </View>
 
       <TouchableOpacity
-        onPress={() => handleOpenDream(dream.id)}
+        onPress={() => handleOpenDream(post.id)}
         style={styles.read_more}
       >
         <Text style={typography.caption_link}>Читать далее...</Text>
@@ -172,7 +172,7 @@ export const AllDreamsScreen = () => {
     >
       <SafeAreaView style={styles.safeArea}>
         <FlatList
-          data={dreams}
+          data={posts}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           ListHeaderComponent={renderHeader}
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: "space-between",
     marginBottom: 20,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
   },
   list: {
     flex: 1,
@@ -299,16 +299,16 @@ const styles = StyleSheet.create({
     borderRadius: 99,
     height: 32,
     justifyContent: "center",
-    marginLeft: 32,
-    width: 120,
+    marginHorizontal: 7,
+    width: 165,
   },
   segmentRight: {
     alignItems: "center",
     borderRadius: 99,
     height: 32,
     justifyContent: "center",
-    marginRight: 32,
-    width: 120,
+    marginHorizontal: 7,
+    width: 165,
   },
   tabBarStub: {
     alignItems: "center",

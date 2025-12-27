@@ -60,7 +60,7 @@ export const SignUpForm = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={typography.caption_white85}>Введите Имя пользователя</Text>
+      <Text style={typography.caption_white85}>Имя пользователя</Text>
       <TextInput
         placeholder="Имя пользователя"
         placeholderTextColor={COLORS.white25}
@@ -76,7 +76,7 @@ export const SignUpForm = () => {
         autoCapitalize="none"
       />
 
-      <Text style={typography.caption_white85}>Введите Пароль</Text>
+      <Text style={typography.caption_white85}>Пароль</Text>
       <View style={styles.passwordContainer}>
         <TextInput
           placeholder="Пароль"
@@ -107,7 +107,7 @@ export const SignUpForm = () => {
         </Pressable>
       </View>
 
-      <Text style={typography.caption_white85}>Повторите Пароль</Text>
+      <Text style={typography.caption_white85}>Пароль</Text>
       <View style={styles.passwordContainer}>
         <TextInput
           placeholder="Пароль"

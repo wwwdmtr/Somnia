@@ -51,7 +51,7 @@ export const UpdateDreamScreen = () => {
     );
   }
 
-  if (!data?.dream) {
+  if (!data?.post) {
     return (
       <ScrollView style={styles.container}>
         <Text>Dream not found</Text>
@@ -68,7 +68,7 @@ export const UpdateDreamScreen = () => {
         <Text style={typography.h2_white100}>Изменение сна</Text>
         <View style={styles.form_container}>
           <UpdateDreamForm
-            dream={data.dream}
+            post={data.post}
             onSuccess={() => navigation.goBack()}
           />
         </View>

@@ -8,7 +8,7 @@ export const createDreamTrpcRoute = trpc.procedure
     if (!ctx.me) {
       throw new Error("Unauthorized");
     }
-    const dream = await ctx.prisma.dream.create({
+    const post = await ctx.prisma.post.create({
       data: {
         title: input.title,
         description: input.description,
@@ -17,5 +17,5 @@ export const createDreamTrpcRoute = trpc.procedure
       },
     });
 
-    return dream;
+    return post;
   });

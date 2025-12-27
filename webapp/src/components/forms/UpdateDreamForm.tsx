@@ -14,35 +14,35 @@ import type { inferRouterOutputs } from "@trpc/server";
 
 type UpdateDreamFormValues = z.infer<typeof zUpdateDreamTrpcInput>;
 type RouterOutputs = inferRouterOutputs<TrpcRouter>;
-type Dream = Omit<
-  NonNullable<RouterOutputs["getDream"]["dream"]>,
+type Post = Omit<
+  NonNullable<RouterOutputs["getDream"]["post"]>,
   "createdAt"
 > & {
   createdAt: Date;
 };
 
 type UpdateDreamFormProps = {
-  dream: Dream;
+  post: Post;
   onSuccess?: () => void;
 };
 
-export const UpdateDreamForm = ({ dream, onSuccess }: UpdateDreamFormProps) => {
+export const UpdateDreamForm = ({ post, onSuccess }: UpdateDreamFormProps) => {
   const utils = trpc.useUtils();
   const updateDream = trpc.updateDream.useMutation({
     onSuccess: async () => {
       await Promise.all([
         utils.getDreams.invalidate(),
-        utils.getDream.invalidate({ id: dream.id }),
+        utils.getDream.invalidate({ id: post.id }),
       ]);
       onSuccess?.();
     },
   });
   const formik = useFormik<UpdateDreamFormValues>({
     initialValues: {
-      dreamId: dream.id,
-      title: dream.title ?? "",
-      description: dream.description ?? "",
-      text: dream.text ?? "",
+      dreamId: post.id,
+      title: post.title ?? "",
+      description: post.description ?? "",
+      text: post.text ?? "",
     },
     validationSchema: toFormikValidationSchema(
       zUpdateDreamTrpcInput.omit({ dreamId: true }),

@@ -10,19 +10,19 @@ export const updateDreamTrpcRoute = trpc.procedure
       throw new Error("Unauthorized");
     }
 
-    const dream = await ctx.prisma.dream.findUnique({
+    const post = await ctx.prisma.post.findUnique({
       where: { id: dreamId },
     });
 
-    if (!dream) {
-      throw new Error("Dream not found");
+    if (!post) {
+      throw new Error("Post not found");
     }
 
-    if (dream.authorId !== ctx.me.id) {
+    if (post.authorId !== ctx.me.id) {
       throw new Error("Not your idea");
     }
 
-    await ctx.prisma.dream.update({
+    await ctx.prisma.post.update({
       where: { id: dreamId },
       data: { ...dreamInput },
     });

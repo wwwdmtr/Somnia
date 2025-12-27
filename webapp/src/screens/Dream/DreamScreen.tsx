@@ -62,7 +62,7 @@ export const DreamScreen = () => {
     );
   }
 
-  if (!data.dream) {
+  if (!data.post) {
     return <ScrollView style={styles.container}></ScrollView>;
   }
 
@@ -71,93 +71,101 @@ export const DreamScreen = () => {
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.BackgroundImage}
     >
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.goBackWrapper}
-          >
-            <Image
-              source={require("../../assets/Icons/navIcons/goBack.png")}
-            ></Image>
-            <Text style={typography.body_white85}>Назад</Text>
-          </TouchableOpacity>
-          {me?.id === data.dream.author.id ? (
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate(ScreenName.EditDream, {
-                  id: String(data.dream.id),
-                })
-              }
-            >
-              <Ionicons name="create-outline" size={24} color="white" />
-            </TouchableOpacity>
-          ) : null}
-        </View>
-        <View style={styles.card}>
-          <View style={styles.postHeader}>
-            <Image
-              source={require("../../assets/defaults/user-avatar.png")}
-              style={styles.cardImage}
-            />
-            <View style={styles.postHeaderInfo}>
-              <Text style={typography.body_white85}>
-                @{data.dream.author.nickname}
-              </Text>
-              <Text style={typography.additionalInfo_white25}>
-                {format(new Date(data.dream.createdAt), "dd.MM.yyyy")}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.dream_info}>
-            <Text style={typography.h4_white_85}>{data.dream.title}</Text>
-
-            <Text style={typography.body_white100}>{data.dream.text}</Text>
-          </View>
-          <View style={styles.actions}>
-            <View style={styles.action}>
-              <TouchableOpacity onPress={() => setLike(!isLikeSet)}>
-                {isLikeSet ? (
-                  <Ionicons name="star" size={20} color="red" />
-                ) : (
-                  <Ionicons
-                    name="star-outline"
-                    size={20}
-                    color="rgba(255,255,255, 0.45)"
-                  />
-                )}
+      <SafeAreaView>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.container}>
+            {/* HEADER */}
+            <View style={styles.header}>
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={styles.goBackWrapper}
+              >
+                <Image
+                  source={require("../../assets/Icons/navIcons/goBack.png")}
+                />
+                <Text style={typography.body_white85}>Назад</Text>
               </TouchableOpacity>
-              <Text style={typography.caption_white85}>нравится</Text>
+
+              {me?.id === data.post.author.id && (
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate(ScreenName.EditDream, {
+                      id: String(data.post.id),
+                    })
+                  }
+                >
+                  <Ionicons name="create-outline" size={24} color="white" />
+                </TouchableOpacity>
+              )}
             </View>
 
-            <View style={styles.action}>
-              <Image
-                source={require("../../assets/Icons/Activity/comments.png")}
-                style={styles.action_img}
-              />
-              <Text style={typography.caption_white85}>комментариев</Text>
+            {/* CARD */}
+            <View style={styles.card}>
+              <View style={styles.postHeader}>
+                <Image
+                  source={require("../../assets/defaults/user-avatar.png")}
+                  style={styles.cardImage}
+                />
+                <View style={styles.postHeaderInfo}>
+                  <Text style={typography.body_white85}>
+                    @{data.post.author.nickname}
+                  </Text>
+                  <Text style={typography.additionalInfo_white25}>
+                    {format(new Date(data.post.createdAt), "dd.MM.yyyy")}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.dream_info}>
+                <Text style={typography.h4_white_85}>{data.post.title}</Text>
+                <Text style={typography.body_white100}>{data.post.text}</Text>
+              </View>
+
+              <View style={styles.actions}>
+                <View style={styles.action}>
+                  <TouchableOpacity onPress={() => setLike(!isLikeSet)}>
+                    <Ionicons
+                      name={isLikeSet ? "star" : "star-outline"}
+                      size={20}
+                      color={isLikeSet ? "red" : "rgba(255,255,255,0.45)"}
+                    />
+                  </TouchableOpacity>
+                  <Text style={typography.caption_white85}>нравится</Text>
+                </View>
+
+                <View style={styles.action}>
+                  <Image
+                    source={require("../../assets/Icons/Activity/comments.png")}
+                    style={styles.action_img}
+                  />
+                  <Text style={typography.caption_white85}>комментариев</Text>
+                </View>
+              </View>
             </View>
           </View>
+        </ScrollView>
+
+        {/* FIXED COMMENT INPUT */}
+        <View style={styles.comment_interraction}>
+          <View style={styles.comment_input}>
+            <TextInput
+              style={typography.body_white25}
+              placeholder="Написать комментарий ..."
+              placeholderTextColor="rgba(255,255,255,0.25)"
+              multiline
+            />
+          </View>
+          <TouchableOpacity style={styles.comment_send_button_wrapper}>
+            <Image
+              source={require("../../assets/Icons/formIcons/send_comment.png")}
+              style={styles.comment_send_button}
+            />
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
-      <View style={styles.comment_interraction}>
-        <View style={styles.comment_input}>
-          <TextInput
-            // eslint-disable-next-line react-native/no-inline-styles
-            style={[typography.body_white25, { padding: 0 }]}
-            placeholder="Написать комментарий ..."
-            placeholderTextColor="rgba(255,255,255,0.25)"
-            multiline
-          />
-        </View>
-        <TouchableOpacity style={styles.comment_send_button_wrapper}>
-          <Image
-            source={require("../../assets/Icons/formIcons/send_comment.png")}
-            style={styles.comment_send_button}
-          />
-        </TouchableOpacity>
-      </View>
     </ImageBackground>
   );
 };
@@ -262,25 +270,7 @@ const styles = StyleSheet.create({
     gap: 4,
     justifyContent: "space-between",
   },
+  scrollContent: {
+    paddingBottom: 100,
+  },
 });
-
-{
-  /* <Text style={styles.description}>Dream id: {data.dream.id}</Text>
-      <Text style={styles.description}>By: {data.dream.author.nickname}</Text>
-      <Text style={styles.description}>{data.dream.title}</Text>
-      <Text style={styles.description}>{data.dream.description}</Text>
-      <Text style={styles.description}>{data.dream.text}</Text>
-      <Text style={styles.description}>
-        Created At: {format(new Date(data.dream.createdAt), 'dd-MM-yyyy HH:mm')}
-      </Text>
-      {me?.id === data.dream.author.id ? (
-        <Button
-          title="Edit dream"
-          onPress={() =>
-            navigation.navigate(ScreenName.EditDream, {
-              id: String(data.dream.id),
-            })
-          }
-        />
-      ) : null} */
-}

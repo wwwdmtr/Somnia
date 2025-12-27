@@ -9,7 +9,7 @@ export const getMyDreamsTrpcRoute = trpc.procedure
     }),
   )
   .query(async ({ ctx, input }) => {
-    const dreams = await ctx.prisma.dream.findMany({
+    const posts = await ctx.prisma.post.findMany({
       where: {
         authorId: input.authorId,
       },
@@ -26,5 +26,5 @@ export const getMyDreamsTrpcRoute = trpc.procedure
       },
     });
 
-    return { dreams };
+    return { posts };
   });

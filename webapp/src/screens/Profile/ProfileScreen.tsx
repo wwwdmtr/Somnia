@@ -110,27 +110,27 @@ export const ProfileScreen = () => {
     </View>
   );
   const renderItem = ({
-    item: dream,
+    item: post,
   }: {
-    item: (typeof data.dreams)[number];
+    item: (typeof data.posts)[number];
   }) => (
     <View style={styles.card}>
       <View style={styles.postHeader}>
         <Text style={typography.additionalInfo_white25}>
-          {format(new Date(dream.createdAt), "dd.MM.yyyy")}
+          {format(new Date(post.createdAt), "dd.MM.yyyy")}
         </Text>
       </View>
 
       <View style={styles.dream_info}>
-        <Text style={typography.h4_white_85}>{dream.title}</Text>
+        <Text style={typography.h4_white_85}>{post.title}</Text>
 
         <Text style={typography.body_white100} numberOfLines={3}>
-          {dream.text}...
+          {post.text}...
         </Text>
       </View>
 
       <TouchableOpacity
-        onPress={() => handleOpenDream(dream.id)}
+        onPress={() => handleOpenDream(post.id)}
         style={styles.read_more}
       >
         <Text style={typography.caption_link}>Читать далее...</Text>
@@ -170,7 +170,7 @@ export const ProfileScreen = () => {
     >
       <SafeAreaView style={styles.safeArea}>
         <FlatList
-          data={data.dreams}
+          data={data.posts}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           ListHeaderComponent={renderHeader}

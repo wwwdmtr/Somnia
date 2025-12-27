@@ -46,7 +46,7 @@ export const SignInForm = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={typography.caption_white85}>Введите Имя пользователя</Text>
+      <Text style={typography.caption_white85}>Имя пользователя</Text>
       <TextInput
         placeholder="Имя пользователя"
         placeholderTextColor={COLORS.white25}
@@ -61,7 +61,7 @@ export const SignInForm = () => {
         ]}
         autoCapitalize="none"
       />
-      <Text style={typography.caption_white85}>Введите Пароль</Text>
+      <Text style={typography.caption_white85}>Пароль</Text>
       <View style={styles.passwordContainer}>
         <TextInput
           placeholder="Пароль"
