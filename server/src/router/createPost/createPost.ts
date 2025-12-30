@@ -1,9 +1,9 @@
 import { trpc } from "../../lib/trpc";
 
-import { zCreateDreamTrpcInput } from "./input";
+import { zCreatePostTrpcInput } from "./input";
 
-export const createDreamTrpcRoute = trpc.procedure
-  .input(zCreateDreamTrpcInput)
+export const createPostTrpcRoute = trpc.procedure
+  .input(zCreatePostTrpcInput)
   .mutation(async ({ ctx, input }) => {
     if (!ctx.me) {
       throw new Error("Unauthorized");

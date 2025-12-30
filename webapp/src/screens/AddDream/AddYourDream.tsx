@@ -24,7 +24,7 @@ type AddDreamNavProp = NativeStackNavigationProp<
 >;
 
 export const AddDreamScreen = () => {
-  const { isLoading, error } = trpc.getDreams.useQuery();
+  const { isLoading, error } = trpc.getPosts.useQuery();
 
   const navigation = useNavigation<AddDreamNavProp>();
 

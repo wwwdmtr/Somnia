@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const zCreateDreamTrpcInput = z.object({
+export const zCreatePostTrpcInput = z.object({
   title: z
     .string({ message: "Заголовок не может быть пустым" })
     .trim()

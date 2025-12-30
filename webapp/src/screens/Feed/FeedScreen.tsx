@@ -25,7 +25,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 type NavigationProp = NativeStackNavigationProp<FeedStackParamList, "Feed">;
 
 export const AllDreamsScreen = () => {
-  const { data, isLoading, error, refetch } = trpc.getDreams.useQuery();
+  const { data, isLoading, error, refetch } = trpc.getPosts.useQuery();
   const [activeTab, setActiveTab] = useState<"feed" | "subs">("feed");
   const [isLikeSet, setLike] = useState(false);
   const [refreshing, setRefreshing] = useState(false);

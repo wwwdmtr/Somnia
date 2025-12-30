@@ -2,15 +2,20 @@ import { z } from "zod";
 
 import { trpc } from "../lib/trpc";
 
-export const getDreamTrpcRoute = trpc.procedure
+export const getMyPostsTrpcRoute = trpc.procedure
   .input(
     z.object({
-      id: z.string(),
+      authorId: z.string(),
     }),
   )
   .query(async ({ ctx, input }) => {
-    const post = await ctx.prisma.post.findUnique({
-      where: { id: input.id },
+    const posts = await ctx.prisma.post.findMany({
+      where: {
+        authorId: input.authorId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
       include: {
         author: {
           select: {
@@ -20,5 +25,6 @@ export const getDreamTrpcRoute = trpc.procedure
         },
       },
     });
-    return { post };
+
+    return { posts };
   });

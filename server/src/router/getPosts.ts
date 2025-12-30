@@ -1,6 +1,6 @@
 import { trpc } from "../lib/trpc";
 
-export const getDreamsTrpcRoute = trpc.procedure.query(async ({ ctx }) => {
+export const getPostsTrpcRoute = trpc.procedure.query(async ({ ctx }) => {
   const posts = await ctx.prisma.post.findMany({
     select: {
       id: true,

@@ -2,25 +2,25 @@ import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 
 import { trpc } from "../lib/trpc";
 
-import { createDreamTrpcRoute } from "./createDream/createDream";
-import { getDreamTrpcRoute } from "./getDream";
-import { getDreamsTrpcRoute } from "./getDreams";
+import { createPostTrpcRoute } from "./createPost/createPost";
 import { getMeTrpcRoute } from "./getMe/getMe";
-import { getMyDreamsTrpcRoute } from "./getMyDreams";
+import { getMyPostsTrpcRoute } from "./getMyPosts";
+import { getPostTrpcRoute } from "./getPost";
+import { getPostsTrpcRoute } from "./getPosts";
 import { signInTrpcRoute } from "./signIn/signIn";
 import { signUpTrpcRoute } from "./signUp/signUp";
-import { updateDreamTrpcRoute } from "./updateDream/updateDream";
+import { updatePostTrpcRoute } from "./updatePost/updatePost";
 import { updateProfileTrpcRoute } from "./updateProfile/updateProfile";
 
 export const trpcRouter = trpc.router({
-  getDreams: getDreamsTrpcRoute,
-  getDream: getDreamTrpcRoute,
-  getMyDreams: getMyDreamsTrpcRoute,
-  createDream: createDreamTrpcRoute,
+  getPosts: getPostsTrpcRoute,
+  getPost: getPostTrpcRoute,
+  getMyPosts: getMyPostsTrpcRoute,
+  createPost: createPostTrpcRoute,
   signUp: signUpTrpcRoute,
   signIn: signInTrpcRoute,
   getMe: getMeTrpcRoute,
-  updateDream: updateDreamTrpcRoute,
+  updatePost: updatePostTrpcRoute,
   updateProfile: updateProfileTrpcRoute,
 });
 

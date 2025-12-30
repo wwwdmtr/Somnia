@@ -1,5 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
-import { zCreateDreamTrpcInput } from "@somnia/server/src/router/createDream/input";
+import { zCreatePostTrpcInput } from "@somnia/server/src/router/createPost/input";
 import { useFormik } from "formik";
 import React from "react";
 import { View, TextInput, Text } from "react-native";
@@ -13,7 +13,7 @@ import { AppButton } from "../ui/AppButton";
 import type { AddDreamStackParamList } from "../../navigation/AddDreamStackParamList";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-type DreamFormValues = z.infer<typeof zCreateDreamTrpcInput>;
+type DreamFormValues = z.infer<typeof zCreatePostTrpcInput>;
 
 type AddDreamNavProp = NativeStackNavigationProp<
   AddDreamStackParamList,
@@ -23,9 +23,9 @@ type AddDreamNavProp = NativeStackNavigationProp<
 export const AddDreamForm = () => {
   const utils = trpc.useUtils();
   const navigation = useNavigation<AddDreamNavProp>();
-  const createDream = trpc.createDream.useMutation({
+  const createPost = trpc.createPost.useMutation({
     onSuccess: () => {
-      utils.getDreams.invalidate();
+      utils.getPosts.invalidate();
     },
   });
   const formik = useFormik<DreamFormValues>({
@@ -34,9 +34,9 @@ export const AddDreamForm = () => {
       description: "some mock description",
       text: "",
     },
-    validationSchema: toFormikValidationSchema(zCreateDreamTrpcInput),
+    validationSchema: toFormikValidationSchema(zCreatePostTrpcInput),
     onSubmit: async (values, { resetForm }) => {
-      await createDream.mutateAsync(values);
+      await createPost.mutateAsync(values);
       resetForm();
       navigation.goBack();
     },

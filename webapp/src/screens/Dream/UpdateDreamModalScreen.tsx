@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 
-import { UpdateDreamForm } from "../../components/forms/UpdateDreamForm";
+import { UpdatePostForms } from "../../components/forms/UpdatePostForm";
 import ScreenName from "../../constants/ScreenName";
 import { trpc } from "../../lib/trpc";
 import { typography } from "../../theme/typography";
@@ -31,7 +31,7 @@ export const UpdateDreamScreen = () => {
   const route = useRoute<EditDreamRouteProp>();
   const navigation = useNavigation<EditDreamNavProp>();
 
-  const { data, isLoading, error } = trpc.getDream.useQuery({
+  const { data, isLoading, error } = trpc.getPost.useQuery({
     id: String(route.params.id),
   });
 
@@ -67,7 +67,7 @@ export const UpdateDreamScreen = () => {
       <ScrollView style={styles.container}>
         <Text style={typography.h2_white100}>Изменение сна</Text>
         <View style={styles.form_container}>
-          <UpdateDreamForm
+          <UpdatePostForms
             post={data.post}
             onSuccess={() => navigation.goBack()}
           />

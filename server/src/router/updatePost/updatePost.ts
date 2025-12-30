@@ -1,17 +1,17 @@
 import { trpc } from "../../lib/trpc";
 
-import { zUpdateDreamTrpcInput } from "./input";
+import { zUpdatePostTrpcInput } from "./input";
 
-export const updateDreamTrpcRoute = trpc.procedure
-  .input(zUpdateDreamTrpcInput)
+export const updatePostTrpcRoute = trpc.procedure
+  .input(zUpdatePostTrpcInput)
   .mutation(async ({ ctx, input }) => {
-    const { dreamId, ...dreamInput } = input;
+    const { postId, ...postInput } = input;
     if (!ctx.me) {
       throw new Error("Unauthorized");
     }
 
     const post = await ctx.prisma.post.findUnique({
-      where: { id: dreamId },
+      where: { id: postId },
     });
 
     if (!post) {
@@ -23,8 +23,8 @@ export const updateDreamTrpcRoute = trpc.procedure
     }
 
     await ctx.prisma.post.update({
-      where: { id: dreamId },
-      data: { ...dreamInput },
+      where: { id: postId },
+      data: { ...postInput },
     });
     return true;
   });

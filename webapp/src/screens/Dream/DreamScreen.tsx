@@ -38,7 +38,7 @@ type DreamScreenNavProp = NativeStackNavigationProp<
 export const DreamScreen = () => {
   const route = useRoute<DreamScreenRouteProp>();
   const navigation = useNavigation<DreamScreenNavProp>();
-  const { data, isLoading, error } = trpc.getDream.useQuery({
+  const { data, isLoading, error } = trpc.getPost.useQuery({
     id: route.params.id,
   });
   const me = useMe();

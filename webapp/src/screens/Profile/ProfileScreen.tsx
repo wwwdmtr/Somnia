@@ -35,7 +35,7 @@ type ProfileScreenNavigationProp = NativeStackNavigationProp<
 
 export const ProfileScreen = () => {
   const { me, isLoading } = useAppContext();
-  const { data, error, refetch } = trpc.getMyDreams.useQuery({
+  const { data, error, refetch } = trpc.getMyPosts.useQuery({
     authorId: me.id || "",
   });
   const navigation = useNavigation<ProfileScreenNavigationProp>();

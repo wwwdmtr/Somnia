@@ -1,4 +1,4 @@
-import { zUpdateDreamTrpcInput } from "@somnia/server/src/router/updateDream/input";
+import { zUpdatePostTrpcInput } from "@somnia/server/src/router/updatePost/input";
 import { useFormik } from "formik";
 import React from "react";
 import { View, TextInput, Text } from "react-native";
@@ -12,44 +12,43 @@ import { AppButton } from "../ui/AppButton";
 import type { TrpcRouter } from "@somnia/server/src/router";
 import type { inferRouterOutputs } from "@trpc/server";
 
-type UpdateDreamFormValues = z.infer<typeof zUpdateDreamTrpcInput>;
+type UpdatePostFormsValues = z.infer<typeof zUpdatePostTrpcInput>;
 type RouterOutputs = inferRouterOutputs<TrpcRouter>;
-type Post = Omit<
-  NonNullable<RouterOutputs["getDream"]["post"]>,
-  "createdAt"
-> & {
+type Post = Omit<NonNullable<RouterOutputs["getPost"]["post"]>, "createdAt"> & {
   createdAt: Date;
 };
 
-type UpdateDreamFormProps = {
+type UpdatePostFormsProps = {
   post: Post;
   onSuccess?: () => void;
 };
 
-export const UpdateDreamForm = ({ post, onSuccess }: UpdateDreamFormProps) => {
+export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
   const utils = trpc.useUtils();
-  const updateDream = trpc.updateDream.useMutation({
+  const updatePost = trpc.updatePost.useMutation({
     onSuccess: async () => {
       await Promise.all([
-        utils.getDreams.invalidate(),
-        utils.getDream.invalidate({ id: post.id }),
+        utils.getPosts.invalidate(),
+        utils.getPost.invalidate({ id: post.id }),
+        utils.getMyPosts.invalidate(),
       ]);
       onSuccess?.();
     },
   });
-  const formik = useFormik<UpdateDreamFormValues>({
+  const formik = useFormik<UpdatePostFormsValues>({
     initialValues: {
-      dreamId: post.id,
+      postId: post.id,
       title: post.title ?? "",
       description: post.description ?? "",
       text: post.text ?? "",
     },
     validationSchema: toFormikValidationSchema(
-      zUpdateDreamTrpcInput.omit({ dreamId: true }),
+      zUpdatePostTrpcInput.omit({ postId: true }),
     ),
     enableReinitialize: true,
+
     onSubmit: async (values, { resetForm }) => {
-      await updateDream.mutateAsync(values);
+      await updatePost.mutateAsync(values);
       resetForm();
     },
   });

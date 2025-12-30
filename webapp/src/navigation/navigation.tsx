@@ -100,6 +100,7 @@ function ProfileStackNav() {
         options={{
           presentation: "modal",
           title: "Edit dream",
+          headerShown: false,
         }}
       />
     </ProfileStack.Navigator>
