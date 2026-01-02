@@ -24,10 +24,6 @@ import { COLORS, typography } from "../../theme/typography";
 
 import type { ProfileStackParamList } from "../../navigation/ProfileStackParamList";
 
-//import type { UserDreamStackParamList } from '../navigation/UserDreamStackParamList';
-
-//type DreamScreenRouteProp = RouteProp<UserDreamStackParamList, 'UserDreams'>;
-
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   ProfileStackParamList,
   ScreenName.Profile
@@ -52,8 +48,8 @@ export const ProfileScreen = () => {
     }
   };
 
-  const handleOpenDream = (id: string) => {
-    navigation.navigate("Dream", { id });
+  const handleOpenPost = (id: string) => {
+    navigation.navigate("Post", { id });
   };
 
   if (isLoading) {
@@ -130,7 +126,7 @@ export const ProfileScreen = () => {
       </View>
 
       <TouchableOpacity
-        onPress={() => handleOpenDream(post.id)}
+        onPress={() => handleOpenPost(post.id)}
         style={styles.read_more}
       >
         <Text style={typography.caption_link}>Читать далее...</Text>

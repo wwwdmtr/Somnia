@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// src/screens/EditDreamScreen.tsx
+// src/screens/EditPostScreen.tsx
 
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import {
@@ -15,21 +15,21 @@ import ScreenName from "../../constants/ScreenName";
 import { trpc } from "../../lib/trpc";
 import { typography } from "../../theme/typography";
 
-import type { AddDreamStackParamList } from "../../navigation/AddDreamStackParamList";
+import type { AddPostStackParamList } from "../../navigation/AddPostStackParamList";
 import type { FeedStackParamList } from "../../navigation/FeedStackParamList";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-type RootStackParamList = FeedStackParamList & AddDreamStackParamList;
+type RootStackParamList = FeedStackParamList & AddPostStackParamList;
 
-type EditDreamRouteProp = RouteProp<RootStackParamList, ScreenName.EditDream>;
-type EditDreamNavProp = NativeStackNavigationProp<
+type EditPostRouteProp = RouteProp<RootStackParamList, ScreenName.EditPost>;
+type EditPostNavProp = NativeStackNavigationProp<
   RootStackParamList,
-  ScreenName.EditDream
+  ScreenName.EditPost
 >;
 
-export const UpdateDreamScreen = () => {
-  const route = useRoute<EditDreamRouteProp>();
-  const navigation = useNavigation<EditDreamNavProp>();
+export const UpdatePostScreen = () => {
+  const route = useRoute<EditPostRouteProp>();
+  const navigation = useNavigation<EditPostNavProp>();
 
   const { data, isLoading, error } = trpc.getPost.useQuery({
     id: String(route.params.id),

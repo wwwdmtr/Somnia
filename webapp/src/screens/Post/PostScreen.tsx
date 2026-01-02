@@ -21,23 +21,23 @@ import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
 import { typography, COLORS } from "../../theme/typography";
 
-import type { AddDreamStackParamList } from "../../navigation/AddDreamStackParamList";
+import type { AddPostStackParamList } from "../../navigation/AddPostStackParamList";
 import type { FeedStackParamList } from "../../navigation/FeedStackParamList";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-type DreamScreenRouteProp = RouteProp<
-  FeedStackParamList & AddDreamStackParamList,
-  ScreenName.Dream
+type PostScreenRouteProp = RouteProp<
+  FeedStackParamList & AddPostStackParamList,
+  ScreenName.Post
 >;
-type DreamScreenStackParamList = FeedStackParamList & AddDreamStackParamList;
-type DreamScreenNavProp = NativeStackNavigationProp<
-  DreamScreenStackParamList,
-  ScreenName.Dream
+type PostScreenStackParamList = FeedStackParamList & AddPostStackParamList;
+type PostScreenNavProp = NativeStackNavigationProp<
+  PostScreenStackParamList,
+  ScreenName.Post
 >;
 
-export const DreamScreen = () => {
-  const route = useRoute<DreamScreenRouteProp>();
-  const navigation = useNavigation<DreamScreenNavProp>();
+export const PostScreen = () => {
+  const route = useRoute<PostScreenRouteProp>();
+  const navigation = useNavigation<PostScreenNavProp>();
   const { data, isLoading, error } = trpc.getPost.useQuery({
     id: route.params.id,
   });
@@ -92,7 +92,7 @@ export const DreamScreen = () => {
               {me?.id === data.post.author.id && (
                 <TouchableOpacity
                   onPress={() =>
-                    navigation.navigate(ScreenName.EditDream, {
+                    navigation.navigate(ScreenName.EditPost, {
                       id: String(data.post.id),
                     })
                   }

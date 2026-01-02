@@ -1,10 +1,10 @@
 export enum ScreenName {
   Feed = "Feed",
-  Dream = "Dream",
-  AddDream = "AddDream",
+  Post = "Post",
+  AddPost = "AddPost",
   Profile = "Profile",
   SignOut = "SignOut",
-  EditDream = "EditDream",
+  EditPost = "EditPost",
   UpdateProfile = "UpdateProfile",
   Onboarding = "Onboarding",
   SignIn = "SignIn",

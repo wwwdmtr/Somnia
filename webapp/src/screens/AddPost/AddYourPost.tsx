@@ -11,22 +11,22 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AddDreamForm } from "../../components/forms/AddDreamForm";
+import { AddPostForm } from "../../components/forms/AddPostForm";
 import { trpc } from "../../lib/trpc";
 import { typography, COLORS } from "../../theme/typography";
 
-import type { AddDreamStackParamList } from "../../navigation/AddDreamStackParamList";
+import type { AddPostStackParamList } from "../../navigation/AddPostStackParamList";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-type AddDreamNavProp = NativeStackNavigationProp<
-  AddDreamStackParamList,
-  "AddDream"
+type AddPostNavProp = NativeStackNavigationProp<
+  AddPostStackParamList,
+  "AddPost"
 >;
 
-export const AddDreamScreen = () => {
+export const AddPostScreen = () => {
   const { isLoading, error } = trpc.getPosts.useQuery();
 
-  const navigation = useNavigation<AddDreamNavProp>();
+  const navigation = useNavigation<AddPostNavProp>();
 
   if (isLoading) {
     return (
@@ -70,7 +70,7 @@ export const AddDreamScreen = () => {
           ></Image>
         </View>
 
-        <AddDreamForm />
+        <AddPostForm />
         <StatusBar style="auto" />
       </SafeAreaView>
     </ImageBackground>

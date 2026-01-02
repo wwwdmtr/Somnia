@@ -24,7 +24,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type NavigationProp = NativeStackNavigationProp<FeedStackParamList, "Feed">;
 
-export const AllDreamsScreen = () => {
+export const AllPostsScreen = () => {
   const { data, isLoading, error, refetch } = trpc.getPosts.useQuery();
   const [activeTab, setActiveTab] = useState<"feed" | "subs">("feed");
   const [isLikeSet, setLike] = useState(false);
@@ -41,8 +41,8 @@ export const AllDreamsScreen = () => {
     }
   };
 
-  const handleOpenDream = (id: string) => {
-    navigation.navigate("Dream", { id });
+  const handleOpenPost = (id: string) => {
+    navigation.navigate("Post", { id });
   };
 
   if (isLoading) {
@@ -112,7 +112,7 @@ export const AllDreamsScreen = () => {
       </View>
 
       <TouchableOpacity
-        onPress={() => handleOpenDream(post.id)}
+        onPress={() => handleOpenPost(post.id)}
         style={styles.read_more}
       >
         <Text style={typography.caption_link}>Читать далее...</Text>

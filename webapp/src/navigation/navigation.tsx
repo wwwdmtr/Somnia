@@ -13,18 +13,18 @@ import { Text, View, Image, ImageSourcePropType } from "react-native";
 import ScreenName from "../constants/ScreenName";
 import TabName from "../constants/TabName";
 import { useAppContext } from "../lib/ctx";
-import { AddDreamScreen } from "../screens/AddDream/AddYourDream";
-import { DreamScreen } from "../screens/Dream/DreamScreen";
-import { UpdateDreamScreen } from "../screens/Dream/UpdateDreamModalScreen";
-import { AllDreamsScreen } from "../screens/Feed/FeedScreen";
+import { AddPostScreen } from "../screens/AddPost/AddYourPost";
+import { AllPostsScreen } from "../screens/Feed/FeedScreen";
 import { OnboardingScreen } from "../screens/Onboarding/OnboardingScreen";
 import { SignInScreen } from "../screens/Onboarding/SignInScreen";
 import { SignUpScreen } from "../screens/Onboarding/SignUpScreen";
+import { PostScreen } from "../screens/Post/PostScreen";
+import { UpdatePostScreen } from "../screens/Post/UpdatePostModalScreen";
 import { ProfileScreen } from "../screens/Profile/ProfileScreen";
 import { SignOutScreen } from "../screens/Profile/SignOutScreen";
 import { UpdateProfileScreen } from "../screens/Profile/UpdateProfileScreen";
 
-import { AddDreamStackParamList } from "./AddDreamStackParamList";
+import { AddPostStackParamList } from "./AddPostStackParamList";
 import { AuthStackParamList } from "./AuthStackParamList";
 import { FeedStackParamList } from "./FeedStackParamList";
 import { ProfileStackParamList } from "./ProfileStackParamList";
@@ -38,17 +38,17 @@ function FeedStackNav() {
     <FeedStack.Navigator>
       <FeedStack.Screen
         name={ScreenName.Feed}
-        component={AllDreamsScreen}
+        component={AllPostsScreen}
         options={{ headerShown: false }}
       />
       <FeedStack.Screen
-        name={ScreenName.Dream}
-        component={DreamScreen}
+        name={ScreenName.Post}
+        component={PostScreen}
         options={{ headerShown: false }}
       />
       <FeedStack.Screen
-        name={ScreenName.EditDream}
-        component={UpdateDreamScreen}
+        name={ScreenName.EditPost}
+        component={UpdatePostScreen}
         options={{
           presentation: "modal",
           headerShown: false,
@@ -58,16 +58,16 @@ function FeedStackNav() {
   );
 }
 
-const AddDreamStack = createNativeStackNavigator<AddDreamStackParamList>();
-function AddDreamStackNav() {
+const AddPostStack = createNativeStackNavigator<AddPostStackParamList>();
+function AddPostStackNav() {
   return (
-    <AddDreamStack.Navigator>
-      <AddDreamStack.Screen
-        name={ScreenName.AddDream}
-        component={AddDreamScreen}
+    <AddPostStack.Navigator>
+      <AddPostStack.Screen
+        name={ScreenName.AddPost}
+        component={AddPostScreen}
         options={{ headerShown: false }}
       />
-    </AddDreamStack.Navigator>
+    </AddPostStack.Navigator>
   );
 }
 
@@ -90,13 +90,13 @@ function ProfileStackNav() {
         options={{ headerShown: false }}
       />
       <FeedStack.Screen
-        name={ScreenName.Dream}
-        component={DreamScreen}
+        name={ScreenName.Post}
+        component={PostScreen}
         options={{ headerShown: false }}
       />
       <FeedStack.Screen
-        name={ScreenName.EditDream}
-        component={UpdateDreamScreen}
+        name={ScreenName.EditPost}
+        component={UpdatePostScreen}
         options={{
           presentation: "modal",
           title: "Edit dream",
@@ -119,7 +119,7 @@ const iconMap: Record<string, IconPairs> = {
     active: require("../assets/Icons/tabIcons/feed-active.png"),
     inactive: require("../assets/Icons/tabIcons/feed-inactive.png"),
   },
-  [TabName.AddDreamTab]: {
+  [TabName.AddPostTab]: {
     active: require("../assets/Icons/tabIcons/add-dream-button.png"),
     inactive: require("../assets/Icons/tabIcons/add-dream-button.png"),
   },
@@ -147,21 +147,17 @@ export const BASE_TAB_BAR_STYLE = {
 } satisfies BottomTabNavigationOptions["tabBarStyle"];
 
 const HIDE_TABBAR_SCREENS: Array<ScreenName | TabName> = [
-  ScreenName.Dream,
-  ScreenName.EditDream,
-  ScreenName.AddDream,
-  TabName.AddDreamTab,
+  ScreenName.Post,
+  ScreenName.EditPost,
+  ScreenName.AddPost,
+  TabName.AddPostTab,
   ScreenName.UpdateProfile,
 ];
 
 function getTabBarStyleForRoute(
   route: RouteProp<RootTabParamList, keyof RootTabParamList>,
 ): BottomTabNavigationOptions["tabBarStyle"] {
-  const focusedRouteName =
-    getFocusedRouteNameFromRoute(route) ??
-    // when stack не инициализировался, getFocusedRouteNameFromRoute вернет undefined.
-    // для AddDream берем имя таба, чтобы скрыть кнопку.
-    route.name;
+  const focusedRouteName = getFocusedRouteNameFromRoute(route) ?? route.name;
 
   const shouldHide = HIDE_TABBAR_SCREENS.includes(
     focusedRouteName as ScreenName,
@@ -170,10 +166,8 @@ function getTabBarStyleForRoute(
   if (shouldHide) {
     return {
       ...BASE_TAB_BAR_STYLE,
-      // визуально убираем таббар, но не размонтируем
       opacity: 0,
       transform: [{ translateY: 80 }],
-      // можно добавить, чтобы не ловил клики
       pointerEvents: "none",
     };
   }
@@ -202,7 +196,7 @@ export function AppNav() {
           tabBarIcon: ({ focused, size }) => {
             const pair = iconMap[route.name];
             const source = focused ? pair.active : pair.inactive;
-            const isCenter = route.name === TabName.AddDreamTab;
+            const isCenter = route.name === TabName.AddPostTab;
 
             if (isCenter) {
               return (
@@ -238,7 +232,7 @@ export function AppNav() {
       }}
     >
       <Tab.Screen name={TabName.FeedTab} component={FeedStackNav} />
-      <Tab.Screen name={TabName.AddDreamTab} component={AddDreamStackNav} />
+      <Tab.Screen name={TabName.AddPostTab} component={AddPostStackNav} />
       <Tab.Screen name={TabName.ProfileTab} component={ProfileStackNav} />
     </Tab.Navigator>
   );

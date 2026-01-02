@@ -10,25 +10,25 @@ import { trpc } from "../../lib/trpc";
 import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
 
-import type { AddDreamStackParamList } from "../../navigation/AddDreamStackParamList";
+import type { AddPostStackParamList } from "../../navigation/AddPostStackParamList";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-type DreamFormValues = z.infer<typeof zCreatePostTrpcInput>;
+type PostFormValues = z.infer<typeof zCreatePostTrpcInput>;
 
-type AddDreamNavProp = NativeStackNavigationProp<
-  AddDreamStackParamList,
-  "AddDream"
+type AddPostNavProp = NativeStackNavigationProp<
+  AddPostStackParamList,
+  "AddPost"
 >;
 
-export const AddDreamForm = () => {
+export const AddPostForm = () => {
   const utils = trpc.useUtils();
-  const navigation = useNavigation<AddDreamNavProp>();
+  const navigation = useNavigation<AddPostNavProp>();
   const createPost = trpc.createPost.useMutation({
     onSuccess: () => {
       utils.getPosts.invalidate();
     },
   });
-  const formik = useFormik<DreamFormValues>({
+  const formik = useFormik<PostFormValues>({
     initialValues: {
       title: "",
       description: "some mock description",
