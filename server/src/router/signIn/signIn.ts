@@ -1,8 +1,8 @@
-import { trpc } from '../../lib/trpc';
-import { getPasswordHash } from '../../utils/getPasswordHash';
-import { signJWT } from '../../utils/signJWT';
+import { trpc } from "../../lib/trpc";
+import { getPasswordHash } from "../../utils/getPasswordHash";
+import { signJWT } from "../../utils/signJWT";
 
-import { zSignInTrpcInput } from './input';
+import { zSignInTrpcInput } from "./input";
 
 export const signInTrpcRoute = trpc.procedure
   .input(zSignInTrpcInput)
@@ -14,7 +14,7 @@ export const signInTrpcRoute = trpc.procedure
       },
     });
     if (!user) {
-      throw new Error('Invalid nickname or password');
+      throw new Error("Неверный никнейм или пароль");
     }
 
     const token = signJWT(user.id);

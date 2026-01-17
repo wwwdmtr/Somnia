@@ -81,7 +81,7 @@ export const UpdateProfileForm = () => {
       )}
 
       <AppButton
-        title={formik.isSubmitting ? "Сохраняем..." : "Обновить профиль"}
+        title={formik.isSubmitting ? "Сохраняем..." : "Обновить пароль"}
         onPress={() => formik.handleSubmit()}
         style={styles.startButton}
         disabled={formik.isSubmitting || !formik.isValid}
