@@ -6,7 +6,7 @@ import { createPostTrpcRoute } from "./createPost/createPost";
 import { getMeTrpcRoute } from "./getMe/getMe";
 import { getMyPostsTrpcRoute } from "./getMyPosts";
 import { getPostTrpcRoute } from "./getPost";
-import { getPostsTrpcRoute } from "./getPosts";
+import { getPostsTrpcRoute } from "./getPosts/getPosts";
 import { signInTrpcRoute } from "./signIn/signIn";
 import { signUpTrpcRoute } from "./signUp/signUp";
 import { updatePasswordTrpcRoute } from "./updatePassword/updatePassword";

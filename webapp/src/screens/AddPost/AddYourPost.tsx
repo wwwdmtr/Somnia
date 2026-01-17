@@ -12,7 +12,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AddPostForm } from "../../components/forms/AddPostForm";
-import { trpc } from "../../lib/trpc";
 import { typography, COLORS } from "../../theme/typography";
 
 import type { AddPostStackParamList } from "../../navigation/AddPostStackParamList";
@@ -24,27 +23,7 @@ type AddPostNavProp = NativeStackNavigationProp<
 >;
 
 export const AddPostScreen = () => {
-  const { isLoading, error } = trpc.getPosts.useQuery();
-
   const navigation = useNavigation<AddPostNavProp>();
-
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <Text>Loading...</Text>
-        <StatusBar style="auto" />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <Text>Error: {error.message}</Text>
-        <StatusBar style="auto" />
-      </View>
-    );
-  }
 
   return (
     <ImageBackground

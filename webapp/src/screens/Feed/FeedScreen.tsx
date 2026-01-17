@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { format } from "date-fns";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -25,45 +25,48 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 type NavigationProp = NativeStackNavigationProp<FeedStackParamList, "Feed">;
 
 export const AllPostsScreen = () => {
-  const { data, isLoading, error, refetch } = trpc.getPosts.useQuery();
-  const [activeTab, setActiveTab] = useState<"feed" | "subs">("feed");
-  const [isLikeSet, setLike] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-
   const navigation = useNavigation<NavigationProp>();
 
-  const onRefresh = async () => {
+  const [activeTab, setActiveTab] = useState<"feed" | "subs">("feed");
+  const [refreshing, setRefreshing] = useState(false);
+  const [likes, setLikes] = useState<Record<string, boolean>>({});
+
+  const {
+    data,
+    error,
+    isLoading,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = trpc.getPosts.useInfiniteQuery(
+    { limit: 15 },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
+
+  const posts = useMemo(
+    () => data?.pages.flatMap((page) => page.posts) ?? [],
+    [data],
+  );
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setRefreshing(false);
-    }
-  };
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
 
   const handleOpenPost = (id: string) => {
     navigation.navigate("Post", { id });
   };
 
-  if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <Text>Loading...</Text>
-        <StatusBar style="auto" />
-      </View>
-    );
-  }
-
-  if (error || !data) {
-    return (
-      <View style={styles.centered}>
-        <Text>Error: {error?.message ?? "Unknown error"}</Text>
-        <StatusBar style="auto" />
-      </View>
-    );
-  }
-
-  const posts = activeTab === "feed" ? data.posts : [];
+  const toggleLike = (postId: string) => {
+    setLikes((prev) => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }));
+  };
 
   const renderHeader = () => (
     <View style={styles.header}>
@@ -76,6 +79,7 @@ export const AllPostsScreen = () => {
       >
         <Text style={typography.caption_white85}>Лента</Text>
       </TouchableOpacity>
+
       <TouchableOpacity
         onPress={() => setActiveTab("subs")}
         style={[
@@ -95,6 +99,7 @@ export const AllPostsScreen = () => {
           source={require("../../assets/defaults/user-avatar.png")}
           style={styles.cardImage}
         />
+
         <View style={styles.postHeaderInfo}>
           <Text style={typography.body_white85}>@{post.author.nickname}</Text>
           <Text style={typography.additionalInfo_white25}>
@@ -105,7 +110,6 @@ export const AllPostsScreen = () => {
 
       <View style={styles.dream_info}>
         <Text style={typography.h4_white_85}>{post.title}</Text>
-
         <Text style={typography.body_white100} numberOfLines={3}>
           {post.text}...
         </Text>
@@ -120,16 +124,12 @@ export const AllPostsScreen = () => {
 
       <View style={styles.actions}>
         <View style={styles.action}>
-          <TouchableOpacity onPress={() => setLike(!isLikeSet)}>
-            {isLikeSet ? (
-              <Ionicons name="star" size={20} color="red" />
-            ) : (
-              <Ionicons
-                name="star-outline"
-                size={20}
-                color="rgba(255,255,255, 0.45)"
-              />
-            )}
+          <TouchableOpacity onPress={() => toggleLike(post.id)}>
+            <Ionicons
+              name={likes[post.id] ? "star" : "star-outline"}
+              size={20}
+              color={likes[post.id] ? "red" : "rgba(255,255,255,0.45)"}
+            />
           </TouchableOpacity>
           <Text style={typography.caption_white85}>нравится</Text>
         </View>
@@ -165,6 +165,24 @@ export const AllPostsScreen = () => {
     );
   };
 
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <Text>Loading...</Text>
+        <StatusBar style="auto" />
+      </View>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <View style={styles.centered}>
+        <Text>Error: {error?.message ?? "Unknown error"}</Text>
+        <StatusBar style="auto" />
+      </View>
+    );
+  }
+
   return (
     <ImageBackground
       source={require("../../assets/backgrounds/application-bg.png")}
@@ -172,12 +190,11 @@ export const AllPostsScreen = () => {
     >
       <SafeAreaView style={styles.safeArea}>
         <FlatList
-          data={posts}
+          data={activeTab === "feed" ? posts : []}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           ListHeaderComponent={renderHeader}
           ListEmptyComponent={renderEmpty}
-          style={styles.list}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -187,20 +204,29 @@ export const AllPostsScreen = () => {
               tintColor="#ffffff"
             />
           }
+          onEndReached={() => {
+            if (!hasNextPage || isFetchingNextPage) {
+              return;
+            }
+
+            fetchNextPage();
+          }}
+          onEndReachedThreshold={0.15}
         />
       </SafeAreaView>
+
       <View pointerEvents="none" style={styles.tabBarStub}>
         <Image
           source={require("../../assets/Icons/tabIcons/feed-active.png")}
           style={styles.tabBarStubIcon}
-        ></Image>
+        />
         <Image
           source={require("../../assets/Icons/tabIcons/add-dream-button.png")}
-        ></Image>
+        />
         <Image
           source={require("../../assets/Icons/tabIcons/profile-inactive.png")}
           style={styles.tabBarStubIcon}
-        ></Image>
+        />
       </View>
     </ImageBackground>
   );
@@ -260,9 +286,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 20,
     paddingHorizontal: 6,
-  },
-  list: {
-    flex: 1,
   },
 
   listContent: {

@@ -18,6 +18,7 @@ model User {
 
 model Post {
     id          String   @id @default(uuid())
+    seq         Int      @unique @default(autoincrement())
     title       String
     description String
     text        String
