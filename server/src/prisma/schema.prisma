@@ -8,21 +8,34 @@ datasource db {
 }
 
 model User {
-    id        String   @id @default(uuid())
-    nickname  String   @unique
-    name      String   @default("")
+    id        String     @id @default(uuid())
+    nickname  String     @unique
+    name      String     @default("")
     password  String
-    createdAt DateTime @default(now())
+    createdAt DateTime   @default(now())
     posts     Post[]
+    postLikes PostLike[]
 }
 
 model Post {
-    id          String   @id @default(uuid())
-    seq         Int      @unique @default(autoincrement())
+    id          String     @id @default(uuid())
+    seq         Int        @unique @default(autoincrement())
     title       String
     description String
     text        String
-    createdAt   DateTime @default(now())
+    createdAt   DateTime   @default(now())
     authorId    String
-    author      User     @relation(fields: [authorId], references: [id])
+    author      User       @relation(fields: [authorId], references: [id])
+    postLikes   PostLike[]
+}
+
+model PostLike {
+    id        String   @id @default(uuid())
+    createdAt DateTime @default(now())
+    post      Post     @relation(fields: [postId], references: [id])
+    postId    String
+    user      User     @relation(fields: [userId], references: [id])
+    userId    String
+
+    @@unique([postId, userId])
 }

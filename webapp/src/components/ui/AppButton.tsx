@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     borderRadius: 99,
     height: 56,
     justifyContent: "center",
-    width: "100%", // растягиваем как на макете
+    width: "100%",
   },
   disabledButton: {
     opacity: 0.6,

@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { z } from "zod";
 
 import { trpc } from "../lib/trpc";
@@ -9,7 +10,7 @@ export const getPostTrpcRoute = trpc.procedure
     }),
   )
   .query(async ({ ctx, input }) => {
-    const post = await ctx.prisma.post.findUnique({
+    const rawPost = await ctx.prisma.post.findUnique({
       where: { id: input.id },
       include: {
         author: {
@@ -18,7 +19,27 @@ export const getPostTrpcRoute = trpc.procedure
             nickname: true,
           },
         },
+        postLikes: {
+          select: {
+            id: true,
+          },
+          where: {
+            ...(ctx.me && { userId: ctx.me.id }),
+          },
+        },
+        _count: {
+          select: { postLikes: true },
+        },
       },
     });
+
+    const isLikedByMe = !!rawPost?.postLikes.length;
+    const likesCount = rawPost?._count.postLikes || 0;
+    const post = rawPost && {
+      ..._.omit(rawPost, ["postLikes", "_count"]),
+      likesCount,
+      isLikedByMe,
+    };
+
     return { post };
   });

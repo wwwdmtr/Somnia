@@ -7,6 +7,7 @@ import { getMeTrpcRoute } from "./getMe/getMe";
 import { getMyPostsTrpcRoute } from "./getMyPosts";
 import { getPostTrpcRoute } from "./getPost";
 import { getPostsTrpcRoute } from "./getPosts/getPosts";
+import { setPostLikeTrpcRoute } from "./setPostLike/setPostLike";
 import { signInTrpcRoute } from "./signIn/signIn";
 import { signUpTrpcRoute } from "./signUp/signUp";
 import { updatePasswordTrpcRoute } from "./updatePassword/updatePassword";
@@ -24,6 +25,7 @@ export const trpcRouter = trpc.router({
   updatePost: updatePostTrpcRoute,
   updateProfile: updateProfileTrpcRoute,
   updatePassword: updatePasswordTrpcRoute,
+  setPostLike: setPostLikeTrpcRoute,
 });
 
 export type TrpcRouter = typeof trpcRouter;

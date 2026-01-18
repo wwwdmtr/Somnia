@@ -26,10 +26,18 @@ type NavigationProp = NativeStackNavigationProp<FeedStackParamList, "Feed">;
 
 export const AllPostsScreen = () => {
   const navigation = useNavigation<NavigationProp>();
+  const utils = trpc.useUtils();
 
   const [activeTab, setActiveTab] = useState<"feed" | "subs">("feed");
   const [refreshing, setRefreshing] = useState(false);
-  const [likes, setLikes] = useState<Record<string, boolean>>({});
+
+  type PostsInfiniteData = NonNullable<
+    ReturnType<typeof utils.getPosts.getInfiniteData>
+  >;
+
+  type LikeMutationContext = {
+    previousData: PostsInfiniteData | undefined;
+  };
 
   const {
     data,
@@ -46,6 +54,82 @@ export const AllPostsScreen = () => {
     },
   );
 
+  const handleMutate = async (variables: {
+    postId: string;
+    isLikedByMe: boolean;
+  }): Promise<LikeMutationContext> => {
+    await utils.getPosts.cancel();
+    const previousData = utils.getPosts.getInfiniteData({ limit: 15 });
+
+    utils.getPosts.setInfiniteData({ limit: 15 }, (old) => {
+      if (!old) {
+        return old;
+      }
+
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          posts: page.posts.map((post) =>
+            post.id === variables.postId
+              ? {
+                  ...post,
+                  isLikedByMe: variables.isLikedByMe,
+                  likesCount: variables.isLikedByMe
+                    ? post.likesCount + 1
+                    : post.likesCount - 1,
+                }
+              : post,
+          ),
+        })),
+      };
+    });
+
+    return { previousData };
+  };
+
+  const handleError = (
+    _err: unknown,
+    _variables: unknown,
+    context: LikeMutationContext | undefined,
+  ) => {
+    if (context?.previousData) {
+      utils.getPosts.setInfiniteData({ limit: 15 }, context.previousData);
+    }
+  };
+
+  const handleSuccess = (data: {
+    post: { id: string; likesCount: number; isLikedByMe: boolean };
+  }) => {
+    utils.getPosts.setInfiniteData({ limit: 15 }, (old) => {
+      if (!old) {
+        return old;
+      }
+
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          posts: page.posts.map((post) =>
+            post.id === data.post.id
+              ? {
+                  ...post,
+                  isLikedByMe: data.post.isLikedByMe,
+                  likesCount: data.post.likesCount,
+                }
+              : post,
+          ),
+        })),
+      };
+    });
+  };
+
+  const setPostLike = trpc.setPostLike.useMutation({
+    onMutate: handleMutate,
+    onError: handleError,
+    onSuccess: handleSuccess,
+  });
+
   const posts = useMemo(
     () => data?.pages.flatMap((page) => page.posts) ?? [],
     [data],
@@ -61,11 +145,11 @@ export const AllPostsScreen = () => {
     navigation.navigate("Post", { id });
   };
 
-  const toggleLike = (postId: string) => {
-    setLikes((prev) => ({
-      ...prev,
-      [postId]: !prev[postId],
-    }));
+  const toggleLike = (postId: string, currentLikeState: boolean) => {
+    setPostLike.mutate({
+      postId,
+      isLikedByMe: !currentLikeState,
+    });
   };
 
   const renderHeader = () => (
@@ -124,14 +208,18 @@ export const AllPostsScreen = () => {
 
       <View style={styles.actions}>
         <View style={styles.action}>
-          <TouchableOpacity onPress={() => toggleLike(post.id)}>
+          <TouchableOpacity
+            onPress={() => toggleLike(post.id, post.isLikedByMe)}
+          >
             <Ionicons
-              name={likes[post.id] ? "star" : "star-outline"}
+              name={post.isLikedByMe ? "star" : "star-outline"}
               size={20}
-              color={likes[post.id] ? "red" : "rgba(255,255,255,0.45)"}
+              color={post.isLikedByMe ? "red" : "rgba(255,255,255,0.45)"}
             />
           </TouchableOpacity>
-          <Text style={typography.caption_white85}>нравится</Text>
+          <Text style={typography.caption_white85}>
+            {post.likesCount} нравится
+          </Text>
         </View>
 
         <View style={styles.action}>

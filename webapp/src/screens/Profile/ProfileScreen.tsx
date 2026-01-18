@@ -31,13 +31,96 @@ type ProfileScreenNavigationProp = NativeStackNavigationProp<
 
 export const ProfileScreen = () => {
   const { me, isLoading } = useAppContext();
+  const utils = trpc.useUtils();
   const { data, error, refetch } = trpc.getMyPosts.useQuery({
     authorId: me.id || "",
   });
   const navigation = useNavigation<ProfileScreenNavigationProp>();
 
-  const [isLikeSet, setLike] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  type MyPostsData = NonNullable<ReturnType<typeof utils.getMyPosts.getData>>;
+
+  type LikeMutationContext = {
+    previousData: MyPostsData | undefined;
+  };
+
+  const handleMutate = async (variables: {
+    postId: string;
+    isLikedByMe: boolean;
+  }): Promise<LikeMutationContext> => {
+    await utils.getMyPosts.cancel({ authorId: me.id || "" });
+    const previousData = utils.getMyPosts.getData({ authorId: me.id || "" });
+
+    utils.getMyPosts.setData({ authorId: me.id || "" }, (old) => {
+      if (!old?.posts) {
+        return old;
+      }
+
+      return {
+        ...old,
+        posts: old.posts.map((post) =>
+          post.id === variables.postId
+            ? {
+                ...post,
+                isLikedByMe: variables.isLikedByMe,
+                likesCount: variables.isLikedByMe
+                  ? post.likesCount + 1
+                  : post.likesCount - 1,
+              }
+            : post,
+        ),
+      };
+    });
+
+    return { previousData };
+  };
+
+  const handleError = (
+    _err: unknown,
+    _variables: unknown,
+    context: LikeMutationContext | undefined,
+  ) => {
+    if (context?.previousData) {
+      utils.getMyPosts.setData({ authorId: me.id || "" }, context.previousData);
+    }
+  };
+
+  const handleSuccess = (data: {
+    post: { id: string; likesCount: number; isLikedByMe: boolean };
+  }) => {
+    utils.getMyPosts.setData({ authorId: me.id || "" }, (old) => {
+      if (!old?.posts) {
+        return old;
+      }
+
+      return {
+        ...old,
+        posts: old.posts.map((post) =>
+          post.id === data.post.id
+            ? {
+                ...post,
+                isLikedByMe: data.post.isLikedByMe,
+                likesCount: data.post.likesCount,
+              }
+            : post,
+        ),
+      };
+    });
+  };
+
+  const setPostLike = trpc.setPostLike.useMutation({
+    onMutate: handleMutate,
+    onError: handleError,
+    onSuccess: handleSuccess,
+  });
+
+  const toggleLike = (postId: string, currentLikeState: boolean) => {
+    setPostLike.mutate({
+      postId,
+      isLikedByMe: !currentLikeState,
+    });
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -69,6 +152,7 @@ export const ProfileScreen = () => {
       </View>
     );
   }
+
   const renderHeader = () => (
     <View style={styles.header}>
       <Image
@@ -105,6 +189,7 @@ export const ProfileScreen = () => {
       </View>
     </View>
   );
+
   const renderItem = ({
     item: post,
   }: {
@@ -134,18 +219,18 @@ export const ProfileScreen = () => {
 
       <View style={styles.actions}>
         <View style={styles.action}>
-          <TouchableOpacity onPress={() => setLike(!isLikeSet)}>
-            {isLikeSet ? (
-              <Ionicons name="star" size={20} color="red" />
-            ) : (
-              <Ionicons
-                name="star-outline"
-                size={20}
-                color="rgba(255,255,255, 0.45)"
-              />
-            )}
+          <TouchableOpacity
+            onPress={() => toggleLike(post.id, post.isLikedByMe)}
+          >
+            <Ionicons
+              name={post.isLikedByMe ? "star" : "star-outline"}
+              size={20}
+              color={post.isLikedByMe ? "red" : "rgba(255,255,255, 0.45)"}
+            />
           </TouchableOpacity>
-          <Text style={typography.caption_white85}>нравится</Text>
+          <Text style={typography.caption_white85}>
+            {post.likesCount} нравится
+          </Text>
         </View>
 
         <View style={styles.action}>

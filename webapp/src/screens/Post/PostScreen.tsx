@@ -3,7 +3,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { format } from "date-fns/format";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -38,11 +37,91 @@ type PostScreenNavProp = NativeStackNavigationProp<
 export const PostScreen = () => {
   const route = useRoute<PostScreenRouteProp>();
   const navigation = useNavigation<PostScreenNavProp>();
+  const utils = trpc.useUtils();
+  const me = useMe();
+
+  type PostData = NonNullable<ReturnType<typeof utils.getPost.getData>>;
+
+  type LikeMutationContext = {
+    previousData: PostData | undefined;
+  };
+
   const { data, isLoading, error } = trpc.getPost.useQuery({
     id: route.params.id,
   });
-  const me = useMe();
-  const [isLikeSet, setLike] = useState(false);
+
+  const handleMutate = async (variables: {
+    postId: string;
+    isLikedByMe: boolean;
+  }): Promise<LikeMutationContext> => {
+    await utils.getPost.cancel({ id: route.params.id });
+    const previousData = utils.getPost.getData({ id: route.params.id });
+
+    utils.getPost.setData({ id: route.params.id }, (old) => {
+      if (!old?.post) {
+        return old;
+      }
+
+      return {
+        ...old,
+        post: {
+          ...old.post,
+          isLikedByMe: variables.isLikedByMe,
+          likesCount: variables.isLikedByMe
+            ? old.post.likesCount + 1
+            : old.post.likesCount - 1,
+        },
+      };
+    });
+
+    return { previousData };
+  };
+
+  const handleError = (
+    _err: unknown,
+    _variables: unknown,
+    context: LikeMutationContext | undefined,
+  ) => {
+    if (context?.previousData) {
+      utils.getPost.setData({ id: route.params.id }, context.previousData);
+    }
+  };
+
+  const handleSuccess = (data: {
+    post: { id: string; likesCount: number; isLikedByMe: boolean };
+  }) => {
+    utils.getPost.setData({ id: route.params.id }, (old) => {
+      if (!old?.post) {
+        return old;
+      }
+
+      return {
+        ...old,
+        post: {
+          ...old.post,
+          isLikedByMe: data.post.isLikedByMe,
+          likesCount: data.post.likesCount,
+        },
+      };
+    });
+  };
+
+  const setPostLike = trpc.setPostLike.useMutation({
+    onMutate: handleMutate,
+    onError: handleError,
+    onSuccess: handleSuccess,
+  });
+
+  const toggleLike = () => {
+    if (!data?.post) {
+      return;
+    }
+
+    setPostLike.mutate({
+      postId: data.post.id,
+      isLikedByMe: !data.post.isLikedByMe,
+    });
+  };
 
   if (isLoading) {
     return (
@@ -126,14 +205,18 @@ export const PostScreen = () => {
 
               <View style={styles.actions}>
                 <View style={styles.action}>
-                  <TouchableOpacity onPress={() => setLike(!isLikeSet)}>
+                  <TouchableOpacity onPress={toggleLike}>
                     <Ionicons
-                      name={isLikeSet ? "star" : "star-outline"}
+                      name={data.post.isLikedByMe ? "star" : "star-outline"}
                       size={20}
-                      color={isLikeSet ? "red" : "rgba(255,255,255,0.45)"}
+                      color={
+                        data.post.isLikedByMe ? "red" : "rgba(255,255,255,0.45)"
+                      }
                     />
                   </TouchableOpacity>
-                  <Text style={typography.caption_white85}>нравится</Text>
+                  <Text style={typography.caption_white85}>
+                    {data.post.likesCount} нравится
+                  </Text>
                 </View>
 
                 <View style={styles.action}>
