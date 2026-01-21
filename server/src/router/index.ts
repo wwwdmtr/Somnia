@@ -2,7 +2,10 @@ import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 
 import { trpc } from "../lib/trpc";
 
+import { createCommentTrpcRoute } from "./createComment/createComment";
 import { createPostTrpcRoute } from "./createPost/createPost";
+import { deleteCommentTrpcRoute } from "./deleteComment/deleteComment";
+import { getCommentsByPostTrpcRoute } from "./getCommentByPost/getCommentByPost";
 import { getMeTrpcRoute } from "./getMe/getMe";
 import { getMyPostsTrpcRoute } from "./getMyPosts";
 import { getPostTrpcRoute } from "./getPost";
@@ -18,14 +21,17 @@ export const trpcRouter = trpc.router({
   getPosts: getPostsTrpcRoute,
   getPost: getPostTrpcRoute,
   getMyPosts: getMyPostsTrpcRoute,
+  createComment: createCommentTrpcRoute,
   createPost: createPostTrpcRoute,
   signUp: signUpTrpcRoute,
   signIn: signInTrpcRoute,
   getMe: getMeTrpcRoute,
+  getCommentsByPost: getCommentsByPostTrpcRoute,
   updatePost: updatePostTrpcRoute,
   updateProfile: updateProfileTrpcRoute,
   updatePassword: updatePasswordTrpcRoute,
   setPostLike: setPostLikeTrpcRoute,
+  deleteComment: deleteCommentTrpcRoute,
 });
 
 export type TrpcRouter = typeof trpcRouter;
@@ -34,5 +40,5 @@ export type TrpcRouterOutput = inferRouterOutputs<TrpcRouter>;
 
 // console.log(
 //   'procedures:',
-//   Object.keys((trpcRouter as any)._def.procedures || {})
+//   Object.keys((trpcRouter as any)._def.procedures || {}),
 // );

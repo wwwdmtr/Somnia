@@ -27,7 +27,7 @@ const updatePasswordFormSchema = zUpdatePasswordTrpcInput
 
 type UpdatePasswordFormValues = z.infer<typeof updatePasswordFormSchema>;
 
-export const UpdatePasswrordForm = () => {
+export const UpdatePasswordForm = () => {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] =
     React.useState(false);

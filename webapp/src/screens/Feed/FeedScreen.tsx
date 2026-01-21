@@ -191,13 +191,14 @@ export const AllPostsScreen = () => {
           </Text>
         </View>
       </View>
-
-      <View style={styles.dream_info}>
-        <Text style={typography.h4_white_85}>{post.title}</Text>
-        <Text style={typography.body_white100} numberOfLines={3}>
-          {post.text}...
-        </Text>
-      </View>
+      <TouchableOpacity onPress={() => handleOpenPost(post.id)}>
+        <View style={styles.dream_info}>
+          <Text style={typography.h4_white_85}>{post.title}</Text>
+          <Text style={typography.body_white100} numberOfLines={3}>
+            {post.text}...
+          </Text>
+        </View>
+      </TouchableOpacity>
 
       <TouchableOpacity
         onPress={() => handleOpenPost(post.id)}
@@ -227,7 +228,11 @@ export const AllPostsScreen = () => {
             source={require("../../assets/Icons/Activity/comments.png")}
             style={styles.action_img}
           />
-          <Text style={typography.caption_white85}>комментариев</Text>
+          <TouchableOpacity onPress={() => handleOpenPost(post.id)}>
+            <Text style={typography.caption_white85}>
+              {post.commentsCount} комментариев
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>

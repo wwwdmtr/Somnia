@@ -13,8 +13,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { UpdatePasswordForm } from "../../components/forms/UpdatePasswordForm";
 import { UpdateProfileForm } from "../../components/forms/UpdateProfileForm";
-import { UpdatePasswrordForm } from "../../components/forms/updatePasswordForm";
 import { AppButton } from "../../components/ui/AppButton";
 import ScreenName from "../../constants/ScreenName";
 import { ProfileStackParamList } from "../../navigation/ProfileStackParamList";
@@ -54,7 +54,7 @@ export const UpdateProfileScreen = () => {
 
           <View style={styles.name_settings_card}>
             <Text style={typography.h4_white_85}>Изменение пароля</Text>
-            <UpdatePasswrordForm />
+            <UpdatePasswordForm />
           </View>
         </ScrollView>
       </SafeAreaView>
