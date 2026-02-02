@@ -307,20 +307,6 @@ export const AllPostsScreen = () => {
           onEndReachedThreshold={0.15}
         />
       </SafeAreaView>
-
-      <View pointerEvents="none" style={styles.tabBarStub}>
-        <Image
-          source={require("../../assets/Icons/tabIcons/feed-active.png")}
-          style={styles.tabBarStubIcon}
-        />
-        <Image
-          source={require("../../assets/Icons/tabIcons/add-dream-button.png")}
-        />
-        <Image
-          source={require("../../assets/Icons/tabIcons/profile-inactive.png")}
-          style={styles.tabBarStubIcon}
-        />
-      </View>
     </ImageBackground>
   );
 };
@@ -425,29 +411,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginHorizontal: 7,
     width: 165,
-  },
-  tabBarStub: {
-    alignItems: "center",
-    backgroundColor: COLORS.navBarBackground,
-    borderRadius: 999,
-    borderTopWidth: 0,
-    bottom: 28,
-    elevation: 0,
-    flexDirection: "row",
-    height: 60,
-    justifyContent: "space-between",
-    left: 13,
-    paddingBottom: 0,
-    paddingLeft: 0,
-    paddingRight: 0,
-    paddingTop: 0,
-    position: "absolute",
-    right: 13,
-    shadowOpacity: 0,
-  },
-  tabBarStubIcon: {
-    height: 24,
-    marginHorizontal: 51,
-    width: 24,
   },
 });

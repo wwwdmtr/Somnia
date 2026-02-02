@@ -9,6 +9,7 @@ export enum ScreenName {
   Onboarding = "Onboarding",
   SignIn = "SignIn",
   SignUp = "SignUp",
+  Search = "Search",
 }
 
 export default ScreenName;

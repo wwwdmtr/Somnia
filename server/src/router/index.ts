@@ -10,6 +10,7 @@ import { getMeTrpcRoute } from "./getMe/getMe";
 import { getMyPostsTrpcRoute } from "./getMyPosts";
 import { getPostTrpcRoute } from "./getPost";
 import { getPostsTrpcRoute } from "./getPosts/getPosts";
+import { getRatedPostsTrpcRoute } from "./getRatedPosts/getRatedPosts";
 import { setPostLikeTrpcRoute } from "./setPostLike/setPostLike";
 import { signInTrpcRoute } from "./signIn/signIn";
 import { signUpTrpcRoute } from "./signUp/signUp";
@@ -21,6 +22,7 @@ export const trpcRouter = trpc.router({
   getPosts: getPostsTrpcRoute,
   getPost: getPostTrpcRoute,
   getMyPosts: getMyPostsTrpcRoute,
+  getRatedPosts: getRatedPostsTrpcRoute,
   createComment: createCommentTrpcRoute,
   createPost: createPostTrpcRoute,
   signUp: signUpTrpcRoute,

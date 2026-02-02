@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
   getFocusedRouteNameFromRoute,
@@ -23,12 +22,14 @@ import { UpdatePostScreen } from "../screens/Post/UpdatePostModalScreen";
 import { ProfileScreen } from "../screens/Profile/ProfileScreen";
 import { SignOutScreen } from "../screens/Profile/SignOutScreen";
 import { UpdateProfileScreen } from "../screens/Profile/UpdateProfileScreen";
+import { SearchScreen } from "../screens/Search/SearchScreen";
 
 import { AddPostStackParamList } from "./AddPostStackParamList";
 import { AuthStackParamList } from "./AuthStackParamList";
 import { FeedStackParamList } from "./FeedStackParamList";
 import { ProfileStackParamList } from "./ProfileStackParamList";
 import { RootTabParamList } from "./RootTabParamList";
+import { SearchStackParamList } from "./SearchStackParamList";
 
 import type { BottomTabNavigationOptions } from "@react-navigation/bottom-tabs";
 
@@ -107,6 +108,33 @@ function ProfileStackNav() {
   );
 }
 
+const SearchStack = createNativeStackNavigator<SearchStackParamList>();
+function SearchStackNav() {
+  return (
+    <SearchStack.Navigator>
+      <SearchStack.Screen
+        name={ScreenName.Search}
+        component={SearchScreen}
+        options={{ headerShown: false }}
+      />
+      <SearchStack.Screen
+        name={ScreenName.Post}
+        component={PostScreen}
+        options={{ headerShown: false }}
+      />
+      <SearchStack.Screen
+        name={ScreenName.EditPost}
+        component={UpdatePostScreen}
+        options={{
+          presentation: "modal",
+          title: "Edit dream",
+          headerShown: false,
+        }}
+      />
+    </SearchStack.Navigator>
+  );
+}
+
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 type IconPairs = {
@@ -126,6 +154,10 @@ const iconMap: Record<string, IconPairs> = {
   [TabName.ProfileTab]: {
     active: require("../assets/Icons/tabIcons/profile-active.png"),
     inactive: require("../assets/Icons/tabIcons/profile-inactive.png"),
+  },
+  [TabName.SearchTab]: {
+    active: require("../assets/Icons/tabIcons/feed-active.png"),
+    inactive: require("../assets/Icons/tabIcons/feed-inactive.png"),
   },
 };
 
@@ -232,6 +264,7 @@ export function AppNav() {
       }}
     >
       <Tab.Screen name={TabName.FeedTab} component={FeedStackNav} />
+      <Tab.Screen name={TabName.SearchTab} component={SearchStackNav} />
       <Tab.Screen name={TabName.AddPostTab} component={AddPostStackNav} />
       <Tab.Screen name={TabName.ProfileTab} component={ProfileStackNav} />
     </Tab.Navigator>
