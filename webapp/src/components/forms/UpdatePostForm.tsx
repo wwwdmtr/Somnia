@@ -1,10 +1,12 @@
 import { zUpdatePostTrpcInput } from "@somnia/server/src/router/updatePost/input";
+import { canDeleteThisPost } from "@somnia/server/src/utils/can";
 import { useFormik } from "formik";
 import React from "react";
-import { View, TextInput, Text } from "react-native";
+import { View, TextInput, Text, TouchableOpacity, Alert } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
 import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
@@ -14,8 +16,12 @@ import type { inferRouterOutputs } from "@trpc/server";
 
 type UpdatePostFormsValues = z.infer<typeof zUpdatePostTrpcInput>;
 type RouterOutputs = inferRouterOutputs<TrpcRouter>;
-type Post = Omit<NonNullable<RouterOutputs["getPost"]["post"]>, "createdAt"> & {
+type Post = Omit<
+  NonNullable<RouterOutputs["getPost"]["post"]>,
+  "createdAt" | "deletedAt"
+> & {
   createdAt: Date;
+  deletedAt: Date | null;
 };
 
 type UpdatePostFormsProps = {
@@ -24,6 +30,7 @@ type UpdatePostFormsProps = {
 };
 
 export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
+  const me = useMe();
   const utils = trpc.useUtils();
   const updatePost = trpc.updatePost.useMutation({
     onSuccess: async () => {
@@ -35,6 +42,39 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
       onSuccess?.();
     },
   });
+  const deletePost = trpc.deletePost.useMutation({
+    onSuccess: async () => {
+      await Promise.all([
+        utils.getPosts.invalidate(),
+        utils.getMyPosts.invalidate(),
+        utils.getRatedPosts.invalidate(),
+      ]);
+      onSuccess?.();
+    },
+  });
+
+  const onDeletePress = () => {
+    Alert.alert(
+      "Удалить пост?",
+      "Пост будет скрыт и исчезнет из ленты.",
+      [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Удалить",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deletePost.mutateAsync({ postId: post.id });
+            } catch (e) {
+              Alert.alert("Ошибка", e?.message ?? "Не удалось удалить пост");
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  };
+
   const formik = useFormik<UpdatePostFormsValues>({
     initialValues: {
       postId: post.id,
@@ -86,6 +126,15 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
       />
       {formik.touched.text && formik.errors.text && (
         <Text style={styles.errorText}>{formik.errors.text}</Text>
+      )}
+
+      {canDeleteThisPost(me, { authorId: post.authorId }) && (
+        <TouchableOpacity
+          onPress={onDeletePress}
+          disabled={deletePost.isPending}
+        >
+          <Text>{deletePost.isPending ? "Удаление..." : "Удалить пост"}</Text>
+        </TouchableOpacity>
       )}
 
       <AppButton

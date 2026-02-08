@@ -26,6 +26,7 @@ export const AddPostForm = () => {
   const createPost = trpc.createPost.useMutation({
     onSuccess: () => {
       utils.getPosts.invalidate();
+      utils.getMyPosts.invalidate();
     },
   });
   const formik = useFormik<PostFormValues>({

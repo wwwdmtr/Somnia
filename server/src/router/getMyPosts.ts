@@ -15,6 +15,7 @@ export const getMyPostsTrpcRoute = trpc.procedure
     const rawPosts = await ctx.prisma.post.findMany({
       where: {
         authorId: input.authorId,
+        deletedAt: null,
       },
       orderBy: {
         createdAt: "desc",

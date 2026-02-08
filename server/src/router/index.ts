@@ -5,6 +5,7 @@ import { trpc } from "../lib/trpc";
 import { createCommentTrpcRoute } from "./createComment/createComment";
 import { createPostTrpcRoute } from "./createPost/createPost";
 import { deleteCommentTrpcRoute } from "./deleteComment/deleteComment";
+import { deletePostTrpcRoute } from "./deletePost/deletePost";
 import { getCommentsByPostTrpcRoute } from "./getCommentByPost/getCommentByPost";
 import { getMeTrpcRoute } from "./getMe/getMe";
 import { getMyPostsTrpcRoute } from "./getMyPosts";
@@ -34,6 +35,7 @@ export const trpcRouter = trpc.router({
   updatePassword: updatePasswordTrpcRoute,
   setPostLike: setPostLikeTrpcRoute,
   deleteComment: deleteCommentTrpcRoute,
+  deletePost: deletePostTrpcRoute,
 });
 
 export type TrpcRouter = typeof trpcRouter;

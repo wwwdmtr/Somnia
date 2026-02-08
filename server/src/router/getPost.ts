@@ -33,6 +33,10 @@ export const getPostTrpcRoute = trpc.procedure
       },
     });
 
+    if (rawPost?.deletedAt) {
+      throw new Error("Пост был удален");
+    }
+
     const isLikedByMe = !!rawPost?.postLikes.length;
     const likesCount = rawPost?._count.postLikes || 0;
     const post = rawPost && {

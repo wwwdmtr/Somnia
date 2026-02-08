@@ -9,14 +9,20 @@ datasource db {
 }
 
 model User {
-    id        String     @id @default(uuid())
-    nickname  String     @unique
-    name      String     @default("")
-    password  String
-    createdAt DateTime   @default(now())
-    posts     Post[]
-    comments  Comment[]
-    postLikes PostLike[]
+    id          String           @id @default(uuid())
+    nickname    String           @unique
+    name        String           @default("")
+    password    String
+    createdAt   DateTime         @default(now())
+    posts       Post[]
+    comments    Comment[]
+    postLikes   PostLike[]
+    permissions UserPermission[]
+}
+
+enum UserPermission {
+    DELETE_POST
+    ALL
 }
 
 model Post {
@@ -30,6 +36,7 @@ model Post {
     author      User       @relation(fields: [authorId], references: [id])
     comments    Comment[]
     postLikes   PostLike[]
+    deletedAt   DateTime?
 }
 
 model PostLike {

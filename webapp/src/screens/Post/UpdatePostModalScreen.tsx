@@ -69,7 +69,7 @@ export const UpdatePostScreen = () => {
         <View style={styles.form_container}>
           <UpdatePostForms
             post={data.post}
-            onSuccess={() => navigation.goBack()}
+            onSuccess={() => navigation.popToTop()}
           />
         </View>
       </ScrollView>

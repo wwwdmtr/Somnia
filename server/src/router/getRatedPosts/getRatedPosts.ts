@@ -40,6 +40,7 @@ export const getRatedPostsTrpcRoute = trpc.procedure
       !!rawSearch && rawSearch.length >= 3 && !/^\d+$/.test(rawSearch);
 
     const where = {
+      deletedAt: null,
       ...(dateFrom ? { createdAt: { gte: dateFrom } } : {}),
 
       ...(rawSearch

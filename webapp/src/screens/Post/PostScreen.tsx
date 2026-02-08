@@ -6,6 +6,7 @@ import {
   useNavigation,
   useFocusEffect,
 } from "@react-navigation/native";
+import { canDeletePost } from "@somnia/server/src/utils/can";
 import { format } from "date-fns/format";
 import { StatusBar } from "expo-status-bar";
 import { useState, useCallback } from "react";
@@ -18,6 +19,7 @@ import {
   Image,
   FlatList,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -77,6 +79,7 @@ export const PostScreen = () => {
     commentId: string;
     nickname: string;
   } | null>(null);
+  const deletePost = trpc.deletePost.useMutation();
 
   type PostData = NonNullable<ReturnType<typeof utils.getPost.getData>>;
 
@@ -305,7 +308,6 @@ export const PostScreen = () => {
             </View>
           </View>
 
-          {/* Ответы на комментарий */}
           {isExpanded &&
             comment.replies.map((reply) => (
               <View key={reply.id} style={styles.replyCard}>
@@ -341,7 +343,6 @@ export const PostScreen = () => {
                   {reply.content}
                 </Text>
 
-                {/* Кнопка ответить на ответ */}
                 <TouchableOpacity
                   onPress={() =>
                     handleReplyToComment(
@@ -393,7 +394,6 @@ export const PostScreen = () => {
 
     return (
       <View>
-        {/* CARD */}
         <View style={styles.card}>
           <View style={styles.postHeader}>
             <Image
@@ -443,7 +443,6 @@ export const PostScreen = () => {
           </View>
         </View>
 
-        {/* COMMENTS HEADER */}
         <View style={styles.commentsHeader}>
           <Text style={typography.h4_white_85}>Комментарии</Text>
         </View>
@@ -490,13 +489,39 @@ export const PostScreen = () => {
     );
   }
 
+  const onDeletePress = () => {
+    Alert.alert(
+      "Удалить пост?",
+      "Пост будет скрыт (soft delete).",
+      [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Удалить",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deletePost.mutateAsync({ postId: String(data.post.id) });
+
+              utils.getPosts.invalidate();
+              utils.getMyPosts.invalidate();
+              utils.getRatedPosts.invalidate();
+              navigation.goBack();
+            } catch (e) {
+              Alert.alert("Ошибка", e?.message ?? "Не удалось удалить пост");
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  };
+
   return (
     <ImageBackground
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.BackgroundImage}
     >
       <SafeAreaView style={styles.safeArea}>
-        {/* HEADER */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -517,9 +542,16 @@ export const PostScreen = () => {
               <Ionicons name="create-outline" size={24} color="white" />
             </TouchableOpacity>
           )}
+          {canDeletePost(me) && (
+            <TouchableOpacity
+              onPress={onDeletePress}
+              disabled={deletePost.isPending}
+            >
+              <Ionicons name="trash-outline" size={24} color="white" />
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* CONTENT WITH VIRTUALIZED COMMENTS */}
         <FlatList
           data={comments}
           renderItem={renderComment}
@@ -545,7 +577,6 @@ export const PostScreen = () => {
           }
         />
 
-        {/* COMMENT FORM */}
         <View style={styles.commentFormWrapper}>
           <AddCommentForm
             postId={data.post.id}

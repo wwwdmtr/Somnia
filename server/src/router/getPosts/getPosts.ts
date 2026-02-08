@@ -10,6 +10,9 @@ export const getPostsTrpcRoute = trpc.procedure
     const userId = ctx.me?.id;
 
     const rawPosts = await ctx.prisma.post.findMany({
+      where: {
+        deletedAt: null,
+      },
       take: input.limit + 1,
       ...(input.cursor && {
         cursor: { seq: input.cursor },
