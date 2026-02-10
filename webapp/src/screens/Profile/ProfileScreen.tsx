@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import {
+  CompositeNavigationProp,
+  useNavigation,
+} from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { isUserAdmin } from "@somnia/server/src/utils/can";
 import { format } from "date-fns";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
@@ -23,10 +27,11 @@ import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
 
 import type { ProfileStackParamList } from "../../navigation/ProfileStackParamList";
+import type { RootStackParamList } from "../../navigation/RootStackParamList";
 
-type ProfileScreenNavigationProp = NativeStackNavigationProp<
-  ProfileStackParamList,
-  ScreenName.Profile
+type ProfileScreenNavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<ProfileStackParamList, ScreenName.Profile>,
+  NativeStackNavigationProp<RootStackParamList>
 >;
 
 export const ProfileScreen = () => {
@@ -187,6 +192,18 @@ export const ProfileScreen = () => {
           <Text style={typography.body_white85}>спутник</Text>
         </View>
       </View>
+
+      {isUserAdmin(me) ? (
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate(ScreenName.AdminStack, {
+              screen: ScreenName.AdminHome,
+            })
+          }
+        >
+          <Text style={typography.body_white85}>Админка</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 

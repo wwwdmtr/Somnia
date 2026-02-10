@@ -7,6 +7,7 @@ import { createPostTrpcRoute } from "./createPost/createPost";
 import { deleteCommentTrpcRoute } from "./deleteComment/deleteComment";
 import { deletePostTrpcRoute } from "./deletePost/deletePost";
 import { getCommentsByPostTrpcRoute } from "./getCommentByPost/getCommentByPost";
+import { getDeletedPostsTrpcRoute } from "./getDeletedPosts/getDeletedPosts";
 import { getMeTrpcRoute } from "./getMe/getMe";
 import { getMyPostsTrpcRoute } from "./getMyPosts";
 import { getPostTrpcRoute } from "./getPost";
@@ -15,6 +16,7 @@ import { getRatedPostsTrpcRoute } from "./getRatedPosts/getRatedPosts";
 import { setPostLikeTrpcRoute } from "./setPostLike/setPostLike";
 import { signInTrpcRoute } from "./signIn/signIn";
 import { signUpTrpcRoute } from "./signUp/signUp";
+import { undoDeletePostTrpcRoute } from "./undoDeletePost/undoDeletePost";
 import { updatePasswordTrpcRoute } from "./updatePassword/updatePassword";
 import { updatePostTrpcRoute } from "./updatePost/updatePost";
 import { updateProfileTrpcRoute } from "./updateProfile/updateProfile";
@@ -36,6 +38,8 @@ export const trpcRouter = trpc.router({
   setPostLike: setPostLikeTrpcRoute,
   deleteComment: deleteCommentTrpcRoute,
   deletePost: deletePostTrpcRoute,
+  getDeletedPosts: getDeletedPostsTrpcRoute,
+  undoDeletePost: undoDeletePostTrpcRoute,
 });
 
 export type TrpcRouter = typeof trpcRouter;

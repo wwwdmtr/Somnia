@@ -31,6 +31,10 @@ export const isPostOwner = (user: MaybeUser, post: MaybePost) => {
   return user.id === post.authorId;
 };
 
+export const isUserAdmin = (user: MaybeUser) => {
+  return hasPermission(user, "ALL");
+};
+
 export const canDeleteThisPost = (user: MaybeUser, post: MaybePost) => {
   return canDeletePost(user) || isPostOwner(user, post);
 };

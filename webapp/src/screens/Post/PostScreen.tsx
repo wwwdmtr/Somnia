@@ -6,7 +6,7 @@ import {
   useNavigation,
   useFocusEffect,
 } from "@react-navigation/native";
-import { canDeletePost } from "@somnia/server/src/utils/can";
+import { canDeletePost, isUserAdmin } from "@somnia/server/src/utils/can";
 import { format } from "date-fns/format";
 import { StatusBar } from "expo-status-bar";
 import { useState, useCallback } from "react";
@@ -80,6 +80,7 @@ export const PostScreen = () => {
     nickname: string;
   } | null>(null);
   const deletePost = trpc.deletePost.useMutation();
+  const undoDeletePost = trpc.undoDeletePost.useMutation();
 
   type PostData = NonNullable<ReturnType<typeof utils.getPost.getData>>;
 
@@ -516,6 +517,36 @@ export const PostScreen = () => {
     );
   };
 
+  const onUndoDeletePress = () => {
+    Alert.alert(
+      "Вернуть пост?",
+      "Пост будет восстановлен.",
+      [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Вернуть",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await undoDeletePost.mutateAsync({
+                postId: String(data.post.id),
+              });
+
+              utils.getPosts.invalidate();
+              utils.getMyPosts.invalidate();
+              utils.getRatedPosts.invalidate();
+              utils.getDeletedPosts.invalidate();
+              navigation.goBack();
+            } catch (e) {
+              Alert.alert("Ошибка", e?.message ?? "Не удалось вернуть пост");
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  };
+
   return (
     <ImageBackground
       source={require("../../assets/backgrounds/application-bg.png")}
@@ -542,12 +573,21 @@ export const PostScreen = () => {
               <Ionicons name="create-outline" size={24} color="white" />
             </TouchableOpacity>
           )}
-          {canDeletePost(me) && (
+          {canDeletePost(me) && data.post.deletedAt == null && (
             <TouchableOpacity
               onPress={onDeletePress}
               disabled={deletePost.isPending}
             >
               <Ionicons name="trash-outline" size={24} color="white" />
+            </TouchableOpacity>
+          )}
+
+          {isUserAdmin(me) && data.post.deletedAt && (
+            <TouchableOpacity
+              onPress={onUndoDeletePress}
+              disabled={undoDeletePost.isPending}
+            >
+              <Ionicons name="refresh-outline" size={24} color="white" />
             </TouchableOpacity>
           )}
         </View>

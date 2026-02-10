@@ -2,6 +2,7 @@ import _ from "lodash";
 import { z } from "zod";
 
 import { trpc } from "../lib/trpc";
+import { isUserAdmin } from "../utils/can";
 
 export const getPostTrpcRoute = trpc.procedure
   .input(
@@ -33,7 +34,7 @@ export const getPostTrpcRoute = trpc.procedure
       },
     });
 
-    if (rawPost?.deletedAt) {
+    if (rawPost?.deletedAt && !isUserAdmin(ctx.me)) {
       throw new Error("Пост был удален");
     }
 

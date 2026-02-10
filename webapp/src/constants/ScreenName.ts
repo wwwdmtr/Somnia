@@ -1,4 +1,6 @@
 export enum ScreenName {
+  RootTabs = "RootTabs",
+  AdminStack = "AdminStack",
   Feed = "Feed",
   Post = "Post",
   AddPost = "AddPost",
@@ -10,6 +12,8 @@ export enum ScreenName {
   SignIn = "SignIn",
   SignUp = "SignUp",
   Search = "Search",
+  AdminHome = "AdminHome",
+  DeletedPosts = "DeletedPosts",
 }
 
 export default ScreenName;

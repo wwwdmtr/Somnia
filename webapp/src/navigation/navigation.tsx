@@ -13,6 +13,8 @@ import ScreenName from "../constants/ScreenName";
 import TabName from "../constants/TabName";
 import { useAppContext } from "../lib/ctx";
 import { AddPostScreen } from "../screens/AddPost/AddYourPost";
+import { AdminScreen } from "../screens/Admin/AdminScreen";
+import { DeletedPostsScreen } from "../screens/Admin/DeletedPosts";
 import { AllPostsScreen } from "../screens/Feed/FeedScreen";
 import { OnboardingScreen } from "../screens/Onboarding/OnboardingScreen";
 import { SignInScreen } from "../screens/Onboarding/SignInScreen";
@@ -25,9 +27,11 @@ import { UpdateProfileScreen } from "../screens/Profile/UpdateProfileScreen";
 import { SearchScreen } from "../screens/Search/SearchScreen";
 
 import { AddPostStackParamList } from "./AddPostStackParamList";
+import { AdminStackParamList } from "./AdminStackParamList";
 import { AuthStackParamList } from "./AuthStackParamList";
 import { FeedStackParamList } from "./FeedStackParamList";
 import { ProfileStackParamList } from "./ProfileStackParamList";
+import { RootStackParamList } from "./RootStackParamList";
 import { RootTabParamList } from "./RootTabParamList";
 import { SearchStackParamList } from "./SearchStackParamList";
 
@@ -135,7 +139,40 @@ function SearchStackNav() {
   );
 }
 
+function AdminStackNav() {
+  return (
+    <AdminStack.Navigator>
+      <AdminStack.Screen
+        name={ScreenName.AdminHome}
+        component={AdminScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStack.Screen
+        name={ScreenName.DeletedPosts}
+        component={DeletedPostsScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStack.Screen
+        name={ScreenName.Post}
+        component={PostScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStack.Screen
+        name={ScreenName.EditPost}
+        component={UpdatePostScreen}
+        options={{
+          presentation: "modal",
+          title: "Edit dream",
+          headerShown: false,
+        }}
+      />
+    </AdminStack.Navigator>
+  );
+}
+
 const Tab = createBottomTabNavigator<RootTabParamList>();
+const RootStack = createNativeStackNavigator<RootStackParamList>();
+const AdminStack = createNativeStackNavigator<AdminStackParamList>();
 
 type IconPairs = {
   active: ImageSourcePropType;
@@ -313,5 +350,22 @@ export function RootNavigation() {
     return null;
   }
 
-  return me ? <AppNav /> : <AuthStackNav />;
+  return me ? <RootStackNav /> : <AuthStackNav />;
+}
+
+function RootStackNav() {
+  return (
+    <RootStack.Navigator>
+      <RootStack.Screen
+        name={ScreenName.RootTabs}
+        component={AppNav}
+        options={{ headerShown: false }}
+      />
+      <RootStack.Screen
+        name={ScreenName.AdminStack}
+        component={AdminStackNav}
+        options={{ headerShown: false }}
+      />
+    </RootStack.Navigator>
+  );
 }
