@@ -44,13 +44,14 @@ export const SignUpForm = () => {
   const formik = useFormik<SignUpFormValues>({
     initialValues: {
       nickname: "",
+      email: "",
       password: "",
       passwordConfirmation: "",
     },
     validationSchema: toFormikValidationSchema(signUpFormSchema),
     onSubmit: async (values, { resetForm }) => {
-      const { nickname, password } = values;
-      const { token } = await signUp.mutateAsync({ nickname, password });
+      const { nickname, email, password } = values;
+      const { token } = await signUp.mutateAsync({ nickname, email, password });
       await setToken(token);
 
       void trpcUtils.invalidate();
@@ -67,6 +68,22 @@ export const SignUpForm = () => {
         value={formik.values.nickname}
         onChangeText={(text) => formik.setFieldValue("nickname", text)}
         onBlur={() => formik.setFieldTouched("nickname")}
+        style={[
+          styles.input,
+          formik.touched.nickname && formik.errors.nickname
+            ? styles.inputError
+            : null,
+        ]}
+        autoCapitalize="none"
+      />
+
+      <Text style={typography.caption_white85}>E-mail</Text>
+      <TextInput
+        placeholder="E-mail"
+        placeholderTextColor={COLORS.white25}
+        value={formik.values.email}
+        onChangeText={(text) => formik.setFieldValue("email", text)}
+        onBlur={() => formik.setFieldTouched("email")}
         style={[
           styles.input,
           formik.touched.nickname && formik.errors.nickname

@@ -10,6 +10,7 @@ const zEnv = z.object({
   PASSWORD_SALT: z.string().trim().min(1),
   ADMIN_NICKNAME: z.string().trim().min(1),
   ADMIN_PASSWORD: z.string().trim().min(1),
+  ADMIN_EMAIL: z.string().trim(),
 });
 
 //eslint-disable-next-line node/no-process-env

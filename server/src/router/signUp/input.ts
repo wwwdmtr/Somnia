@@ -6,6 +6,7 @@ export const zSignUpTrpcInput = z.object({
     .min(3, "Никнейм должен быть не менее 3 символов")
     .max(30)
     .regex(/^[a-z0-9-]+$/, "Никнейм содержит недопустимые символы."),
+  email: z.string().min(1).check(z.email("Некорректная почта")),
   password: z
     .string({ message: "Пароль не может быть пустым" })
     .min(6, "Пароль должен содержать минимум 6 символов")
