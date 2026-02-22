@@ -1,8 +1,9 @@
-import { trpc } from "../../lib/trpc";
-import { getPasswordHash } from "../../utils/getPasswordHash";
-import { signJWT } from "../../utils/signJWT";
+import { sendWelcomeEmail } from '../../lib/emails';
+import { trpc } from '../../lib/trpc';
+import { getPasswordHash } from '../../utils/getPasswordHash';
+import { signJWT } from '../../utils/signJWT';
 
-import { zSignUpTrpcInput } from "./input";
+import { zSignUpTrpcInput } from './input';
 
 export const signUpTrpcRoute = trpc.procedure
   .input(zSignUpTrpcInput)
@@ -13,7 +14,7 @@ export const signUpTrpcRoute = trpc.procedure
       },
     });
     if (exUserWithNick) {
-      throw new Error("User with this nick already exists");
+      throw new Error('Пользователь с таким ником уже зарегистрирован');
     }
     const exUserWithEmail = await ctx.prisma.user.findUnique({
       where: {
@@ -21,7 +22,7 @@ export const signUpTrpcRoute = trpc.procedure
       },
     });
     if (exUserWithEmail) {
-      throw new Error("User with this email already exists");
+      throw new Error('Пользователь с таким email уже зарегистрирован');
     }
 
     const user = await ctx.prisma.user.create({
@@ -31,6 +32,8 @@ export const signUpTrpcRoute = trpc.procedure
         password: getPasswordHash(input.password),
       },
     });
+
+    void sendWelcomeEmail({ user });
 
     const token = signJWT(user.id);
 

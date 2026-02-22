@@ -6,6 +6,8 @@
   "scripts": {
     "b": "pnpm --filter @somnia/server",
     "f": "pnpm --filter @somnia/webapp",
+    "build:server": "pnpm --filter @somnia/server build",
+    "start:server": "pnpm --filter @somnia/server start",
     "types": " concurrently 'pnpm b types && pnpm f types'",
     "lint": "concurrently 'pnpm b lint && pnpm f lint'",
     "prettify": "pnpm -r exec prettier --write \"**/*.{js,jsx,ts,tsx,json,md,css,scss,html}\"",
@@ -15,6 +17,7 @@
     "@typescript-eslint/eslint-plugin": "^8.46.1",
     "@typescript-eslint/parser": "^8.46.1",
     "concurrently": "^9.2.1",
+    "copyfiles": "^2.4.1",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",

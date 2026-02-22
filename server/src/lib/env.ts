@@ -1,5 +1,5 @@
-import * as dotenv from "dotenv";
-import { z } from "zod";
+import * as dotenv from 'dotenv';
+import { z } from 'zod';
 
 dotenv.config();
 
@@ -11,6 +11,7 @@ const zEnv = z.object({
   ADMIN_NICKNAME: z.string().trim().min(1),
   ADMIN_PASSWORD: z.string().trim().min(1),
   ADMIN_EMAIL: z.string().trim(),
+  WEBAPP_URL: z.string().trim().min(1),
 });
 
 //eslint-disable-next-line node/no-process-env
