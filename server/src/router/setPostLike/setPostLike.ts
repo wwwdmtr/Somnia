@@ -13,34 +13,67 @@ export const setPostLikeTrpcRoute = trpc.procedure
 
     const post = await ctx.prisma.post.findUnique({
       where: { id: postId },
+      select: {
+        id: true,
+        authorId: true,
+      },
     });
 
     if (!post) {
       throw new Error("Post not found");
     }
-    if (isLikedByMe) {
-      await ctx.prisma.postLike.upsert({
-        where: {
-          postId_userId: {
-            postId,
-            userId: ctx.me.id,
-          },
-        },
-        create: {
-          userId: ctx.me.id,
+
+    const existingLike = await ctx.prisma.postLike.findUnique({
+      where: {
+        postId_userId: {
           postId,
+          userId: ctx.me.id,
         },
-        update: {},
-      });
-    } else {
-      await ctx.prisma.postLike.delete({
-        where: {
-          postId_userId: {
-            postId,
+      },
+      select: { id: true },
+    });
+
+    if (isLikedByMe) {
+      if (!existingLike) {
+        await ctx.prisma.postLike.create({
+          data: {
             userId: ctx.me.id,
+            postId,
           },
-        },
-      });
+        });
+
+        if (post.authorId !== ctx.me.id) {
+          await ctx.prisma.notification.create({
+            data: {
+              type: "POST_LIKED",
+              recipientId: post.authorId,
+              actorId: ctx.me.id,
+              postId,
+            },
+          });
+        }
+      }
+    } else {
+      if (existingLike) {
+        await ctx.prisma.$transaction([
+          ctx.prisma.postLike.delete({
+            where: {
+              postId_userId: {
+                postId,
+                userId: ctx.me.id,
+              },
+            },
+          }),
+          ctx.prisma.notification.deleteMany({
+            where: {
+              type: "POST_LIKED",
+              recipientId: post.authorId,
+              actorId: ctx.me.id,
+              postId,
+            },
+          }),
+        ]);
+      }
     }
 
     const likesCount = await ctx.prisma.postLike.count({

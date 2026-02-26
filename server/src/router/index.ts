@@ -9,10 +9,13 @@ import { deletePostTrpcRoute } from "./deletePost/deletePost";
 import { getCommentsByPostTrpcRoute } from "./getCommentByPost/getCommentByPost";
 import { getDeletedPostsTrpcRoute } from "./getDeletedPosts/getDeletedPosts";
 import { getMeTrpcRoute } from "./getMe/getMe";
+import { getMyNotificationsTrpcRoute } from "./getMyNotifications/getMyNotifications";
 import { getMyPostsTrpcRoute } from "./getMyPosts";
 import { getPostTrpcRoute } from "./getPost";
 import { getPostsTrpcRoute } from "./getPosts/getPosts";
 import { getRatedPostsTrpcRoute } from "./getRatedPosts/getRatedPosts";
+import { getUnreadNotificationsCountTrpcRoute } from "./getUnreadNotificationsCount/getUnreadNotificationsCount";
+import { markAllNotificationsReadTrpcRoute } from "./markAllNotificationsRead/markAllNotificationsRead";
 import { setPostLikeTrpcRoute } from "./setPostLike/setPostLike";
 import { signInTrpcRoute } from "./signIn/signIn";
 import { signUpTrpcRoute } from "./signUp/signUp";
@@ -25,6 +28,8 @@ export const trpcRouter = trpc.router({
   getPosts: getPostsTrpcRoute,
   getPost: getPostTrpcRoute,
   getMyPosts: getMyPostsTrpcRoute,
+  getMyNotifications: getMyNotificationsTrpcRoute,
+  getUnreadNotificationsCount: getUnreadNotificationsCountTrpcRoute,
   getRatedPosts: getRatedPostsTrpcRoute,
   createComment: createCommentTrpcRoute,
   createPost: createPostTrpcRoute,
@@ -38,6 +43,7 @@ export const trpcRouter = trpc.router({
   setPostLike: setPostLikeTrpcRoute,
   deleteComment: deleteCommentTrpcRoute,
   deletePost: deletePostTrpcRoute,
+  markAllNotificationsRead: markAllNotificationsReadTrpcRoute,
   getDeletedPosts: getDeletedPostsTrpcRoute,
   undoDeletePost: undoDeletePostTrpcRoute,
 });

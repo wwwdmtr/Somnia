@@ -17,6 +17,9 @@ export const COLORS = {
   linkColor: "rgba(22, 104, 220, 1)",
   navBarBackground: "rgba(7, 15, 50, 1)",
   postsCardBackground: "rgba(7, 15, 50, 0.6)",
+  notificationUnreadBackground: "rgba(22, 104, 220, 0.22)",
+  notificationUnreadBorder: "rgba(22, 104, 220, 0.9)",
+  unreadDot: "rgba(255, 59, 48, 1)",
 };
 
 export const typography = StyleSheet.create({

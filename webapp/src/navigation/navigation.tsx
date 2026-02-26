@@ -16,6 +16,7 @@ import { AddPostScreen } from "../screens/AddPost/AddYourPost";
 import { AdminScreen } from "../screens/Admin/AdminScreen";
 import { DeletedPostsScreen } from "../screens/Admin/DeletedPosts";
 import { AllPostsScreen } from "../screens/Feed/FeedScreen";
+import { NotificationsScreen } from "../screens/Notifications/NotificationsScreen";
 import { OnboardingScreen } from "../screens/Onboarding/OnboardingScreen";
 import { SignInScreen } from "../screens/Onboarding/SignInScreen";
 import { SignUpScreen } from "../screens/Onboarding/SignUpScreen";
@@ -49,6 +50,11 @@ function FeedStackNav() {
       <FeedStack.Screen
         name={ScreenName.Post}
         component={PostScreen}
+        options={{ headerShown: false }}
+      />
+      <FeedStack.Screen
+        name={ScreenName.Notifications}
+        component={NotificationsScreen}
         options={{ headerShown: false }}
       />
       <FeedStack.Screen
@@ -217,6 +223,7 @@ export const BASE_TAB_BAR_STYLE = {
 
 const HIDE_TABBAR_SCREENS: Array<ScreenName | TabName> = [
   ScreenName.Post,
+  ScreenName.Notifications,
   ScreenName.EditPost,
   ScreenName.AddPost,
   TabName.AddPostTab,

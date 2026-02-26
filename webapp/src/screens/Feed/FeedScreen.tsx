@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import {
+  useFocusEffect,
+  useIsFocused,
+  useNavigation,
+} from "@react-navigation/native";
 import { format } from "date-fns";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useMemo, useState } from "react";
@@ -16,6 +20,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
 import { typography, COLORS } from "../../theme/typography";
 
@@ -27,7 +32,8 @@ type NavigationProp = NativeStackNavigationProp<FeedStackParamList, "Feed">;
 export const AllPostsScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const utils = trpc.useUtils();
-
+  const me = useMe();
+  const isFeedFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState<"feed" | "subs">("feed");
   const [refreshing, setRefreshing] = useState(false);
 
@@ -134,15 +140,36 @@ export const AllPostsScreen = () => {
     () => data?.pages.flatMap((page) => page.posts) ?? [],
     [data],
   );
+  const { data: unreadNotificationsData, refetch: refetchUnreadNotifications } =
+    trpc.getUnreadNotificationsCount.useQuery(
+      {},
+      {
+        refetchInterval: isFeedFocused ? 30000 : false,
+        refetchIntervalInBackground: false,
+        staleTime: 15000,
+      },
+    );
+
+  const hasUnreadNotifications =
+    (unreadNotificationsData?.unreadCount ?? 0) > 0;
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refetch();
+    await Promise.all([refetch(), refetchUnreadNotifications()]);
     setRefreshing(false);
-  }, [refetch]);
+  }, [refetch, refetchUnreadNotifications]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refetchUnreadNotifications();
+    }, [refetchUnreadNotifications]),
+  );
 
   const handleOpenPost = (id: string) => {
     navigation.navigate("Post", { id });
+  };
+  const handleOpenNotifications = () => {
+    navigation.navigate("Notifications");
   };
 
   const toggleLike = (postId: string, currentLikeState: boolean) => {
@@ -153,26 +180,45 @@ export const AllPostsScreen = () => {
   };
 
   const renderHeader = () => (
-    <View style={styles.header}>
-      <TouchableOpacity
-        onPress={() => setActiveTab("feed")}
-        style={[
-          styles.segmentLeft,
-          activeTab === "feed" && styles.segmentActive,
-        ]}
-      >
-        <Text style={typography.caption_white85}>Лента</Text>
-      </TouchableOpacity>
+    <View style={styles.headerContainer}>
+      <View style={styles.topRow}>
+        <Text style={typography.h4_white_85}>{me.nickname}</Text>
+        <TouchableOpacity
+          onPress={handleOpenNotifications}
+          style={styles.notificationsButton}
+        >
+          <Ionicons
+            name={
+              hasUnreadNotifications ? "notifications" : "notifications-outline"
+            }
+            size={22}
+            color={COLORS.white85}
+          />
+          {hasUnreadNotifications && <View style={styles.unreadDot} />}
+        </TouchableOpacity>
+      </View>
 
-      <TouchableOpacity
-        onPress={() => setActiveTab("subs")}
-        style={[
-          styles.segmentRight,
-          activeTab === "subs" && styles.segmentActive,
-        ]}
-      >
-        <Text style={typography.caption_white85}>Подписки</Text>
-      </TouchableOpacity>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => setActiveTab("feed")}
+          style={[
+            styles.segmentLeft,
+            activeTab === "feed" && styles.segmentActive,
+          ]}
+        >
+          <Text style={typography.caption_white85}>Лента</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => setActiveTab("subs")}
+          style={[
+            styles.segmentRight,
+            activeTab === "subs" && styles.segmentActive,
+          ]}
+        >
+          <Text style={typography.caption_white85}>Подписки</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -366,12 +412,24 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 6,
   },
+  headerContainer: {
+    marginBottom: 20,
+  },
 
   listContent: {
     padding: 14,
     paddingBottom: 70,
   },
 
+  notificationsButton: {
+    alignItems: "center",
+    backgroundColor: COLORS.postsCardBackground,
+    borderRadius: 999,
+    height: 38,
+    justifyContent: "center",
+    position: "relative",
+    width: 38,
+  },
   postHeader: {
     alignItems: "center",
     flexDirection: "row",
@@ -385,10 +443,10 @@ const styles = StyleSheet.create({
     gap: 4,
     justifyContent: "space-between",
   },
+
   read_more: {
     marginTop: 8,
   },
-
   safeArea: {
     flex: 1,
     marginBottom: 20,
@@ -411,5 +469,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginHorizontal: 7,
     width: 165,
+  },
+  topRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+    paddingHorizontal: 6,
+  },
+  unreadDot: {
+    backgroundColor: COLORS.unreadDot,
+    borderColor: COLORS.navBarBackground,
+    borderRadius: 5,
+    borderWidth: 1,
+    height: 10,
+    position: "absolute",
+    right: 7,
+    top: 7,
+    width: 10,
   },
 });
