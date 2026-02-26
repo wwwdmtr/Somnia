@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { format } from "date-fns";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   ImageBackground,
@@ -58,7 +58,6 @@ export const NotificationsScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const utils = trpc.useUtils();
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
-  const hasMarkedReadOnLeaveRef = useRef(false);
 
   const {
     data,
@@ -105,11 +104,25 @@ export const NotificationsScreen = () => {
     return result;
   }, [unreadNotifications, readNotifications]);
 
-  const handleOpenPost = (postId: string) => {
+  const markAllRead = useCallback(async () => {
+    if (
+      unreadNotifications.length === 0 ||
+      markAllNotificationsRead.isPending
+    ) {
+      return;
+    }
+
+    await markAllNotificationsRead.mutateAsync({});
+    await utils.getUnreadNotificationsCount.invalidate();
+  }, [unreadNotifications.length, markAllNotificationsRead, utils]);
+
+  const handleOpenPost = async (postId: string) => {
+    await markAllRead();
     navigation.navigate("Post", { id: postId });
   };
 
-  const handleGoBack = () => {
+  const handleGoBack = async () => {
+    await markAllRead();
     navigation.goBack();
   };
 
@@ -124,23 +137,6 @@ export const NotificationsScreen = () => {
       setIsPullRefreshing(false);
     }
   }, [refetch, utils]);
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("beforeRemove", () => {
-      if (hasMarkedReadOnLeaveRef.current) {
-        return;
-      }
-
-      hasMarkedReadOnLeaveRef.current = true;
-      markAllNotificationsRead.mutate(undefined, {
-        onSuccess: () => {
-          utils.getUnreadNotificationsCount.invalidate();
-        },
-      });
-    });
-
-    return unsubscribe;
-  }, [navigation, markAllNotificationsRead, utils]);
 
   if (isLoading) {
     return (

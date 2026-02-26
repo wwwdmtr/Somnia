@@ -20,6 +20,7 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -79,6 +80,7 @@ export const PostScreen = () => {
     commentId: string;
     nickname: string;
   } | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const deletePost = trpc.deletePost.useMutation();
   const undoDeletePost = trpc.undoDeletePost.useMutation();
 
@@ -88,7 +90,12 @@ export const PostScreen = () => {
     previousData: PostData | undefined;
   };
 
-  const { data, isLoading, error } = trpc.getPost.useQuery({
+  const {
+    data,
+    isLoading,
+    error,
+    refetch: refetchPost,
+  } = trpc.getPost.useQuery({
     id: route.params.id,
   });
 
@@ -98,6 +105,7 @@ export const PostScreen = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch: refetchComments,
   } = trpc.getCommentsByPost.useInfiniteQuery(
     {
       postId: route.params.id,
@@ -243,6 +251,15 @@ export const PostScreen = () => {
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([refetchPost(), refetchComments()]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetchPost, refetchComments]);
 
   const renderComment = useCallback(
     ({ item: comment }: { item: Comment }) => {
@@ -602,6 +619,13 @@ export const PostScreen = () => {
           onEndReachedThreshold={0.5}
           contentContainerStyle={styles.flatListContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={COLORS.white85}
+            />
+          }
           ListEmptyComponent={
             commentsLoading ? (
               <View style={styles.loadingFooter}>
