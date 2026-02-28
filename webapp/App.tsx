@@ -6,6 +6,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AppContextProvider } from "./src/lib/ctx";
 import { TrpcProvider } from "./src/lib/trpc";
+import { linking } from "./src/navigation/linking";
 import { RootNavigation } from "./src/navigation/navigation";
 
 const WEB_WIDTH = 393;
@@ -16,7 +17,7 @@ export default function App() {
 
   const content = (
     <SafeAreaProvider>
-      <NavigationContainer>
+      <NavigationContainer linking={linking}>
         <RootNavigation />
       </NavigationContainer>
     </SafeAreaProvider>

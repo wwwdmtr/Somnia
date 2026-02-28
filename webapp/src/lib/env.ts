@@ -1,16 +1,16 @@
 import { z } from "zod";
 
-const rawEnv: Record<string, string | undefined> =
-  (
-    globalThis as typeof globalThis & {
-      process?: { env?: Record<string, string | undefined> };
-    }
-  ).process?.env ?? {};
-
 const zEnv = z.object({
   BACKEND_TRPC_URL: z.string().trim().url(),
+  WEBAPP_URL: z.string().trim().url(),
 });
 
 export const env = zEnv.parse({
-  BACKEND_TRPC_URL: rawEnv.EXPO_PUBLIC_BACKEND_TRPC_URL,
+  // eslint-disable-next-line node/no-process-env
+  BACKEND_TRPC_URL: process.env.EXPO_PUBLIC_BACKEND_TRPC_URL,
+  WEBAPP_URL:
+    // eslint-disable-next-line node/no-process-env
+    process.env.EXPO_PUBLIC_WEBAPP_URL ??
+    (typeof window !== "undefined" ? window.location?.origin : undefined) ??
+    "http://localhost:8081",
 });

@@ -11,7 +11,7 @@ import { presetDB } from "./scripts/presetDB";
 const parseList = (value: string | undefined): string[] | undefined =>
   value
     ?.split(",")
-    .map((item) => item.trim())
+    .map((item) => item.trim().replace(/\/+$/, ""))
     .filter(Boolean);
 
 //eslint-disable-next-line node/no-process-env
@@ -19,8 +19,11 @@ const explicitOrigins = parseList(process.env.CORS_ORIGINS);
 const DEFAULT_ALLOWED_ORIGINS = [
   "http://localhost:3000",
   "http://localhost:19006",
+  "http://localhost:8081",
   "http://127.0.0.1:3000",
   "http://127.0.0.1:19006",
+  "http://127.0.0.1:8081",
+  env.WEBAPP_URL.trim().replace(/\/+$/, ""),
 ] as string[];
 const allowedOrigins: string[] =
   explicitOrigins && explicitOrigins.length > 0
@@ -45,7 +48,9 @@ void (async () => {
             return;
           }
 
-          if (allowAllInDev || allowedOrigins.includes(origin)) {
+          const normalizedOrigin = origin.trim().replace(/\/+$/, "");
+
+          if (allowAllInDev || allowedOrigins.includes(normalizedOrigin)) {
             callback(null, true);
             return;
           }
