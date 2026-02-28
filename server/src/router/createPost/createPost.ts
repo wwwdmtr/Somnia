@@ -1,12 +1,12 @@
-import { trpc } from "../../lib/trpc";
+import { trpcLoggedProcedure } from '../../lib/trpc';
 
-import { zCreatePostTrpcInput } from "./input";
+import { zCreatePostTrpcInput } from './input';
 
-export const createPostTrpcRoute = trpc.procedure
+export const createPostTrpcRoute = trpcLoggedProcedure
   .input(zCreatePostTrpcInput)
   .mutation(async ({ ctx, input }) => {
     if (!ctx.me) {
-      throw new Error("Unauthorized");
+      throw new Error('Unauthorized');
     }
     const post = await ctx.prisma.post.create({
       data: {

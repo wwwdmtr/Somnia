@@ -1,6 +1,6 @@
-import { toClientMe } from "../../lib/models";
-import { trpc } from "../../lib/trpc";
+import { toClientMe } from '../../lib/models';
+import { trpcLoggedProcedure } from '../../lib/trpc';
 
-export const getMeTrpcRoute = trpc.procedure.query(async ({ ctx }) => {
+export const getMeTrpcRoute = trpcLoggedProcedure.query(async ({ ctx }) => {
   return { me: toClientMe(ctx.me) };
 });

@@ -1,10 +1,10 @@
-import _ from "lodash";
-import { z } from "zod";
+import _ from 'lodash';
+import { z } from 'zod';
 
-import { trpc } from "../lib/trpc";
-import { isUserAdmin } from "../utils/can";
+import { trpcLoggedProcedure } from '../lib/trpc';
+import { isUserAdmin } from '../utils/can';
 
-export const getPostTrpcRoute = trpc.procedure
+export const getPostTrpcRoute = trpcLoggedProcedure
   .input(
     z.object({
       id: z.string(),
@@ -35,13 +35,13 @@ export const getPostTrpcRoute = trpc.procedure
     });
 
     if (rawPost?.deletedAt && !isUserAdmin(ctx.me)) {
-      throw new Error("Пост был удален");
+      throw new Error('Пост был удален');
     }
 
     const isLikedByMe = !!rawPost?.postLikes.length;
     const likesCount = rawPost?._count.postLikes || 0;
     const post = rawPost && {
-      ..._.omit(rawPost, ["postLikes", "_count"]),
+      ..._.omit(rawPost, ['postLikes', '_count']),
       likesCount,
       isLikedByMe,
     };

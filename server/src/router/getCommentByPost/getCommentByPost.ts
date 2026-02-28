@@ -1,8 +1,8 @@
-import { trpc } from "../../lib/trpc";
+import { trpcLoggedProcedure } from '../../lib/trpc';
 
-import { zGetCommentsByPostTrpcInput } from "./input";
+import { zGetCommentsByPostTrpcInput } from './input';
 
-export const getCommentsByPostTrpcRoute = trpc.procedure
+export const getCommentsByPostTrpcRoute = trpcLoggedProcedure
   .input(zGetCommentsByPostTrpcInput)
   .query(async ({ ctx, input }) => {
     const post = await ctx.prisma.post.findUnique({
@@ -11,7 +11,7 @@ export const getCommentsByPostTrpcRoute = trpc.procedure
     });
 
     if (!post) {
-      throw new Error("Post not found");
+      throw new Error('Post not found');
     }
 
     const rawComments = await ctx.prisma.comment.findMany({
@@ -43,7 +43,7 @@ export const getCommentsByPostTrpcRoute = trpc.procedure
               },
             },
           },
-          orderBy: { createdAt: "asc" },
+          orderBy: { createdAt: 'asc' },
         },
         _count: {
           select: {
@@ -53,7 +53,7 @@ export const getCommentsByPostTrpcRoute = trpc.procedure
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
 
     let nextCursor: string | null = null;

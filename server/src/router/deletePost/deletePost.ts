@@ -1,10 +1,10 @@
 import { sendPostBlockedEmail } from '../../lib/emails';
-import { trpc } from '../../lib/trpc';
+import { trpcLoggedProcedure } from '../../lib/trpc';
 import { canDeleteThisPost, isPostOwner } from '../../utils/can';
 
 import { zDeletePostTrpcInput } from './input';
 
-export const deletePostTrpcRoute = trpc.procedure
+export const deletePostTrpcRoute = trpcLoggedProcedure
   .input(zDeletePostTrpcInput)
   .mutation(async ({ ctx, input }) => {
     const { postId } = input;

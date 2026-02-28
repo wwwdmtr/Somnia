@@ -1,20 +1,20 @@
-import { toClientMe } from "../../lib/models";
-import { trpc } from "../../lib/trpc";
+import { toClientMe } from '../../lib/models';
+import { trpcLoggedProcedure } from '../../lib/trpc';
 
-import { zUpadteProfileTrpcInput } from "./input";
+import { zUpadteProfileTrpcInput } from './input';
 
-export const updateProfileTrpcRoute = trpc.procedure
+export const updateProfileTrpcRoute = trpcLoggedProcedure
   .input(zUpadteProfileTrpcInput)
   .mutation(async ({ ctx, input }) => {
     if (!ctx.me) {
-      throw new Error("UNAUTHORIZED");
+      throw new Error('UNAUTHORIZED');
     }
     if (ctx.me.nickname !== input.nickname) {
       const exUser = await ctx.prisma.user.findUnique({
         where: { nickname: input.nickname },
       });
       if (exUser) {
-        throw new Error("User with this nickname already exists");
+        throw new Error('User with this nickname already exists');
       }
     }
 

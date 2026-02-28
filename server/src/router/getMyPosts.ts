@@ -1,9 +1,9 @@
-import _ from "lodash";
-import { z } from "zod";
+import _ from 'lodash';
+import { z } from 'zod';
 
-import { trpc } from "../lib/trpc";
+import { trpcLoggedProcedure } from '../lib/trpc';
 
-export const getMyPostsTrpcRoute = trpc.procedure
+export const getMyPostsTrpcRoute = trpcLoggedProcedure
   .input(
     z.object({
       authorId: z.string(),
@@ -18,7 +18,7 @@ export const getMyPostsTrpcRoute = trpc.procedure
         deletedAt: null,
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: 'desc',
       },
       include: {
         author: {
@@ -46,7 +46,7 @@ export const getMyPostsTrpcRoute = trpc.procedure
     });
 
     const posts = rawPosts.map((post) => ({
-      ..._.omit(post, ["_count", "postLikes"]),
+      ..._.omit(post, ['_count', 'postLikes']),
       likesCount: post._count.postLikes,
       isLikedByMe: post.postLikes.length > 0,
     }));

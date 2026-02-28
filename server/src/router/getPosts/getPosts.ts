@@ -1,10 +1,10 @@
-import _ from "lodash";
+import _ from 'lodash';
 
-import { trpc } from "../../lib/trpc";
+import { trpcLoggedProcedure } from '../../lib/trpc';
 
-import { zGetPostsTrpcInput } from "./input";
+import { zGetPostsTrpcInput } from './input';
 
-export const getPostsTrpcRoute = trpc.procedure
+export const getPostsTrpcRoute = trpcLoggedProcedure
   .input(zGetPostsTrpcInput)
   .query(async ({ ctx, input }) => {
     const userId = ctx.me?.id;
@@ -19,7 +19,7 @@ export const getPostsTrpcRoute = trpc.procedure
         skip: 1,
       }),
       orderBy: {
-        seq: "desc",
+        seq: 'desc',
       },
       select: {
         id: true,
@@ -64,7 +64,7 @@ export const getPostsTrpcRoute = trpc.procedure
     }
 
     const posts = rawPosts.map((post) => ({
-      ..._.omit(post, ["_count", "postLikes"]),
+      ..._.omit(post, ['_count', 'postLikes']),
       likesCount: post._count.postLikes,
       commentsCount: post._count.comments,
       isLikedByMe: post.postLikes.length > 0,

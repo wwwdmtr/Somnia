@@ -1,12 +1,12 @@
-import { trpc } from "../../lib/trpc";
+import { trpcLoggedProcedure } from '../../lib/trpc';
 
-import { zCreateCommentTrpcInput } from "./input";
+import { zCreateCommentTrpcInput } from './input';
 
-export const createCommentTrpcRoute = trpc.procedure
+export const createCommentTrpcRoute = trpcLoggedProcedure
   .input(zCreateCommentTrpcInput)
   .mutation(async ({ ctx, input }) => {
     if (!ctx.me) {
-      throw new Error("Unauthorized");
+      throw new Error('Unauthorized');
     }
 
     const post = await ctx.prisma.post.findUnique({
@@ -18,7 +18,7 @@ export const createCommentTrpcRoute = trpc.procedure
     });
 
     if (!post) {
-      throw new Error("Post not found");
+      throw new Error('Post not found');
     }
 
     let parentComment: { id: string; postId: string; authorId: string } | null =
@@ -29,7 +29,7 @@ export const createCommentTrpcRoute = trpc.procedure
         select: { id: true, postId: true, authorId: true },
       });
       if (!parentComment) {
-        throw new Error("Parent comment not found");
+        throw new Error('Parent comment not found');
       }
 
       if (parentComment.postId !== input.postId) {
@@ -47,7 +47,7 @@ export const createCommentTrpcRoute = trpc.procedure
     });
 
     const notificationsToCreate: Array<{
-      type: "POST_COMMENTED" | "COMMENT_REPLIED";
+      type: 'POST_COMMENTED' | 'COMMENT_REPLIED';
       recipientId: string;
       actorId: string;
       postId: string;
@@ -56,7 +56,7 @@ export const createCommentTrpcRoute = trpc.procedure
 
     if (post.authorId !== ctx.me.id) {
       notificationsToCreate.push({
-        type: "POST_COMMENTED",
+        type: 'POST_COMMENTED',
         recipientId: post.authorId,
         actorId: ctx.me.id,
         postId: input.postId,
@@ -73,11 +73,11 @@ export const createCommentTrpcRoute = trpc.procedure
         const existingNotification =
           notificationsToCreate[existingNotificationIndex];
         if (existingNotification) {
-          existingNotification.type = "COMMENT_REPLIED";
+          existingNotification.type = 'COMMENT_REPLIED';
         }
       } else {
         notificationsToCreate.push({
-          type: "COMMENT_REPLIED",
+          type: 'COMMENT_REPLIED',
           recipientId: parentComment.authorId,
           actorId: ctx.me.id,
           postId: input.postId,

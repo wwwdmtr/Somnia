@@ -1,12 +1,12 @@
-import { trpc } from "../../lib/trpc";
+import { trpcLoggedProcedure } from '../../lib/trpc';
 
-import { zGetMyNotificationsTrpcInput } from "./input";
+import { zGetMyNotificationsTrpcInput } from './input';
 
-export const getMyNotificationsTrpcRoute = trpc.procedure
+export const getMyNotificationsTrpcRoute = trpcLoggedProcedure
   .input(zGetMyNotificationsTrpcInput)
   .query(async ({ ctx, input }) => {
     if (!ctx.me) {
-      throw new Error("Unauthorized");
+      throw new Error('Unauthorized');
     }
 
     const rawNotifications = await ctx.prisma.notification.findMany({
@@ -18,7 +18,7 @@ export const getMyNotificationsTrpcRoute = trpc.procedure
         cursor: { id: input.cursor },
         skip: 1,
       }),
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       select: {
         id: true,
         type: true,

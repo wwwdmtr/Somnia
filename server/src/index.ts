@@ -1,29 +1,30 @@
-import cors from "cors";
-import express from "express";
+import cors from 'cors';
+import express from 'express';
 
-import { AppContext, createAppContext } from "./lib/ctx";
-import { env } from "./lib/env";
-import { applyPassportToExpressApp } from "./lib/passport";
-import { applyTrpcToExpressApp } from "./lib/trpc";
-import { trpcRouter } from "./router/index";
-import { presetDB } from "./scripts/presetDB";
+import { AppContext, createAppContext } from './lib/ctx';
+import { env } from './lib/env';
+import { logger } from './lib/logger';
+import { applyPassportToExpressApp } from './lib/passport';
+import { applyTrpcToExpressApp } from './lib/trpc';
+import { trpcRouter } from './router/index';
+import { presetDB } from './scripts/presetDB';
 
 const parseList = (value: string | undefined): string[] | undefined =>
   value
-    ?.split(",")
-    .map((item) => item.trim().replace(/\/+$/, ""))
+    ?.split(',')
+    .map((item) => item.trim().replace(/\/+$/, ''))
     .filter(Boolean);
 
 //eslint-disable-next-line node/no-process-env
 const explicitOrigins = parseList(process.env.CORS_ORIGINS);
 const DEFAULT_ALLOWED_ORIGINS = [
-  "http://localhost:3000",
-  "http://localhost:19006",
-  "http://localhost:8081",
-  "http://127.0.0.1:3000",
-  "http://127.0.0.1:19006",
-  "http://127.0.0.1:8081",
-  env.WEBAPP_URL.trim().replace(/\/+$/, ""),
+  'http://localhost:3000',
+  'http://localhost:19006',
+  'http://localhost:8081',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:19006',
+  'http://127.0.0.1:8081',
+  env.WEBAPP_URL.trim().replace(/\/+$/, ''),
 ] as string[];
 const allowedOrigins: string[] =
   explicitOrigins && explicitOrigins.length > 0
@@ -31,7 +32,7 @@ const allowedOrigins: string[] =
     : [...DEFAULT_ALLOWED_ORIGINS];
 const allowAllInDev =
   //eslint-disable-next-line node/no-process-env
-  !explicitOrigins?.length && process.env.NODE_ENV !== "production";
+  !explicitOrigins?.length && process.env.NODE_ENV !== 'production';
 
 void (async () => {
   let ctx: AppContext | null = null;
@@ -48,7 +49,7 @@ void (async () => {
             return;
           }
 
-          const normalizedOrigin = origin.trim().replace(/\/+$/, "");
+          const normalizedOrigin = origin.trim().replace(/\/+$/, '');
 
           if (allowAllInDev || allowedOrigins.includes(normalizedOrigin)) {
             callback(null, true);
@@ -68,10 +69,13 @@ void (async () => {
     await applyTrpcToExpressApp(expressApp, ctx, trpcRouter);
 
     expressApp.listen(env.PORT, () => {
-      console.info(`Server is running on http://localhost:${env.PORT}`);
+      logger.info(
+        'express',
+        `Server is running on http://localhost:${env.PORT}`,
+      );
     });
   } catch (error) {
-    console.error("Failed to start server:", error);
+    logger.error('app', error);
     await ctx?.stop();
   }
 })();

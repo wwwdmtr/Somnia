@@ -1,10 +1,10 @@
-import { trpc } from "../../lib/trpc";
-import { getPasswordHash } from "../../utils/getPasswordHash";
-import { signJWT } from "../../utils/signJWT";
+import { trpcLoggedProcedure } from '../../lib/trpc';
+import { getPasswordHash } from '../../utils/getPasswordHash';
+import { signJWT } from '../../utils/signJWT';
 
-import { zSignInTrpcInput } from "./input";
+import { zSignInTrpcInput } from './input';
 
-export const signInTrpcRoute = trpc.procedure
+export const signInTrpcRoute = trpcLoggedProcedure
   .input(zSignInTrpcInput)
   .mutation(async ({ input, ctx }) => {
     const user = await ctx.prisma.user.findFirst({
@@ -14,7 +14,7 @@ export const signInTrpcRoute = trpc.procedure
       },
     });
     if (!user) {
-      throw new Error("Неверный никнейм или пароль");
+      throw new Error('Неверный никнейм или пароль');
     }
 
     const token = signJWT(user.id);

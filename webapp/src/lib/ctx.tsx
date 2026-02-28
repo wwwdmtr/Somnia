@@ -25,13 +25,13 @@ export const AppContextProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const { data, error, isLoading, isFetching, isError } = trpc.getMe.useQuery();
+  const { data, error, isLoading, isError } = trpc.getMe.useQuery();
 
   return (
     <AppReactContext.Provider
       value={{
         me: data?.me || null,
-        isLoading: isLoading || isFetching,
+        isLoading,
         isError,
         error: error ?? null,
       }}

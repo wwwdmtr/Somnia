@@ -81,14 +81,15 @@ module.exports = [
           skipStrings: true,
         },
       ],
-      'no-console': [
-        'error',
-        {
-          allow: ['info', 'error', 'warn'],
-        },
-      ],
+      'no-console': 'off',
       'react/react-in-jsx-scope': 'off',
       'node/no-process-env': 'error',
     },
   }),
+  {
+    files: ['server/src/**/*.{ts,tsx}'],
+    rules: {
+      'no-console': 'error',
+    },
+  },
 ];

@@ -1,12 +1,12 @@
-import { trpc } from "../../lib/trpc";
+import { trpcLoggedProcedure } from '../../lib/trpc';
 
-import { zGetUnreadNotificationsCountTrpcInput } from "./input";
+import { zGetUnreadNotificationsCountTrpcInput } from './input';
 
-export const getUnreadNotificationsCountTrpcRoute = trpc.procedure
+export const getUnreadNotificationsCountTrpcRoute = trpcLoggedProcedure
   .input(zGetUnreadNotificationsCountTrpcInput)
   .query(async ({ ctx }) => {
     if (!ctx.me) {
-      throw new Error("Unauthorized");
+      throw new Error('Unauthorized');
     }
 
     const unreadCount = await ctx.prisma.notification.count({

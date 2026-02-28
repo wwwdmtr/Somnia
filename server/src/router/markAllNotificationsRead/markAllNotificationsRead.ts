@@ -1,12 +1,12 @@
-import { trpc } from "../../lib/trpc";
+import { trpcLoggedProcedure } from '../../lib/trpc';
 
-import { zMarkAllNotificationsReadTrpcInput } from "./input";
+import { zMarkAllNotificationsReadTrpcInput } from './input';
 
-export const markAllNotificationsReadTrpcRoute = trpc.procedure
+export const markAllNotificationsReadTrpcRoute = trpcLoggedProcedure
   .input(zMarkAllNotificationsReadTrpcInput)
   .mutation(async ({ ctx }) => {
     if (!ctx.me) {
-      throw new Error("Unauthorized");
+      throw new Error('Unauthorized');
     }
 
     const result = await ctx.prisma.notification.updateMany({

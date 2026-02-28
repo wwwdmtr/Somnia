@@ -1,10 +1,10 @@
-import _ from "lodash";
+import _ from 'lodash';
 
-import { trpc } from "../../lib/trpc";
+import { trpcLoggedProcedure } from '../../lib/trpc';
 
-import { zGetRatedPostsTrpcInput } from "./input";
+import { zGetRatedPostsTrpcInput } from './input';
 
-export const getRatedPostsTrpcRoute = trpc.procedure
+export const getRatedPostsTrpcRoute = trpcLoggedProcedure
   .input(zGetRatedPostsTrpcInput)
   .query(async ({ ctx, input }) => {
     const userId = ctx.me?.id;
@@ -15,16 +15,16 @@ export const getRatedPostsTrpcRoute = trpc.procedure
       const now = new Date();
 
       switch (input.period) {
-        case "day":
+        case 'day':
           dateFrom = new Date(now.setDate(now.getDate() - 1));
           break;
-        case "week":
+        case 'week':
           dateFrom = new Date(now.setDate(now.getDate() - 7));
           break;
-        case "month":
+        case 'month':
           dateFrom = new Date(now.setMonth(now.getMonth() - 1));
           break;
-        case "all":
+        case 'all':
         default:
           dateFrom = undefined;
           break;
@@ -33,7 +33,7 @@ export const getRatedPostsTrpcRoute = trpc.procedure
 
     const rawSearch = input.search?.trim();
     const normalizedSearch = rawSearch
-      ? rawSearch.replace(/\s+/g, " & ")
+      ? rawSearch.replace(/\s+/g, ' & ')
       : undefined;
 
     const shouldUseFts =
@@ -46,14 +46,14 @@ export const getRatedPostsTrpcRoute = trpc.procedure
       ...(rawSearch
         ? {
             OR: [
-              { title: { contains: rawSearch, mode: "insensitive" as const } },
+              { title: { contains: rawSearch, mode: 'insensitive' as const } },
               {
                 description: {
                   contains: rawSearch,
-                  mode: "insensitive" as const,
+                  mode: 'insensitive' as const,
                 },
               },
-              { text: { contains: rawSearch, mode: "insensitive" as const } },
+              { text: { contains: rawSearch, mode: 'insensitive' as const } },
 
               ...(shouldUseFts
                 ? ([
@@ -75,7 +75,7 @@ export const getRatedPostsTrpcRoute = trpc.procedure
 
       orderBy: {
         postLikes: {
-          _count: "desc",
+          _count: 'desc',
         },
       },
 
@@ -118,7 +118,7 @@ export const getRatedPostsTrpcRoute = trpc.procedure
     }
 
     const posts = rawPosts.map((post) => ({
-      ..._.omit(post, ["_count", "postLikes"]),
+      ..._.omit(post, ['_count', 'postLikes']),
       likesCount: post._count.postLikes,
       commentsCount: post._count.comments,
       isLikedByMe: userId ? post.postLikes.length > 0 : false,

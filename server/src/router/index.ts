@@ -1,30 +1,30 @@
-import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
+import { type inferRouterInputs, type inferRouterOutputs } from '@trpc/server';
 
-import { trpc } from "../lib/trpc";
+import { createTrpcRouter } from '../lib/trpc';
 
-import { createCommentTrpcRoute } from "./createComment/createComment";
-import { createPostTrpcRoute } from "./createPost/createPost";
-import { deleteCommentTrpcRoute } from "./deleteComment/deleteComment";
-import { deletePostTrpcRoute } from "./deletePost/deletePost";
-import { getCommentsByPostTrpcRoute } from "./getCommentByPost/getCommentByPost";
-import { getDeletedPostsTrpcRoute } from "./getDeletedPosts/getDeletedPosts";
-import { getMeTrpcRoute } from "./getMe/getMe";
-import { getMyNotificationsTrpcRoute } from "./getMyNotifications/getMyNotifications";
-import { getMyPostsTrpcRoute } from "./getMyPosts";
-import { getPostTrpcRoute } from "./getPost";
-import { getPostsTrpcRoute } from "./getPosts/getPosts";
-import { getRatedPostsTrpcRoute } from "./getRatedPosts/getRatedPosts";
-import { getUnreadNotificationsCountTrpcRoute } from "./getUnreadNotificationsCount/getUnreadNotificationsCount";
-import { markAllNotificationsReadTrpcRoute } from "./markAllNotificationsRead/markAllNotificationsRead";
-import { setPostLikeTrpcRoute } from "./setPostLike/setPostLike";
-import { signInTrpcRoute } from "./signIn/signIn";
-import { signUpTrpcRoute } from "./signUp/signUp";
-import { undoDeletePostTrpcRoute } from "./undoDeletePost/undoDeletePost";
-import { updatePasswordTrpcRoute } from "./updatePassword/updatePassword";
-import { updatePostTrpcRoute } from "./updatePost/updatePost";
-import { updateProfileTrpcRoute } from "./updateProfile/updateProfile";
+import { createCommentTrpcRoute } from './createComment/createComment';
+import { createPostTrpcRoute } from './createPost/createPost';
+import { deleteCommentTrpcRoute } from './deleteComment/deleteComment';
+import { deletePostTrpcRoute } from './deletePost/deletePost';
+import { getCommentsByPostTrpcRoute } from './getCommentByPost/getCommentByPost';
+import { getDeletedPostsTrpcRoute } from './getDeletedPosts/getDeletedPosts';
+import { getMeTrpcRoute } from './getMe/getMe';
+import { getMyNotificationsTrpcRoute } from './getMyNotifications/getMyNotifications';
+import { getMyPostsTrpcRoute } from './getMyPosts';
+import { getPostTrpcRoute } from './getPost';
+import { getPostsTrpcRoute } from './getPosts/getPosts';
+import { getRatedPostsTrpcRoute } from './getRatedPosts/getRatedPosts';
+import { getUnreadNotificationsCountTrpcRoute } from './getUnreadNotificationsCount/getUnreadNotificationsCount';
+import { markAllNotificationsReadTrpcRoute } from './markAllNotificationsRead/markAllNotificationsRead';
+import { setPostLikeTrpcRoute } from './setPostLike/setPostLike';
+import { signInTrpcRoute } from './signIn/signIn';
+import { signUpTrpcRoute } from './signUp/signUp';
+import { undoDeletePostTrpcRoute } from './undoDeletePost/undoDeletePost';
+import { updatePasswordTrpcRoute } from './updatePassword/updatePassword';
+import { updatePostTrpcRoute } from './updatePost/updatePost';
+import { updateProfileTrpcRoute } from './updateProfile/updateProfile';
 
-export const trpcRouter = trpc.router({
+export const trpcRouter = createTrpcRouter({
   getPosts: getPostsTrpcRoute,
   getPost: getPostTrpcRoute,
   getMyPosts: getMyPostsTrpcRoute,

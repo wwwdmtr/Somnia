@@ -1,9 +1,9 @@
-import { trpc } from "../../lib/trpc";
-import { isUserAdmin } from "../../utils/can";
+import { trpcLoggedProcedure } from '../../lib/trpc';
+import { isUserAdmin } from '../../utils/can';
 
-import { zUndoDeletePostTrpcInput } from "./input";
+import { zUndoDeletePostTrpcInput } from './input';
 
-export const undoDeletePostTrpcRoute = trpc.procedure
+export const undoDeletePostTrpcRoute = trpcLoggedProcedure
   .input(zUndoDeletePostTrpcInput)
   .mutation(async ({ ctx, input }) => {
     const { postId } = input;
@@ -14,11 +14,11 @@ export const undoDeletePostTrpcRoute = trpc.procedure
     });
 
     if (!post || !post.deletedAt) {
-      throw new Error("Post not found");
+      throw new Error('Post not found');
     }
 
     if (!isUserAdmin(ctx.me)) {
-      throw new Error("Unauthorized");
+      throw new Error('Unauthorized');
     }
 
     await ctx.prisma.post.update({

@@ -1,20 +1,21 @@
-import { promises as fs } from "fs";
-import path from "path";
+import { promises as fs } from 'fs';
+import path from 'path';
 
-import { type Post, type User } from "@prisma/client";
-import fg from "fast-glob";
-import Handlebars from "handlebars";
-import _ from "lodash";
+import { type Post, type User } from '@prisma/client';
+import fg from 'fast-glob';
+import Handlebars from 'handlebars';
+import _ from 'lodash';
 
-import { env } from "./env";
+import { env } from './env';
+import { logger } from './logger';
 
 const getHbrTemplates = _.memoize(async () => {
-  const htmlPathsPattern = path.resolve(__dirname, "../emails/dist/**/*.html");
+  const htmlPathsPattern = path.resolve(__dirname, '../emails/dist/**/*.html');
   const htmlPaths = fg.sync(htmlPathsPattern);
   const hbrTemplates: Record<string, HandlebarsTemplateDelegate> = {};
   for (const htmlPath of htmlPaths) {
-    const templateName = path.basename(htmlPath, ".html");
-    const htmlTemplate = await fs.readFile(htmlPath, "utf8");
+    const templateName = path.basename(htmlPath, '.html');
+    const htmlTemplate = await fs.readFile(htmlPath, 'utf8');
     hbrTemplates[templateName] = Handlebars.compile(htmlTemplate);
   }
   return hbrTemplates;
@@ -51,7 +52,7 @@ const sendEmail = async ({
       homeUrl: env.WEBAPP_URL,
     };
     const html = await getEmailHtml(templateName, fullTemplateVaraibles);
-    console.info("sendEmail", {
+    logger.info('email', 'sendEmail', {
       to,
       subject,
       templateName,
@@ -59,7 +60,7 @@ const sendEmail = async ({
     });
     return { ok: true };
   } catch (error) {
-    console.error(error);
+    logger.error('email', error);
     return { ok: false };
   }
 };
@@ -67,12 +68,12 @@ const sendEmail = async ({
 export const sendWelcomeEmail = async ({
   user,
 }: {
-  user: Pick<User, "nickname" | "email">;
+  user: Pick<User, 'nickname' | 'email'>;
 }) => {
   return await sendEmail({
     to: user.email,
-    subject: "Thanks For Registration!",
-    templateName: "welcome",
+    subject: 'Thanks For Registration!',
+    templateName: 'welcome',
     templateVariables: {
       userNick: user.nickname,
       addIdeaUrl: `${env.WEBAPP_URL}`,
@@ -84,13 +85,13 @@ export const sendPostBlockedEmail = async ({
   user,
   post,
 }: {
-  user: Pick<User, "email">;
-  post: Pick<Post, "title">;
+  user: Pick<User, 'email'>;
+  post: Pick<Post, 'title'>;
 }) => {
   return await sendEmail({
     to: user.email,
-    subject: "Your Post Blocked!",
-    templateName: "postBlocked",
+    subject: 'Your Post Blocked!',
+    templateName: 'postBlocked',
     templateVariables: {
       postTitle: post.title,
     },
