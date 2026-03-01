@@ -1,7 +1,10 @@
-import * as dotenv from 'dotenv';
-import { z } from 'zod';
+import * as dotenv from "dotenv";
+import { z } from "zod";
 
-dotenv.config();
+dotenv.config({
+  // eslint-disable-next-line node/no-process-env
+  override: process.env.NODE_ENV !== "production",
+});
 
 const zEnv = z.object({
   PORT: z.string().trim().min(1),

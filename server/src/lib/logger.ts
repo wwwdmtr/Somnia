@@ -8,7 +8,11 @@ import { MESSAGE } from "triple-beam";
 import winston from "winston";
 import * as yaml from "yaml";
 
+import { deepMap } from "../utils/deepMap";
+
 import { env } from "./env";
+
+debug.enable(env.DEBUG);
 
 export const winstonLogger = winston.createLogger({
   defaultMeta: { service: "backend", host: env.SERVER_URL },
@@ -62,25 +66,37 @@ export const winstonLogger = winston.createLogger({
   ],
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Meta = Record<string, any> | undefined;
+
+const prettifyMeta = (meta: Meta): Meta => {
+  return deepMap(meta, ({ key, value }) => {
+    if (
+      ["email", "password", "token", "currentPassword", "newPassword"].includes(
+        key,
+      )
+    ) {
+      return "[SENSITIVE]";
+    }
+    return value;
+  });
+};
+
 export const logger = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  info: (logType: string, message: string, meta?: Record<string, any>) => {
-    if (debug.enabled(`somnia:${logType}`)) {
+  info: (logType: string, message: string, meta?: Meta) => {
+    if (!debug.enabled(`somnia:${logType}`)) {
       return;
     }
-    winstonLogger.info(message, { logType, ...meta });
+    winstonLogger.info(message, { logType, ...prettifyMeta(meta) });
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  error: (logType: string, error: any, meta?: Record<string, any>) => {
-    if (debug.enabled(`somnia:${logType}`)) {
-      return;
-    }
+  error: (logType: string, error: any, meta?: Meta) => {
     const serializedError = serializeError(error);
     winstonLogger.error(serializedError.message || "Unknown error", {
       logType,
       error,
       errorStack: serializedError.stack,
-      ...meta,
+      ...prettifyMeta(meta),
     });
   },
 };

@@ -1,16 +1,16 @@
-import { initTRPC } from '@trpc/server';
-import * as trpcExpress from '@trpc/server/adapters/express';
-import { type Express } from 'express';
-import superjson from 'superjson';
-import { expressHandler } from 'trpc-playground/handlers/express';
+import { initTRPC } from "@trpc/server";
+import * as trpcExpress from "@trpc/server/adapters/express";
+import { type Express } from "express";
+import superjson from "superjson";
+import { expressHandler } from "trpc-playground/handlers/express";
 
-import { type TrpcRouter } from '../router';
-import { ExpressRequest } from '../utils/types';
+import { type TrpcRouter } from "../router";
+import { ExpressRequest } from "../utils/types";
 
-import { AppContext } from './ctx';
-import { logger } from './logger';
+import { AppContext } from "./ctx";
+import { logger } from "./logger";
 
-import type { DataTransformerOptions } from '@trpc/server/unstable-core-do-not-import';
+import type { DataTransformerOptions } from "@trpc/server/unstable-core-do-not-import";
 
 const dataTransformer: DataTransformerOptions = superjson;
 
@@ -30,19 +30,21 @@ const trpc = initTRPC.context<TrpcContext>().create({
 export const createTrpcRouter = trpc.router;
 
 export const trpcLoggedProcedure = trpc.procedure.use(
-  trpc.middleware(async ({ path, type, next, ctx, input }) => {
+  trpc.middleware(async ({ path, type, next, ctx, getRawInput, input }) => {
     const start = Date.now();
     const result = await next();
+    const rawInput = await getRawInput();
     const durationMs = Date.now() - start;
     const meta = {
       path,
       type,
       userId: ctx.me?.id || null,
       durationMs,
-      rawInput: input || null,
+      rawInput: rawInput || null,
+      input: input || null,
     };
     if (result.ok) {
-      logger.info(`trpc:${type}:success`, 'Successfull request', {
+      logger.info(`trpc:${type}:success`, "Successfull request", {
         ...meta,
         output: result.data,
       });
@@ -59,17 +61,17 @@ export const applyTrpcToExpressApp = async (
   trpcRouter: TrpcRouter,
 ) => {
   expressApp.use(
-    '/trpc',
+    "/trpc",
     trpcExpress.createExpressMiddleware({
       router: trpcRouter,
       createContext: getCreateTrpcContext(appContext),
     }),
   );
   expressApp.use(
-    '/trpc-playground',
+    "/trpc-playground",
     await expressHandler({
-      trpcApiEndpoint: '/trpc',
-      playgroundEndpoint: '/trpc-playground',
+      trpcApiEndpoint: "/trpc",
+      playgroundEndpoint: "/trpc-playground",
       router: trpcRouter,
       request: {
         superjson: true,
