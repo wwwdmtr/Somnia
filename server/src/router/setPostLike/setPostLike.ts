@@ -1,6 +1,7 @@
-import { trpcLoggedProcedure } from '../../lib/trpc';
+import { ExpectedError } from "../../lib/error";
+import { trpcLoggedProcedure } from "../../lib/trpc";
 
-import { setPostLikeTrpcInput } from './input';
+import { setPostLikeTrpcInput } from "./input";
 
 export const setPostLikeTrpcRoute = trpcLoggedProcedure
   .input(setPostLikeTrpcInput)
@@ -8,7 +9,7 @@ export const setPostLikeTrpcRoute = trpcLoggedProcedure
     const { postId, isLikedByMe } = input;
 
     if (!ctx.me) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     const post = await ctx.prisma.post.findUnique({
@@ -20,7 +21,7 @@ export const setPostLikeTrpcRoute = trpcLoggedProcedure
     });
 
     if (!post) {
-      throw new Error('Post not found');
+      throw new ExpectedError("Post not found");
     }
 
     const existingLike = await ctx.prisma.postLike.findUnique({
@@ -45,7 +46,7 @@ export const setPostLikeTrpcRoute = trpcLoggedProcedure
         if (post.authorId !== ctx.me.id) {
           await ctx.prisma.notification.create({
             data: {
-              type: 'POST_LIKED',
+              type: "POST_LIKED",
               recipientId: post.authorId,
               actorId: ctx.me.id,
               postId,
@@ -66,7 +67,7 @@ export const setPostLikeTrpcRoute = trpcLoggedProcedure
           }),
           ctx.prisma.notification.deleteMany({
             where: {
-              type: 'POST_LIKED',
+              type: "POST_LIKED",
               recipientId: post.authorId,
               actorId: ctx.me.id,
               postId,

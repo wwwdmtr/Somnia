@@ -1,12 +1,13 @@
-import { trpcLoggedProcedure } from '../../lib/trpc';
+import { ExpectedError } from "../../lib/error";
+import { trpcLoggedProcedure } from "../../lib/trpc";
 
-import { zDeleteCommentTrpcInput } from './input';
+import { zDeleteCommentTrpcInput } from "./input";
 
 export const deleteCommentTrpcRoute = trpcLoggedProcedure
   .input(zDeleteCommentTrpcInput)
   .mutation(async ({ ctx, input }) => {
     if (!ctx.me) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
 
     const comment = await ctx.prisma.comment.findUnique({
@@ -17,11 +18,11 @@ export const deleteCommentTrpcRoute = trpcLoggedProcedure
     });
 
     if (!comment) {
-      throw new Error('Комментарий не найден');
+      throw new ExpectedError("Комментарий не найден");
     }
 
     if (comment.authorId !== ctx.me.id) {
-      throw new Error('Нет прав на удаление');
+      throw new Error("Нет прав на удаление");
     }
 
     if (comment.parentId) {
@@ -41,7 +42,7 @@ export const deleteCommentTrpcRoute = trpcLoggedProcedure
         where: { id: comment.id },
         data: {
           deletedAt: new Date(),
-          content: '[Комментарий удалён]',
+          content: "[Комментарий удалён]",
         },
       });
     }

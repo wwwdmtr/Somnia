@@ -1,8 +1,9 @@
-import { sendPostBlockedEmail } from '../../lib/emails';
-import { trpcLoggedProcedure } from '../../lib/trpc';
-import { canDeleteThisPost, isPostOwner } from '../../utils/can';
+import { sendPostBlockedEmail } from "../../lib/emails";
+import { ExpectedError } from "../../lib/error";
+import { trpcLoggedProcedure } from "../../lib/trpc";
+import { canDeleteThisPost, isPostOwner } from "../../utils/can";
 
-import { zDeletePostTrpcInput } from './input';
+import { zDeletePostTrpcInput } from "./input";
 
 export const deletePostTrpcRoute = trpcLoggedProcedure
   .input(zDeletePostTrpcInput)
@@ -25,11 +26,11 @@ export const deletePostTrpcRoute = trpcLoggedProcedure
     });
 
     if (!post || post.deletedAt) {
-      throw new Error('Post not found');
+      throw new ExpectedError("Post not found");
     }
 
     if (!canDeleteThisPost(ctx.me, post)) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
 
     await ctx.prisma.post.update({

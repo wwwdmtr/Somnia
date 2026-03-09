@@ -8,6 +8,7 @@ import { type TrpcRouter } from "../router";
 import { ExpressRequest } from "../utils/types";
 
 import { AppContext } from "./ctx";
+import { ExpectedError } from "./error";
 import { logger } from "./logger";
 
 import type { DataTransformerOptions } from "@trpc/server/unstable-core-do-not-import";
@@ -25,6 +26,16 @@ type TrpcContext = Awaited<ReturnType<typeof getCreateTrpcContext>>;
 
 const trpc = initTRPC.context<TrpcContext>().create({
   transformer: dataTransformer,
+  errorFormatter: ({ shape, error }) => {
+    const isExpected = error.cause instanceof ExpectedError;
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        isExpected,
+      },
+    };
+  },
 });
 
 export const createTrpcRouter = trpc.router;

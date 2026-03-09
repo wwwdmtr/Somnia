@@ -1,8 +1,9 @@
-import { trpcLoggedProcedure } from '../../lib/trpc';
-import { getPasswordHash } from '../../utils/getPasswordHash';
-import { signJWT } from '../../utils/signJWT';
+import { ExpectedError } from "../../lib/error";
+import { trpcLoggedProcedure } from "../../lib/trpc";
+import { getPasswordHash } from "../../utils/getPasswordHash";
+import { signJWT } from "../../utils/signJWT";
 
-import { zSignInTrpcInput } from './input';
+import { zSignInTrpcInput } from "./input";
 
 export const signInTrpcRoute = trpcLoggedProcedure
   .input(zSignInTrpcInput)
@@ -14,7 +15,7 @@ export const signInTrpcRoute = trpcLoggedProcedure
       },
     });
     if (!user) {
-      throw new Error('Неверный никнейм или пароль');
+      throw new ExpectedError("Неверный никнейм или пароль");
     }
 
     const token = signJWT(user.id);

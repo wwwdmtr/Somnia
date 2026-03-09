@@ -1,9 +1,10 @@
-import { sendWelcomeEmail } from '../../lib/emails';
-import { trpcLoggedProcedure } from '../../lib/trpc';
-import { getPasswordHash } from '../../utils/getPasswordHash';
-import { signJWT } from '../../utils/signJWT';
+import { sendWelcomeEmail } from "../../lib/emails";
+import { ExpectedError } from "../../lib/error";
+import { trpcLoggedProcedure } from "../../lib/trpc";
+import { getPasswordHash } from "../../utils/getPasswordHash";
+import { signJWT } from "../../utils/signJWT";
 
-import { zSignUpTrpcInput } from './input';
+import { zSignUpTrpcInput } from "./input";
 
 export const signUpTrpcRoute = trpcLoggedProcedure
   .input(zSignUpTrpcInput)
@@ -14,7 +15,7 @@ export const signUpTrpcRoute = trpcLoggedProcedure
       },
     });
     if (exUserWithNick) {
-      throw new Error('Пользователь с таким ником уже зарегистрирован');
+      throw new ExpectedError("Пользователь с таким ником уже зарегистрирован");
     }
     const exUserWithEmail = await ctx.prisma.user.findUnique({
       where: {
@@ -22,7 +23,7 @@ export const signUpTrpcRoute = trpcLoggedProcedure
       },
     });
     if (exUserWithEmail) {
-      throw new Error('Пользователь с таким email уже зарегистрирован');
+      throw new ExpectedError("Пользователь с таким email уже зарегистрирован");
     }
 
     const user = await ctx.prisma.user.create({

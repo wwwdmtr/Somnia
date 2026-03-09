@@ -1,4 +1,3 @@
-import { TrpcRouter } from "@somnia/server/src/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, type TRPCLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
@@ -16,8 +15,15 @@ type AppRouter = Omit<ServerAppRouter, "_def"> & {
     _config: Omit<ServerAppRouter["_def"]["_config"], "$types"> & {
       $types: Omit<
         ServerAppRouter["_def"]["_config"]["$types"],
-        "transformer"
-      > & { transformer: true };
+        "transformer" | "errorShape"
+      > & {
+        transformer: true;
+        errorShape: ServerAppRouter["_def"]["_config"]["$types"]["errorShape"] & {
+          data: ServerAppRouter["_def"]["_config"]["$types"]["errorShape"]["data"] & {
+            isExpected?: boolean;
+          };
+        };
+      };
     };
   };
 };
@@ -33,7 +39,7 @@ const queryClient = new QueryClient({
   },
 });
 
-const customTrpcLink: TRPCLink<TrpcRouter> = () => {
+const customTrpcLink: TRPCLink<AppRouter> = () => {
   return ({ next, op }) => {
     return observable((observer) => {
       const unsubscribe = next(op).subscribe({
@@ -41,10 +47,13 @@ const customTrpcLink: TRPCLink<TrpcRouter> = () => {
           observer.next(value);
         },
         error(error) {
-          if (env.NODE_ENV !== "development") {
-            console.error(error);
+          if (!error.data?.isExpected) {
+            if (env.NODE_ENV !== "development") {
+              console.error(error);
+            }
+            sentryCaptureException(error);
           }
-          sentryCaptureException(error);
+
           observer.error(error);
         },
         complete() {

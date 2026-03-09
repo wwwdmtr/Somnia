@@ -1,12 +1,13 @@
-import { trpcLoggedProcedure } from '../../lib/trpc';
+import { ExpectedError } from "../../lib/error";
+import { trpcLoggedProcedure } from "../../lib/trpc";
 
-import { zCreateCommentTrpcInput } from './input';
+import { zCreateCommentTrpcInput } from "./input";
 
 export const createCommentTrpcRoute = trpcLoggedProcedure
   .input(zCreateCommentTrpcInput)
   .mutation(async ({ ctx, input }) => {
     if (!ctx.me) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
 
     const post = await ctx.prisma.post.findUnique({
@@ -18,7 +19,7 @@ export const createCommentTrpcRoute = trpcLoggedProcedure
     });
 
     if (!post) {
-      throw new Error('Post not found');
+      throw new ExpectedError("Post not found");
     }
 
     let parentComment: { id: string; postId: string; authorId: string } | null =
@@ -29,11 +30,11 @@ export const createCommentTrpcRoute = trpcLoggedProcedure
         select: { id: true, postId: true, authorId: true },
       });
       if (!parentComment) {
-        throw new Error('Parent comment not found');
+        throw new ExpectedError("Parent comment not found");
       }
 
       if (parentComment.postId !== input.postId) {
-        throw new Error("Parent comment doesn't belong to this post");
+        throw new ExpectedError("Parent comment doesn't belong to this post");
       }
     }
 
@@ -47,7 +48,7 @@ export const createCommentTrpcRoute = trpcLoggedProcedure
     });
 
     const notificationsToCreate: Array<{
-      type: 'POST_COMMENTED' | 'COMMENT_REPLIED';
+      type: "POST_COMMENTED" | "COMMENT_REPLIED";
       recipientId: string;
       actorId: string;
       postId: string;
@@ -56,7 +57,7 @@ export const createCommentTrpcRoute = trpcLoggedProcedure
 
     if (post.authorId !== ctx.me.id) {
       notificationsToCreate.push({
-        type: 'POST_COMMENTED',
+        type: "POST_COMMENTED",
         recipientId: post.authorId,
         actorId: ctx.me.id,
         postId: input.postId,
@@ -73,11 +74,11 @@ export const createCommentTrpcRoute = trpcLoggedProcedure
         const existingNotification =
           notificationsToCreate[existingNotificationIndex];
         if (existingNotification) {
-          existingNotification.type = 'COMMENT_REPLIED';
+          existingNotification.type = "COMMENT_REPLIED";
         }
       } else {
         notificationsToCreate.push({
-          type: 'COMMENT_REPLIED',
+          type: "COMMENT_REPLIED",
           recipientId: parentComment.authorId,
           actorId: ctx.me.id,
           postId: input.postId,
