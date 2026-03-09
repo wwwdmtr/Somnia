@@ -1,4 +1,5 @@
 import { zUpadteProfileTrpcInput } from "@somnia/server/src/router/updateProfile/input";
+import { TRPCClientError } from "@trpc/client";
 import { useFormik } from "formik";
 import React from "react";
 import { View, TextInput, Text } from "react-native";
@@ -6,6 +7,7 @@ import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
 import { useMe } from "../../lib/ctx";
+import { sentryCaptureException } from "../../lib/sentrySDK";
 import { trpc } from "../../lib/trpc";
 import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
@@ -28,6 +30,10 @@ export const UpdateProfileForm = () => {
         const updatedMe = await updateProfile.mutateAsync(values);
         trpcUtils.getMe.setData(undefined, { me: updatedMe });
       } catch (err) {
+        if (!(err instanceof TRPCClientError)) {
+          sentryCaptureException(err);
+        }
+
         const msg = err?.message || "";
 
         if (msg.includes("already exists")) {

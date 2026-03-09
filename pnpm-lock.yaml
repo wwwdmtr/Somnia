@@ -177,6 +177,9 @@ importers:
       '@react-navigation/native-stack':
         specifier: ^6.11.0
         version: 6.11.0(@react-navigation/native@6.1.18(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.1(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-screens@4.16.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      '@sentry/react':
+        specifier: ^10.42.0
+        version: 10.42.0(react@19.1.0)
       '@somnia/server':
         specifier: workspace:*
         version: link:../server
@@ -189,6 +192,9 @@ importers:
       '@trpc/react-query':
         specifier: ^11.6.0
         version: 11.7.0(@tanstack/react-query@5.90.5(react@19.1.0))(@trpc/client@11.7.0(@trpc/server@11.7.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.7.0(typescript@5.9.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)
+      '@trpc/server':
+        specifier: ^11.7.0
+        version: 11.7.0(typescript@5.9.3)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -1310,6 +1316,36 @@ packages:
 
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
+
+  '@sentry-internal/browser-utils@10.42.0':
+    resolution: {integrity: sha512-HCEICKvepxN4/6NYfnMMMlppcSwIEwtS66X6d1/mwaHdi2ivw0uGl52p7Nfhda/lIJArbrkWprxl0WcjZajhQA==}
+    engines: {node: '>=18'}
+
+  '@sentry-internal/feedback@10.42.0':
+    resolution: {integrity: sha512-lpPcHsog10MVYFTWE0Pf8vQRqQWwZHJpkVl2FEb9/HDdHFyTBUhCVoWo1KyKaG7GJl9AVKMAg7bp9SSNArhFNQ==}
+    engines: {node: '>=18'}
+
+  '@sentry-internal/replay-canvas@10.42.0':
+    resolution: {integrity: sha512-am3m1Fj8ihoPfoYo41Qq4KeCAAICn4bySso8Oepu9dMNe9Lcnsf+reMRS2qxTPg3pZDc4JEMOcLyNCcgnAfrHw==}
+    engines: {node: '>=18'}
+
+  '@sentry-internal/replay@10.42.0':
+    resolution: {integrity: sha512-Zh3EoaH39x2lqVY1YyVB2vJEyCIrT+YLUQxYl1yvP0MJgLxaR6akVjkgxbSUJahan4cX5DxpZiEHfzdlWnYPyQ==}
+    engines: {node: '>=18'}
+
+  '@sentry/browser@10.42.0':
+    resolution: {integrity: sha512-iXxYjXNEBwY1MH4lDSDZZUNjzPJDK7/YLwVIJq/3iBYpIQVIhaJsoJnf3clx9+NfJ8QFKyKfcvgae61zm+hgTA==}
+    engines: {node: '>=18'}
+
+  '@sentry/core@10.42.0':
+    resolution: {integrity: sha512-L4rMrXMqUKBanpjpMT+TuAVk6xAijz6AWM6RiEYpohAr7SGcCEc1/T0+Ep1eLV8+pwWacfU27OvELIyNeOnGzA==}
+    engines: {node: '>=18'}
+
+  '@sentry/react@10.42.0':
+    resolution: {integrity: sha512-uigyz6E3yPjjqIZpkGzRChww6gzMmqdCpK30M5aBYoaen29DDmSECHYA16sfgXeSwzQhnXyX7GxgOB+eKIr9dw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      react: ^16.14.0 || 17.x || 18.x || 19.x
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
@@ -6719,6 +6755,40 @@ snapshots:
       nanoid: 3.3.11
 
   '@rtsao/scc@1.1.0': {}
+
+  '@sentry-internal/browser-utils@10.42.0':
+    dependencies:
+      '@sentry/core': 10.42.0
+
+  '@sentry-internal/feedback@10.42.0':
+    dependencies:
+      '@sentry/core': 10.42.0
+
+  '@sentry-internal/replay-canvas@10.42.0':
+    dependencies:
+      '@sentry-internal/replay': 10.42.0
+      '@sentry/core': 10.42.0
+
+  '@sentry-internal/replay@10.42.0':
+    dependencies:
+      '@sentry-internal/browser-utils': 10.42.0
+      '@sentry/core': 10.42.0
+
+  '@sentry/browser@10.42.0':
+    dependencies:
+      '@sentry-internal/browser-utils': 10.42.0
+      '@sentry-internal/feedback': 10.42.0
+      '@sentry-internal/replay': 10.42.0
+      '@sentry-internal/replay-canvas': 10.42.0
+      '@sentry/core': 10.42.0
+
+  '@sentry/core@10.42.0': {}
+
+  '@sentry/react@10.42.0(react@19.1.0)':
+    dependencies:
+      '@sentry/browser': 10.42.0
+      '@sentry/core': 10.42.0
+      react: 19.1.0
 
   '@sinclair/typebox@0.27.8': {}
 

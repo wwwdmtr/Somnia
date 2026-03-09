@@ -1,9 +1,12 @@
+import { TrpcRouter } from "@somnia/server/src/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/client";
+import { httpBatchLink, type TRPCLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
+import { observable } from "@trpc/server/observable";
 import superjson from "superjson";
 
 import { env } from "./env";
+import { sentryCaptureException } from "./sentrySDK";
 import { getToken } from "./tokenStorage";
 
 import type { AppRouter as ServerAppRouter } from "@somnia/server/src/router-types";
@@ -30,8 +33,32 @@ const queryClient = new QueryClient({
   },
 });
 
+const customTrpcLink: TRPCLink<TrpcRouter> = () => {
+  return ({ next, op }) => {
+    return observable((observer) => {
+      const unsubscribe = next(op).subscribe({
+        next(value) {
+          observer.next(value);
+        },
+        error(error) {
+          if (env.NODE_ENV !== "development") {
+            console.error(error);
+          }
+          sentryCaptureException(error);
+          observer.error(error);
+        },
+        complete() {
+          observer.complete();
+        },
+      });
+      return unsubscribe;
+    });
+  };
+};
+
 const trpcClient = trpc.createClient({
   links: [
+    customTrpcLink,
     httpBatchLink({
       url: env.BACKEND_TRPC_URL,
       transformer: superjson,

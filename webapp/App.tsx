@@ -5,10 +5,11 @@ import { Platform, StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AppContextProvider } from "./src/lib/ctx";
+import { SentryUser } from "./src/lib/sentrySDK";
 import { TrpcProvider } from "./src/lib/trpc";
 import { linking } from "./src/navigation/linking";
 import { RootNavigation } from "./src/navigation/navigation";
-
+import "./src/lib/sentrySDK";
 const WEB_WIDTH = 393;
 const WEB_HEIGHT = 852;
 
@@ -22,10 +23,10 @@ export default function App() {
       </NavigationContainer>
     </SafeAreaProvider>
   );
-
   return (
     <TrpcProvider>
       <AppContextProvider>
+        <SentryUser />
         {isWeb ? (
           <View style={styles.webRoot}>
             <View style={styles.webShell}>{content}</View>
