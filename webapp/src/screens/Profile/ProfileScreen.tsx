@@ -5,7 +5,7 @@ import {
   useNavigation,
 } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { isUserAdmin } from "@somnia/server/src/utils/can";
+import { isUserAdmin } from "@somnia/shared/src/utils/can";
 import { format } from "date-fns";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";

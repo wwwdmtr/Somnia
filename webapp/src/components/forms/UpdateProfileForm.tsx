@@ -1,4 +1,4 @@
-import { zUpadteProfileTrpcInput } from "@somnia/server/src/router/updateProfile/input";
+import { zUpadteProfileTrpcInput } from "@somnia/shared/src/router/updateProfile/input";
 import { TRPCClientError } from "@trpc/client";
 import { useFormik } from "formik";
 import React from "react";

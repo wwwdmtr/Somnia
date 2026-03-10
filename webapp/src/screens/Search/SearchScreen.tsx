@@ -4,7 +4,7 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { zGetRatedPostsTrpcInput } from "@somnia/server/src/router/getRatedPosts/input";
+import { zGetRatedPostsTrpcInput } from "@somnia/shared/src/router/getRatedPosts/input";
 import { format } from "date-fns";
 import { StatusBar } from "expo-status-bar";
 import { useFormik } from "formik";

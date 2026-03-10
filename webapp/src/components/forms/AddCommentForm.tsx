@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { zCreateCommentTrpcInput } from "@somnia/server/src/router/createComment/input";
+import { zCreateCommentTrpcInput } from "@somnia/shared/src/router/createComment/input";
 import { useFormik } from "formik";
 import React, { useEffect } from "react";
 import { View, TextInput, Text, TouchableOpacity } from "react-native";

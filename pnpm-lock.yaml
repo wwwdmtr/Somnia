@@ -160,6 +160,15 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  shared:
+    dependencies:
+      '@somnia/server':
+        specifier: workspace:*
+        version: link:../server
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
+
   webapp:
     dependencies:
       '@react-native-cookies/cookies':
@@ -180,9 +189,9 @@ importers:
       '@sentry/react':
         specifier: ^10.42.0
         version: 10.42.0(react@19.1.0)
-      '@somnia/server':
+      '@somnia/shared':
         specifier: workspace:*
-        version: link:../server
+        version: link:../shared
       '@tanstack/react-query':
         specifier: ^5.90.3
         version: 5.90.5(react@19.1.0)

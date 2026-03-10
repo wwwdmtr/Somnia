@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { zUpdatePasswordTrpcInput } from "@somnia/server/src/router/updatePassword/input";
+import { zUpdatePasswordTrpcInput } from "@somnia/shared/src/router/updatePassword/input";
 import { useFormik } from "formik";
 import React from "react";
 import { View, TextInput, Text, Pressable } from "react-native";

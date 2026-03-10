@@ -8,7 +8,7 @@ import { env } from "./env";
 import { sentryCaptureException } from "./sentrySDK";
 import { getToken } from "./tokenStorage";
 
-import type { AppRouter as ServerAppRouter } from "@somnia/server/src/router-types";
+import type { AppRouter as ServerAppRouter } from "@somnia/shared/src/router-types";
 
 type AppRouter = Omit<ServerAppRouter, "_def"> & {
   _def: Omit<ServerAppRouter["_def"], "_config"> & {

@@ -6,7 +6,7 @@ import {
   useNavigation,
   useFocusEffect,
 } from "@react-navigation/native";
-import { canDeletePost, isUserAdmin } from "@somnia/server/src/utils/can";
+import { canDeletePost, isUserAdmin } from "@somnia/shared/src/utils/can";
 import { format } from "date-fns/format";
 import { StatusBar } from "expo-status-bar";
 import { useState, useCallback } from "react";

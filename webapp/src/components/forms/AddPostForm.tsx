@@ -1,5 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
-import { zCreatePostTrpcInput } from "@somnia/server/src/router/createPost/input";
+import { zCreatePostTrpcInput } from "@somnia/shared/src/router/createPost/input";
 import { useFormik } from "formik";
 import React from "react";
 import { View, TextInput, Text } from "react-native";

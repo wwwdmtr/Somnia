@@ -2,7 +2,7 @@ import { createContext, useContext } from "react";
 
 import { trpc } from "./trpc";
 
-import type { ClientMe } from "@somnia/server/src/lib/models";
+import type { ClientMe } from "@somnia/shared/src/lib/models";
 
 type GetMeError = ReturnType<typeof trpc.getMe.useQuery>["error"];
 

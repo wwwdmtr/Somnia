@@ -1,5 +1,5 @@
-import { zUpdatePostTrpcInput } from "@somnia/server/src/router/updatePost/input";
-import { canDeleteThisPost } from "@somnia/server/src/utils/can";
+import { zUpdatePostTrpcInput } from "@somnia/shared/src/router/updatePost/input";
+import { canDeleteThisPost } from "@somnia/shared/src/utils/can";
 import { useFormik } from "formik";
 import React from "react";
 import { View, TextInput, Text, TouchableOpacity, Alert } from "react-native";
@@ -11,7 +11,7 @@ import { trpc } from "../../lib/trpc";
 import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
 
-import type { TrpcRouter } from "@somnia/server/src/router";
+import type { TrpcRouter } from "@somnia/shared/src/router";
 import type { inferRouterOutputs } from "@trpc/server";
 
 type UpdatePostFormsValues = z.infer<typeof zUpdatePostTrpcInput>;
