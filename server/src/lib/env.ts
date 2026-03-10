@@ -1,9 +1,9 @@
-import * as dotenv from "dotenv";
-import { z } from "zod";
+import * as dotenv from 'dotenv';
+import { z } from 'zod';
 
 dotenv.config({
   // eslint-disable-next-line node/no-process-env
-  override: process.env.NODE_ENV !== "production",
+  override: process.env.NODE_ENV !== 'production',
 });
 
 const zEnv = z.object({
@@ -17,6 +17,9 @@ const zEnv = z.object({
   WEBAPP_URL: z.string().trim().min(1),
   SERVER_URL: z.string().trim().min(1),
   DEBUG: z.string().trim().min(1),
+  BACKEND_SENTRYHAWK_DSN: z.string().trim().min(1),
+  SOURCE_VERSION: z.string().trim().min(1),
+  NODE_ENV: z.enum(['development', 'production', 'test']),
 });
 
 //eslint-disable-next-line node/no-process-env
