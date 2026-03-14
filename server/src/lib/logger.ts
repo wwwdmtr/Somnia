@@ -15,7 +15,7 @@ import { env } from './env';
 import { ExpectedError } from './error';
 import { sentryCaptureException } from './sentrySDK';
 
-debug.enable(env.DEBUG);
+debug.enable(env.DEBUG ?? '');
 
 export const winstonLogger = winston.createLogger({
   defaultMeta: { service: 'backend', host: env.SERVER_URL },

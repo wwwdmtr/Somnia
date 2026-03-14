@@ -1,9 +1,11 @@
-import * as Sentry from "@sentry/node";
+import * as Sentry from '@sentry/node';
 
-import { env } from "./env";
-import { type LoggerMetaData } from "./logger";
+import { env } from './env';
+import { type LoggerMetaData } from './logger';
 
-if (env.BACKEND_SENTRYHAWK_DSN) {
+const isSentryEnabled = env.BACKEND_SENTRYHAWK_DSN && env.NODE_ENV !== 'test';
+
+if (isSentryEnabled) {
   Sentry.init({
     dsn: env.BACKEND_SENTRYHAWK_DSN,
     environment: env.NODE_ENV,
@@ -16,7 +18,7 @@ export const sentryCaptureException = (
   error: Error,
   prettifiedMetaData?: LoggerMetaData,
 ) => {
-  if (env.BACKEND_SENTRYHAWK_DSN) {
+  if (isSentryEnabled) {
     Sentry.captureException(error, prettifiedMetaData);
   }
 };
