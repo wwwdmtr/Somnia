@@ -4,6 +4,7 @@ import { z } from 'zod';
 dotenv.config({
   // eslint-disable-next-line node/no-process-env
   override: process.env.NODE_ENV !== 'production',
+  quiet: true,
 });
 
 const zEnv = z.object({
