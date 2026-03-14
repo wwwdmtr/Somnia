@@ -1,6 +1,9 @@
 {
   "name": "@somnia/shared",
   "version": "1.0.0",
+  "scripts": {
+    "test": "jest"
+  },
   "private": true,
   "main": "src/index.ts",
   "types": "src/index.ts",

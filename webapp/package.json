@@ -4,6 +4,7 @@
   "packageManager": "pnpm@10.18.1",
   "scripts": {
     "dev": "expo start",
+    "test": "jest",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",

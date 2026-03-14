@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "dev": "ts-node-dev --watch ./src/emails/dist,./.env --respawn --exit-child --transpile-only ./src/index.ts",
     "clean": "rimraf ./dist",
     "build-ts": "pnpm clean && tsc --project ./tsconfig.json",

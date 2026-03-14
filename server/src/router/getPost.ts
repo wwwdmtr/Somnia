@@ -1,9 +1,9 @@
-import _ from "lodash";
-import { z } from "zod";
+import _ from 'lodash';
+import { z } from 'zod';
 
-import { ExpectedError } from "../lib/error";
-import { trpcLoggedProcedure } from "../lib/trpc";
-import { isUserAdmin } from "../utils/can";
+import { ExpectedError } from '../lib/error';
+import { trpcLoggedProcedure } from '../lib/trpc';
+import { isUserAdmin } from '../utils/can';
 
 export const getPostTrpcRoute = trpcLoggedProcedure
   .input(
@@ -36,13 +36,13 @@ export const getPostTrpcRoute = trpcLoggedProcedure
     });
 
     if (rawPost?.deletedAt && !isUserAdmin(ctx.me)) {
-      throw new ExpectedError("Пост был удален");
+      throw new ExpectedError('Пост был удален');
     }
 
     const isLikedByMe = !!rawPost?.postLikes.length;
     const likesCount = rawPost?._count.postLikes || 0;
     const post = rawPost && {
-      ..._.omit(rawPost, ["postLikes", "_count"]),
+      ..._.omit(rawPost, ['postLikes', '_count']),
       likesCount,
       isLikedByMe,
     };

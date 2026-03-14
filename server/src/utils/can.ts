@@ -1,6 +1,5 @@
-import type { UserPermission } from "@prisma/client";
+import type { UserPermission } from '@prisma/client';
 
-// допускаем Partial<User> с фронта
 type MaybeUser = {
   id?: string;
   permissions?: UserPermission[];
@@ -16,12 +15,12 @@ const hasPermission = (user: MaybeUser, permission: UserPermission) => {
   }
 
   return (
-    user.permissions.includes(permission) || user.permissions.includes("ALL")
+    user.permissions.includes(permission) || user.permissions.includes('ALL')
   );
 };
 
 export const canDeletePost = (user: MaybeUser) => {
-  return hasPermission(user, "DELETE_POST");
+  return hasPermission(user, 'DELETE_POST');
 };
 
 export const isPostOwner = (user: MaybeUser, post: MaybePost) => {
@@ -32,7 +31,7 @@ export const isPostOwner = (user: MaybeUser, post: MaybePost) => {
 };
 
 export const isUserAdmin = (user: MaybeUser) => {
-  return hasPermission(user, "ALL");
+  return hasPermission(user, 'ALL');
 };
 
 export const canDeleteThisPost = (user: MaybeUser, post: MaybePost) => {

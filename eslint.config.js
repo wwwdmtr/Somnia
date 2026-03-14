@@ -10,7 +10,13 @@ const compat = new FlatCompat({
 
 module.exports = [
   {
-    ignores: ['node_modules', 'dist', 'build'],
+    ignores: [
+      'node_modules',
+      'dist',
+      'build',
+      '*config.{js,ts}',
+      '**/*.config.{js,ts}',
+    ],
   },
   ...compat.config({
     root: true,
@@ -22,6 +28,7 @@ module.exports = [
       'react-native',
       'import',
       'node',
+      'jest',
     ],
     extends: [
       'eslint:recommended',
@@ -30,6 +37,7 @@ module.exports = [
       'plugin:react-hooks/recommended',
       'plugin:react-native/all',
       'prettier',
+      'plugin:jest/recommended',
     ],
     env: {
       es2021: true,
