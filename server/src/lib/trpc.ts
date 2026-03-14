@@ -5,9 +5,9 @@ import superjson from "superjson";
 import { expressHandler } from "trpc-playground/handlers/express";
 
 import { type TrpcRouter } from "../router";
-import { ExpressRequest } from "../utils/types";
+import { type ExpressRequest } from "../utils/types";
 
-import { AppContext } from "./ctx";
+import { type AppContext } from "./ctx";
 import { ExpectedError } from "./error";
 import { logger } from "./logger";
 
@@ -15,14 +15,23 @@ import type { DataTransformerOptions } from "@trpc/server/unstable-core-do-not-i
 
 const dataTransformer: DataTransformerOptions = superjson;
 
+export const getTrpcContext = ({
+  appContext,
+  req,
+}: {
+  appContext: AppContext;
+  req: ExpressRequest;
+}) => ({
+  ...appContext,
+  me: req.user || null,
+});
+
 const getCreateTrpcContext =
   (appContext: AppContext) =>
-  ({ req }: trpcExpress.CreateExpressContextOptions) => ({
-    ...appContext,
-    me: (req as ExpressRequest).user || null,
-  });
+  ({ req }: trpcExpress.CreateExpressContextOptions) =>
+    getTrpcContext({ appContext, req: req as ExpressRequest });
 
-type TrpcContext = Awaited<ReturnType<typeof getCreateTrpcContext>>;
+type TrpcContext = ReturnType<typeof getTrpcContext>;
 
 const trpc = initTRPC.context<TrpcContext>().create({
   transformer: dataTransformer,

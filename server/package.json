@@ -5,10 +5,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
+    "test": "jest --runInBand",
     "dev": "ts-node-dev --watch ./src/emails/dist,./.env --respawn --exit-child --transpile-only ./src/index.ts",
     "clean": "rimraf ./dist",
-    "build-ts": "pnpm clean && tsc --project ./tsconfig.json",
+    "build-ts": "pnpm clean && tsc --project ./tsconfig.build.json",
     "build": "pnpm build-ts && pnpm build-emails && pnpm copy-emails",
     "build-emails": "rimraf ./src/emails/dist && mkdir ./src/emails/dist && mjml ./src/emails/[!_]*.mjml -o ./src/emails/dist",
     "watch-emails": "mjml -w ./src/emails/[!_]*.mjml -o ./src/emails/dist",
