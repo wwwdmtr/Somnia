@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
 import { typography, COLORS } from "../../theme/typography";
@@ -226,7 +227,7 @@ export const AllPostsScreen = () => {
     <View style={styles.card}>
       <View style={styles.postHeader}>
         <Image
-          source={require("../../assets/defaults/user-avatar.png")}
+          source={getAvatarSource(post.author.avatar, "small")}
           style={styles.cardImage}
         />
 
@@ -385,6 +386,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   cardImage: {
+    borderRadius: 24,
     height: 48,
     width: 48,
   },

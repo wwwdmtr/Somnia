@@ -1,9 +1,9 @@
-import { getAvatarUrl } from "@somnia/shared/src/cloudinary/cloudinary";
 import { TRPCClientError } from "@trpc/client";
 import * as ImagePicker from "expo-image-picker";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Image, Platform, StyleSheet, Text, View } from "react-native";
 
+import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
 import { sentryCaptureException } from "../../lib/sentrySDK";
 import { trpc } from "../../lib/trpc";
@@ -111,11 +111,6 @@ export const AvatarUploader = () => {
     prepareCloudinaryUpload.isPending ||
     setMyAvatar.isPending ||
     isUploadingToCloudinary;
-  const avatarUri = useMemo(
-    () => getAvatarUrl(me?.avatar, "big"),
-    [me?.avatar],
-  );
-
   if (!me) {
     return (
       <View style={styles.container}>
@@ -168,14 +163,11 @@ export const AvatarUploader = () => {
         const fileName =
           file.fileName ||
           `avatar.${(file.mimeType || "image/jpeg").split("/")[1] || "jpg"}`;
-        formData.append(
-          "file",
-          {
-            uri: file.uri,
-            name: fileName,
-            type: file.mimeType || "image/jpeg",
-          } as unknown as Blob,
-        );
+        formData.append("file", {
+          uri: file.uri,
+          name: fileName,
+          type: file.mimeType || "image/jpeg",
+        } as unknown as Blob);
       }
       formData.append("api_key", preparedData.apiKey);
       formData.append("timestamp", preparedData.timestamp);
@@ -225,7 +217,7 @@ export const AvatarUploader = () => {
 
   return (
     <View style={styles.container}>
-      <Image source={{ uri: avatarUri }} style={styles.avatar} />
+      <Image source={getAvatarSource(me.avatar, "big")} style={styles.avatar} />
 
       {errorMessage ? (
         <Text style={styles.errorText}>{errorMessage}</Text>

@@ -25,6 +25,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { getAvatarSource } from "../../lib/avatar";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
 
@@ -328,7 +329,7 @@ export const SearchScreen = () => {
 
       <View style={styles.postHeader}>
         <Image
-          source={require("../../assets/defaults/user-avatar.png")}
+          source={getAvatarSource(post.author.avatar, "small")}
           style={styles.cardImage}
         />
         <View style={styles.postHeaderInfo}>
@@ -500,7 +501,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
 
-  cardImage: { height: 48, width: 48 },
+  cardImage: { borderRadius: 24, height: 48, width: 48 },
 
   centered: { alignItems: "center", flex: 1, justifyContent: "center" },
 

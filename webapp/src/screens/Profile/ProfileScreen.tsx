@@ -5,7 +5,6 @@ import {
   useNavigation,
 } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { getAvatarUrl } from "@somnia/shared/src/cloudinary/cloudinary";
 import { isUserAdmin } from "@somnia/shared/src/utils/can";
 import { format } from "date-fns";
 import { StatusBar } from "expo-status-bar";
@@ -23,6 +22,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ScreenName from "../../constants/ScreenName";
+import { getAvatarSource } from "../../lib/avatar";
 import { useAppContext } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
@@ -162,7 +162,7 @@ export const ProfileScreen = () => {
   const renderHeader = () => (
     <View style={styles.header}>
       <Image
-        source={{ uri: getAvatarUrl(me.avatar, "big") }}
+        source={getAvatarSource(me.avatar, "big")}
         style={styles.avatar}
       ></Image>
       {me.name ? <Text style={typography.h3_white85}>{me.name}</Text> : null}

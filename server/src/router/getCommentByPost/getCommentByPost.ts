@@ -1,6 +1,6 @@
-import { trpcLoggedProcedure } from '../../lib/trpc';
+import { trpcLoggedProcedure } from "../../lib/trpc";
 
-import { zGetCommentsByPostTrpcInput } from './input';
+import { zGetCommentsByPostTrpcInput } from "./input";
 
 export const getCommentsByPostTrpcRoute = trpcLoggedProcedure
   .input(zGetCommentsByPostTrpcInput)
@@ -11,7 +11,7 @@ export const getCommentsByPostTrpcRoute = trpcLoggedProcedure
     });
 
     if (!post) {
-      throw new Error('Post not found');
+      throw new Error("Post not found");
     }
 
     const rawComments = await ctx.prisma.comment.findMany({
@@ -30,6 +30,7 @@ export const getCommentsByPostTrpcRoute = trpcLoggedProcedure
             id: true,
             nickname: true,
             name: true,
+            avatar: true,
           },
         },
         replies: {
@@ -40,10 +41,11 @@ export const getCommentsByPostTrpcRoute = trpcLoggedProcedure
                 id: true,
                 nickname: true,
                 name: true,
+                avatar: true,
               },
             },
           },
-          orderBy: { createdAt: 'asc' },
+          orderBy: { createdAt: "asc" },
         },
         _count: {
           select: {
@@ -53,7 +55,7 @@ export const getCommentsByPostTrpcRoute = trpcLoggedProcedure
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     let nextCursor: string | null = null;

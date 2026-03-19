@@ -26,6 +26,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AddCommentForm } from "../../components/forms/AddCommentForm";
 import ScreenName from "../../constants/ScreenName";
+import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
 import { typography, COLORS } from "../../theme/typography";
@@ -53,6 +54,7 @@ type Comment = {
     id: string;
     nickname: string;
     name: string;
+    avatar: string | null;
   };
   repliesCount: number;
   replies: Array<{
@@ -64,6 +66,7 @@ type Comment = {
       id: string;
       nickname: string;
       name: string;
+      avatar: string | null;
     };
   }>;
 };
@@ -271,7 +274,7 @@ export const PostScreen = () => {
           <View style={styles.commentCard}>
             <View style={styles.commentHeader}>
               <Image
-                source={require("../../assets/defaults/user-avatar.png")}
+                source={getAvatarSource(comment.author.avatar, "small")}
                 style={styles.commentAvatar}
               />
               <View style={styles.commentHeaderInfo}>
@@ -331,7 +334,7 @@ export const PostScreen = () => {
               <View key={reply.id} style={styles.replyCard}>
                 <View style={styles.commentHeader}>
                   <Image
-                    source={require("../../assets/defaults/user-avatar.png")}
+                    source={getAvatarSource(reply.author.avatar, "small")}
                     style={styles.replyAvatar}
                   />
                   <View style={styles.commentHeaderInfo}>
@@ -415,7 +418,7 @@ export const PostScreen = () => {
         <View style={styles.card}>
           <View style={styles.postHeader}>
             <Image
-              source={require("../../assets/defaults/user-avatar.png")}
+              source={getAvatarSource(data.post.author.avatar, "small")}
               style={styles.cardImage}
             />
             <View style={styles.postHeaderInfo}>
@@ -681,6 +684,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   cardImage: {
+    borderRadius: 24,
     height: 48,
     width: 48,
   },
@@ -695,6 +699,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   commentAvatar: {
+    borderRadius: 20,
     height: 40,
     width: 40,
   },
@@ -787,6 +792,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   replyAvatar: {
+    borderRadius: 16,
     height: 32,
     width: 32,
   },
