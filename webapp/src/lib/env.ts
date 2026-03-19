@@ -16,5 +16,7 @@ export const env = zEnv.parse({
     "http://localhost:8081",
   WEBAPP_SENTRYHAWK_DSN: process.env.EXPO_PUBLIC_WEBAPP_SENTRYHAWK_DSN,
   NODE_ENV: process.env.NODE_ENV,
+  WEBAPP_CLOUDINARY_CLOUD_NAME:
+    process.env.EXPO_PUBLIC_WEBAPP_CLOUDINARY_CLOUD_NAME,
 });
 console.log(env.WEBAPP_SENTRYHAWK_DSN);

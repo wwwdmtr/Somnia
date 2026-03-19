@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AvatarUploader } from "../../components/forms/AvatarUploader";
 import { UpdatePasswordForm } from "../../components/forms/UpdatePasswordForm";
 import { UpdateProfileForm } from "../../components/forms/UpdateProfileForm";
 import { AppButton } from "../../components/ui/AppButton";
@@ -50,6 +51,11 @@ export const UpdateProfileScreen = () => {
           <View style={styles.name_settings_card}>
             <Text style={typography.h4_white_85}>Имя профиля</Text>
             <UpdateProfileForm />
+          </View>
+
+          <View style={styles.name_settings_card}>
+            <Text style={typography.h4_white_85}>Аватарка</Text>
+            <AvatarUploader />
           </View>
 
           <View style={styles.name_settings_card}>

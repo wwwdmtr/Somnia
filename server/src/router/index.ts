@@ -16,6 +16,7 @@ import { getPostsTrpcRoute } from './getPosts/getPosts';
 import { getRatedPostsTrpcRoute } from './getRatedPosts/getRatedPosts';
 import { getUnreadNotificationsCountTrpcRoute } from './getUnreadNotificationsCount/getUnreadNotificationsCount';
 import { markAllNotificationsReadTrpcRoute } from './markAllNotificationsRead/markAllNotificationsRead';
+import { setMyAvatarTrpcRoute } from './setMyAvatar/setMyAvatar';
 import { setPostLikeTrpcRoute } from './setPostLike/setPostLike';
 import { signInTrpcRoute } from './signIn/signIn';
 import { signUpTrpcRoute } from './signUp/signUp';
@@ -23,6 +24,7 @@ import { undoDeletePostTrpcRoute } from './undoDeletePost/undoDeletePost';
 import { updatePasswordTrpcRoute } from './updatePassword/updatePassword';
 import { updatePostTrpcRoute } from './updatePost/updatePost';
 import { updateProfileTrpcRoute } from './updateProfile/updateProfile';
+import { prepareCloudinaryUploadTrpcRoute } from './upload/prepareCloudinaryUpload/prepareCloudinaryUpload';
 
 export const trpcRouter = createTrpcRouter({
   getPosts: getPostsTrpcRoute,
@@ -44,8 +46,10 @@ export const trpcRouter = createTrpcRouter({
   deleteComment: deleteCommentTrpcRoute,
   deletePost: deletePostTrpcRoute,
   markAllNotificationsRead: markAllNotificationsReadTrpcRoute,
+  setMyAvatar: setMyAvatarTrpcRoute,
   getDeletedPosts: getDeletedPostsTrpcRoute,
   undoDeletePost: undoDeletePostTrpcRoute,
+  prepareCloudinaryUpload: prepareCloudinaryUploadTrpcRoute,
 });
 
 export type TrpcRouter = typeof trpcRouter;

@@ -32,7 +32,9 @@
   "dependencies": {
     "@prisma/client": "^6.18.0",
     "@sentry/node": "^10.43.0",
+    "@somnia/shared": "workspace:*",
     "@trpc/server": "^11.6.0",
+    "cloudinary": "^2.9.0",
     "cors": "^2.8.5",
     "debug": "^4.4.3",
     "dotenv": "^17.2.3",

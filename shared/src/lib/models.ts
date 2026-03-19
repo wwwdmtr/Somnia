@@ -6,5 +6,6 @@ export type ClientMe = {
   name?: string | null;
   bio?: string | null;
   email?: string | null;
+  avatar?: string | null;
   permissions?: UserPermission[];
 } | null;

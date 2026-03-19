@@ -68,6 +68,9 @@ const zEnv = z.object({
   BACKEND_SENTRYHAWK_DSN: z.string().trim().min(1),
   SOURCE_VERSION: z.string().trim().min(1),
   NODE_ENV: z.enum(['development', 'production', 'test']),
+  CLOUDINARY_API_KEY: z.string().trim().optional(),
+  CLOUDINARY_API_SECRET: z.string().trim().optional(),
+  CLOUDINARY_CLOUD_NAME: z.string().trim().min(1),
 });
 
 //eslint-disable-next-line node/no-process-env
