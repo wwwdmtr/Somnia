@@ -7,6 +7,10 @@ import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
 import { useMe } from "../../lib/ctx";
+import {
+  uploadPostImagesToCloudinary,
+  type PickedPostImageFile,
+} from "../../lib/postImages";
 import { trpc } from "../../lib/trpc";
 import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
@@ -34,7 +38,9 @@ type UpdatePostFormsProps = {
 export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
   const me = useMe();
   const utils = trpc.useUtils();
+  const prepareCloudinaryUpload = trpc.prepareCloudinaryUpload.useMutation();
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [pendingImages, setPendingImages] = useState<PickedPostImageFile[]>([]);
   const updatePost = trpc.updatePost.useMutation({
     onSuccess: async () => {
       await Promise.all([
@@ -92,8 +98,24 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
     enableReinitialize: true,
 
     onSubmit: async (values, { resetForm }) => {
-      await updatePost.mutateAsync(values);
-      resetForm();
+      setIsUploadingImages(true);
+      try {
+        const uploadedImages = await uploadPostImagesToCloudinary({
+          files: pendingImages,
+          prepareCloudinaryUpload: () =>
+            prepareCloudinaryUpload.mutateAsync({
+              type: "image",
+            }),
+        });
+        await updatePost.mutateAsync({
+          ...values,
+          images: [...values.images, ...uploadedImages],
+        });
+        setPendingImages([]);
+        resetForm();
+      } finally {
+        setIsUploadingImages(false);
+      }
     },
   });
   const imageErrorText =
@@ -137,13 +159,14 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
       )}
 
       <PostImagesUploader
-        images={formik.values.images}
-        onUploadingChange={setIsUploadingImages}
+        uploadedImages={formik.values.images}
+        pendingImages={pendingImages}
         disabled={formik.isSubmitting}
-        onChange={(images) => {
+        onUploadedImagesChange={(images) => {
           formik.setFieldTouched("images", true, false);
           void formik.setFieldValue("images", images);
         }}
+        onPendingImagesChange={setPendingImages}
       />
 
       {imageErrorText ? (
@@ -161,10 +184,10 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
 
       <AppButton
         title={
-          formik.isSubmitting
-            ? "Сохранение..."
-            : isUploadingImages
-              ? "Загружаем изображения..."
+          isUploadingImages
+            ? "Загружаем изображения..."
+            : formik.isSubmitting
+              ? "Сохранение..."
               : "Сохранить изменения"
         }
         onPress={() => formik.handleSubmit()}
