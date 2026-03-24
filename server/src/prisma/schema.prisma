@@ -35,6 +35,7 @@ model Post {
     title         String
     description   String
     text          String
+    images        String[]
     createdAt     DateTime       @default(now())
     authorId      String
     author        User           @relation(fields: [authorId], references: [id])

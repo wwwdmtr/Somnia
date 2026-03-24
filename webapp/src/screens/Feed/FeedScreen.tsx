@@ -5,6 +5,7 @@ import {
   useIsFocused,
   useNavigation,
 } from "@react-navigation/native";
+import { getCloudinaryUploadUrl } from "@somnia/shared/src/cloudinary/cloudinary";
 import { format } from "date-fns";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useMemo, useState } from "react";
@@ -17,9 +18,11 @@ import {
   Image,
   RefreshControl,
   FlatList,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
@@ -37,6 +40,15 @@ export const AllPostsScreen = () => {
   const isFeedFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState<"feed" | "subs">("feed");
   const [refreshing, setRefreshing] = useState(false);
+  const [imageViewerState, setImageViewerState] = useState<{
+    isOpen: boolean;
+    images: string[];
+    index: number;
+  }>({
+    isOpen: false,
+    images: [],
+    index: 0,
+  });
 
   type PostsInfiniteData = NonNullable<
     ReturnType<typeof utils.getPosts.getInfiniteData>
@@ -141,11 +153,13 @@ export const AllPostsScreen = () => {
     () => data?.pages.flatMap((page) => page.posts) ?? [],
     [data],
   );
+  const isAuthorized = Boolean(me?.id);
   const { data: unreadNotificationsData, refetch: refetchUnreadNotifications } =
     trpc.getUnreadNotificationsCount.useQuery(
       {},
       {
-        refetchInterval: isFeedFocused ? 30000 : false,
+        enabled: isAuthorized,
+        refetchInterval: isFeedFocused && isAuthorized ? 30000 : false,
         refetchIntervalInBackground: false,
         staleTime: 15000,
       },
@@ -162,8 +176,11 @@ export const AllPostsScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
+      if (!isAuthorized) {
+        return;
+      }
       void refetchUnreadNotifications();
-    }, [refetchUnreadNotifications]),
+    }, [isAuthorized, refetchUnreadNotifications]),
   );
 
   const handleOpenPost = (id: string) => {
@@ -177,6 +194,14 @@ export const AllPostsScreen = () => {
     setPostLike.mutate({
       postId,
       isLikedByMe: !currentLikeState,
+    });
+  };
+
+  const openImageViewer = (images: string[], index: number) => {
+    setImageViewerState({
+      isOpen: true,
+      images,
+      index,
     });
   };
 
@@ -238,6 +263,44 @@ export const AllPostsScreen = () => {
           </Text>
         </View>
       </View>
+
+      {post.images.length === 1 ? (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => openImageViewer(post.images, 0)}
+        >
+          <Image
+            source={{
+              uri: getCloudinaryUploadUrl(post.images[0], "image", "large"),
+            }}
+            style={styles.singlePostPreviewImage}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      ) : post.images.length > 1 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.postImagesScroller}
+          contentContainerStyle={styles.postImagesContainer}
+        >
+          {post.images.map((imagePublicId, index) => (
+            <TouchableOpacity
+              key={`${imagePublicId}-${index}`}
+              activeOpacity={0.9}
+              onPress={() => openImageViewer(post.images, index)}
+            >
+              <Image
+                source={{
+                  uri: getCloudinaryUploadUrl(imagePublicId, "image", "large"),
+                }}
+                style={styles.postPreviewImage}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      ) : null}
       <TouchableOpacity onPress={() => handleOpenPost(post.id)}>
         <View style={styles.dream_info}>
           <Text style={typography.h4_white_85}>{post.title}</Text>
@@ -353,6 +416,14 @@ export const AllPostsScreen = () => {
           }}
           onEndReachedThreshold={0.15}
         />
+        <PostImageViewerModal
+          visible={imageViewerState.isOpen}
+          imagePublicIds={imageViewerState.images}
+          initialIndex={imageViewerState.index}
+          onClose={() =>
+            setImageViewerState((prev) => ({ ...prev, isOpen: false }))
+          }
+        />
       </SafeAreaView>
     </ImageBackground>
   );
@@ -445,10 +516,23 @@ const styles = StyleSheet.create({
     gap: 4,
     justifyContent: "space-between",
   },
-
+  postImagesContainer: {
+    gap: 10,
+    paddingRight: 8,
+  },
+  postImagesScroller: {
+    marginBottom: 16,
+  },
+  postPreviewImage: {
+    backgroundColor: COLORS.imageEmptyFieldsBackground,
+    borderRadius: 14,
+    height: 220,
+    width: 260,
+  },
   read_more: {
     marginTop: 8,
   },
+
   safeArea: {
     flex: 1,
     marginBottom: 20,
@@ -471,6 +555,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginHorizontal: 7,
     width: 165,
+  },
+  singlePostPreviewImage: {
+    backgroundColor: COLORS.imageEmptyFieldsBackground,
+    borderRadius: 14,
+    height: 220,
+    marginBottom: 16,
+    width: "100%",
   },
   topRow: {
     alignItems: "center",

@@ -5,6 +5,7 @@ import {
   useNavigation,
 } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { getCloudinaryUploadUrl } from "@somnia/shared/src/cloudinary/cloudinary";
 import { isUserAdmin } from "@somnia/shared/src/utils/can";
 import { format } from "date-fns";
 import { StatusBar } from "expo-status-bar";
@@ -18,9 +19,11 @@ import {
   Image,
   FlatList,
   RefreshControl,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import ScreenName from "../../constants/ScreenName";
 import { getAvatarSource } from "../../lib/avatar";
 import { useAppContext } from "../../lib/ctx";
@@ -44,6 +47,15 @@ export const ProfileScreen = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [imageViewerState, setImageViewerState] = useState<{
+    isOpen: boolean;
+    images: string[];
+    index: number;
+  }>({
+    isOpen: false,
+    images: [],
+    index: 0,
+  });
 
   type MyPostsData = NonNullable<ReturnType<typeof utils.getMyPosts.getData>>;
 
@@ -125,6 +137,14 @@ export const ProfileScreen = () => {
     setPostLike.mutate({
       postId,
       isLikedByMe: !currentLikeState,
+    });
+  };
+
+  const openImageViewer = (images: string[], index: number) => {
+    setImageViewerState({
+      isOpen: true,
+      images,
+      index,
     });
   };
 
@@ -228,6 +248,44 @@ export const ProfileScreen = () => {
         </Text>
       </View>
 
+      {post.images.length === 1 ? (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => openImageViewer(post.images, 0)}
+        >
+          <Image
+            source={{
+              uri: getCloudinaryUploadUrl(post.images[0], "image", "large"),
+            }}
+            style={styles.singlePostPreviewImage}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      ) : post.images.length > 1 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.postImagesScroller}
+          contentContainerStyle={styles.postImagesContainer}
+        >
+          {post.images.map((imagePublicId, index) => (
+            <TouchableOpacity
+              key={`${imagePublicId}-${index}`}
+              activeOpacity={0.9}
+              onPress={() => openImageViewer(post.images, index)}
+            >
+              <Image
+                source={{
+                  uri: getCloudinaryUploadUrl(imagePublicId, "image", "large"),
+                }}
+                style={styles.postPreviewImage}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      ) : null}
+
       <TouchableOpacity
         onPress={() => handleOpenPost(post.id)}
         style={styles.read_more}
@@ -283,6 +341,14 @@ export const ProfileScreen = () => {
             />
           }
         ></FlatList>
+        <PostImageViewerModal
+          visible={imageViewerState.isOpen}
+          imagePublicIds={imageViewerState.images}
+          initialIndex={imageViewerState.index}
+          onClose={() =>
+            setImageViewerState((prev) => ({ ...prev, isOpen: false }))
+          }
+        />
       </SafeAreaView>
     </ImageBackground>
   );
@@ -370,13 +436,33 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     width: "100%",
   },
-
+  postImagesContainer: {
+    gap: 10,
+    paddingRight: 8,
+  },
+  postImagesScroller: {
+    marginBottom: 16,
+  },
+  postPreviewImage: {
+    backgroundColor: COLORS.imageEmptyFieldsBackground,
+    borderRadius: 14,
+    height: 180,
+    width: 260,
+  },
   read_more: {
     marginTop: 8,
   },
+
   safeArea: {
     flex: 1,
     marginBottom: 20,
     marginHorizontal: 14,
+  },
+  singlePostPreviewImage: {
+    backgroundColor: COLORS.imageEmptyFieldsBackground,
+    borderRadius: 14,
+    height: 180,
+    marginBottom: 16,
+    width: "100%",
   },
 });

@@ -20,6 +20,8 @@ export const COLORS = {
   notificationUnreadBackground: "rgba(22, 104, 220, 0.22)",
   notificationUnreadBorder: "rgba(22, 104, 220, 0.9)",
   unreadDot: "rgba(255, 59, 48, 1)",
+  imageEmptyFieldsBackground: "rgba(255,255,255,0.06)",
+  imageFullScreenBackground: "rgba(0,0,0,0.95)",
 };
 
 export const typography = StyleSheet.create({

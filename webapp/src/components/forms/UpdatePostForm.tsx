@@ -1,7 +1,7 @@
 import { zUpdatePostTrpcInput } from "@somnia/shared/src/router/updatePost/input";
 import { canDeleteThisPost } from "@somnia/shared/src/utils/can";
 import { useFormik } from "formik";
-import React from "react";
+import React, { useState } from "react";
 import { View, TextInput, Text, TouchableOpacity, Alert } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
@@ -10,6 +10,8 @@ import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
 import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
+
+import { PostImagesUploader } from "./PostImagesUploader";
 
 import type { TrpcRouter } from "@somnia/shared/src/router";
 import type { inferRouterOutputs } from "@trpc/server";
@@ -32,6 +34,7 @@ type UpdatePostFormsProps = {
 export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
   const me = useMe();
   const utils = trpc.useUtils();
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
   const updatePost = trpc.updatePost.useMutation({
     onSuccess: async () => {
       await Promise.all([
@@ -81,6 +84,7 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
       title: post.title ?? "",
       description: post.description ?? "",
       text: post.text ?? "",
+      images: post.images ?? [],
     },
     validationSchema: toFormikValidationSchema(
       zUpdatePostTrpcInput.omit({ postId: true }),
@@ -92,6 +96,10 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
       resetForm();
     },
   });
+  const imageErrorText =
+    formik.touched.images && typeof formik.errors.images === "string"
+      ? formik.errors.images
+      : null;
 
   return (
     <View style={styles.container}>
@@ -128,20 +136,40 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
         <Text style={styles.errorText}>{formik.errors.text}</Text>
       )}
 
+      <PostImagesUploader
+        images={formik.values.images}
+        onUploadingChange={setIsUploadingImages}
+        disabled={formik.isSubmitting}
+        onChange={(images) => {
+          formik.setFieldTouched("images", true, false);
+          void formik.setFieldValue("images", images);
+        }}
+      />
+
+      {imageErrorText ? (
+        <Text style={styles.errorText}>{imageErrorText}</Text>
+      ) : null}
+
       {canDeleteThisPost(me, { authorId: post.authorId }) && (
         <TouchableOpacity
           onPress={onDeletePress}
-          disabled={deletePost.isPending}
+          disabled={deletePost.isPending || isUploadingImages}
         >
           <Text>{deletePost.isPending ? "Удаление..." : "Удалить пост"}</Text>
         </TouchableOpacity>
       )}
 
       <AppButton
-        title={formik.isSubmitting ? "Сохранение..." : "Сохранить изменения"}
+        title={
+          formik.isSubmitting
+            ? "Сохранение..."
+            : isUploadingImages
+              ? "Загружаем изображения..."
+              : "Сохранить изменения"
+        }
         onPress={() => formik.handleSubmit()}
         style={styles.startButton}
-        disabled={formik.isSubmitting || !formik.isValid}
+        disabled={formik.isSubmitting || isUploadingImages || !formik.isValid}
       />
     </View>
   );

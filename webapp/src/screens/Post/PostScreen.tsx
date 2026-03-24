@@ -6,6 +6,7 @@ import {
   useNavigation,
   useFocusEffect,
 } from "@react-navigation/native";
+import { getCloudinaryUploadUrl } from "@somnia/shared/src/cloudinary/cloudinary";
 import { canDeletePost, isUserAdmin } from "@somnia/shared/src/utils/can";
 import { format } from "date-fns/format";
 import { StatusBar } from "expo-status-bar";
@@ -21,10 +22,12 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AddCommentForm } from "../../components/forms/AddCommentForm";
+import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import ScreenName from "../../constants/ScreenName";
 import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
@@ -83,6 +86,15 @@ export const PostScreen = () => {
     commentId: string;
     nickname: string;
   } | null>(null);
+  const [imageViewerState, setImageViewerState] = useState<{
+    isOpen: boolean;
+    images: string[];
+    index: number;
+  }>({
+    isOpen: false,
+    images: [],
+    index: 0,
+  });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const deletePost = trpc.deletePost.useMutation();
   const undoDeletePost = trpc.undoDeletePost.useMutation();
@@ -248,6 +260,14 @@ export const PostScreen = () => {
       isLikedByMe: !data.post.isLikedByMe,
     });
   }, [data, setPostLike]);
+
+  const openImageViewer = useCallback((images: string[], index: number) => {
+    setImageViewerState({
+      isOpen: true,
+      images,
+      index,
+    });
+  }, []);
 
   const loadMoreComments = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -436,6 +456,35 @@ export const PostScreen = () => {
             <Text style={typography.body_white100}>{data.post.text}</Text>
           </View>
 
+          {data.post.images.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.postImagesScroller}
+              contentContainerStyle={styles.postImagesContainer}
+            >
+              {data.post.images.map((imagePublicId, index) => (
+                <TouchableOpacity
+                  key={`${imagePublicId}-${index}`}
+                  activeOpacity={0.9}
+                  onPress={() => openImageViewer(data.post.images, index)}
+                >
+                  <Image
+                    source={{
+                      uri: getCloudinaryUploadUrl(
+                        imagePublicId,
+                        "image",
+                        "large",
+                      ),
+                    }}
+                    style={styles.postImage}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          ) : null}
+
           <View style={styles.actions}>
             <View style={styles.action}>
               <TouchableOpacity onPress={toggleLike}>
@@ -469,7 +518,7 @@ export const PostScreen = () => {
         </View>
       </View>
     );
-  }, [data, toggleLike, totalCommentsCount]);
+  }, [data, openImageViewer, toggleLike, totalCommentsCount]);
 
   if (isLoading) {
     return (
@@ -653,6 +702,14 @@ export const PostScreen = () => {
             onCancelReply={cancelReply}
           />
         </View>
+        <PostImageViewerModal
+          visible={imageViewerState.isOpen}
+          imagePublicIds={imageViewerState.images}
+          initialIndex={imageViewerState.index}
+          onClose={() =>
+            setImageViewerState((prev) => ({ ...prev, isOpen: false }))
+          }
+        />
       </SafeAreaView>
     </ImageBackground>
   );
@@ -786,6 +843,19 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     gap: 4,
     justifyContent: "space-between",
+  },
+  postImage: {
+    backgroundColor: COLORS.imageEmptyFieldsBackground,
+    borderRadius: 16,
+    height: 220,
+    width: 280,
+  },
+  postImagesContainer: {
+    gap: 10,
+    paddingRight: 8,
+  },
+  postImagesScroller: {
+    marginTop: 16,
   },
   repliesToggle: {
     flexDirection: "row",

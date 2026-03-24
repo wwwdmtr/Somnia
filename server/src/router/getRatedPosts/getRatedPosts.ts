@@ -85,6 +85,7 @@ export const getRatedPostsTrpcRoute = trpcLoggedProcedure
         title: true,
         description: true,
         text: true,
+        images: true,
         createdAt: true,
 
         author: {

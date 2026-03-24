@@ -8,6 +8,7 @@ import {
   ImageBackground,
   TouchableOpacity,
   Image,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -49,7 +50,14 @@ export const AddPostScreen = () => {
           ></Image>
         </View>
 
-        <AddPostForm />
+        <ScrollView
+          style={styles.formScroll}
+          contentContainerStyle={styles.formScrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <AddPostForm />
+        </ScrollView>
         <StatusBar style="auto" />
       </SafeAreaView>
     </ImageBackground>
@@ -69,6 +77,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 14,
+  },
+  formScroll: {
+    flex: 1,
+  },
+  formScrollContent: {
+    paddingBottom: 24,
   },
 
   goBackWrapper: {

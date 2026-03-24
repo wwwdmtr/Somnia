@@ -1,7 +1,1 @@
-import { z } from "zod";
-
-import { zCreatePostTrpcInput } from "../createPost/input";
-
-export const zUpdatePostTrpcInput = zCreatePostTrpcInput.extend({
-  postId: z.string().min(1),
-});
+export { zUpdatePostTrpcInput } from "@somnia/shared/src/router/updatePost/input";

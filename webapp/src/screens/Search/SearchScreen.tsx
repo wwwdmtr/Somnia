@@ -4,6 +4,7 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { getCloudinaryUploadUrl } from "@somnia/shared/src/cloudinary/cloudinary";
 import { zGetRatedPostsTrpcInput } from "@somnia/shared/src/router/getRatedPosts/input";
 import { format } from "date-fns";
 import { StatusBar } from "expo-status-bar";
@@ -21,10 +22,12 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { getAvatarSource } from "../../lib/avatar";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
@@ -76,6 +79,15 @@ export const SearchScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>("all");
   const [showPeriodModal, setShowPeriodModal] = useState(false);
+  const [imageViewerState, setImageViewerState] = useState<{
+    isOpen: boolean;
+    images: string[];
+    index: number;
+  }>({
+    isOpen: false,
+    images: [],
+    index: 0,
+  });
 
   const formik = useFormik<SearchFormValues>({
     initialValues: { search: "" },
@@ -191,6 +203,14 @@ export const SearchScreen = () => {
     setPostLike.mutate({
       postId,
       isLikedByMe: !currentLikeState,
+    });
+  };
+
+  const openImageViewer = (images: string[], index: number) => {
+    setImageViewerState({
+      isOpen: true,
+      images,
+      index,
     });
   };
 
@@ -340,6 +360,44 @@ export const SearchScreen = () => {
         </View>
       </View>
 
+      {post.images.length === 1 ? (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => openImageViewer(post.images, 0)}
+        >
+          <Image
+            source={{
+              uri: getCloudinaryUploadUrl(post.images[0], "image", "large"),
+            }}
+            style={styles.singlePostPreviewImage}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      ) : post.images.length > 1 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.postImagesScroller}
+          contentContainerStyle={styles.postImagesContainer}
+        >
+          {post.images.map((imagePublicId, imageIndex) => (
+            <TouchableOpacity
+              key={`${imagePublicId}-${imageIndex}`}
+              activeOpacity={0.9}
+              onPress={() => openImageViewer(post.images, imageIndex)}
+            >
+              <Image
+                source={{
+                  uri: getCloudinaryUploadUrl(imagePublicId, "image", "large"),
+                }}
+                style={styles.postPreviewImage}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      ) : null}
+
       <TouchableOpacity onPress={() => handleOpenPost(post.id)}>
         <View style={styles.dream_info}>
           <Text style={typography.h4_white_85}>{post.title}</Text>
@@ -457,6 +515,14 @@ export const SearchScreen = () => {
             onEndReachedThreshold={0.15}
           />
         )}
+        <PostImageViewerModal
+          visible={imageViewerState.isOpen}
+          imagePublicIds={imageViewerState.images}
+          initialIndex={imageViewerState.index}
+          onClose={() =>
+            setImageViewerState((prev) => ({ ...prev, isOpen: false }))
+          }
+        />
       </SafeAreaView>
 
       {!isSearchMode && renderPeriodModal()}
@@ -579,6 +645,22 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 
+  postImagesContainer: {
+    gap: 10,
+    paddingRight: 8,
+  },
+
+  postImagesScroller: {
+    marginBottom: 16,
+  },
+
+  postPreviewImage: {
+    backgroundColor: COLORS.imageEmptyFieldsBackground,
+    borderRadius: 14,
+    height: 220,
+    width: 260,
+  },
+
   read_more: { marginTop: 8 },
 
   safeArea: { flex: 1, marginBottom: 20 },
@@ -601,6 +683,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
+  singlePostPreviewImage: {
+    backgroundColor: COLORS.imageEmptyFieldsBackground,
+    borderRadius: 14,
+    height: 220,
+    marginBottom: 16,
+    width: "100%",
+  },
   updatingRow: {
     alignItems: "center",
     alignSelf: "center",
