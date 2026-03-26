@@ -5,6 +5,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 
 import ScreenName from "../../constants/ScreenName";
 import TabName from "../../constants/TabName";
+import { mixpanelTrackSignOut } from "../../lib/mixpanel";
 import { clearToken } from "../../lib/tokenStorage";
 import { trpc } from "../../lib/trpc";
 
@@ -22,6 +23,7 @@ export const SignOutScreen: React.FC<Props> = ({ navigation }) => {
 
     const signOut = async () => {
       try {
+        mixpanelTrackSignOut();
         await clearToken();
         await utils.invalidate();
       } catch (error) {

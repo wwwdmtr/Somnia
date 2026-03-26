@@ -29,6 +29,7 @@ import { toFormikValidationSchema } from "zod-formik-adapter";
 
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { getAvatarSource } from "../../lib/avatar";
+import { mixpanelTrackPostLike } from "../../lib/mixpanel";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
 
@@ -186,6 +187,8 @@ export const SearchScreen = () => {
           })),
         };
       });
+
+      mixpanelTrackPostLike(data.post);
     },
   });
 

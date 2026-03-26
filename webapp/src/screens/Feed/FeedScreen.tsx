@@ -25,6 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
+import { mixpanelTrackPostLike } from "../../lib/mixpanel";
 import { trpc } from "../../lib/trpc";
 import { typography, COLORS } from "../../theme/typography";
 
@@ -141,6 +142,8 @@ export const AllPostsScreen = () => {
         })),
       };
     });
+
+    mixpanelTrackPostLike(data.post);
   };
 
   const setPostLike = trpc.setPostLike.useMutation({

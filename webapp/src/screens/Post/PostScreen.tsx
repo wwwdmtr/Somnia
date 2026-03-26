@@ -31,6 +31,7 @@ import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import ScreenName from "../../constants/ScreenName";
 import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
+import { mixpanelTrackPostLike } from "../../lib/mixpanel";
 import { trpc } from "../../lib/trpc";
 import { typography, COLORS } from "../../theme/typography";
 
@@ -236,6 +237,8 @@ export const PostScreen = () => {
         },
       };
     });
+
+    mixpanelTrackPostLike(data.post);
   };
 
   const setPostLike = trpc.setPostLike.useMutation({

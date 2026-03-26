@@ -4,16 +4,16 @@ import { useEffect } from "react";
 import { useMe } from "./ctx";
 import { env } from "./env";
 
-if (env.WEBAPP_SENTRYHAWK_DSN) {
+if (env.SENTRYHAWK_DSN) {
   Sentry.init({
-    dsn: env.WEBAPP_SENTRYHAWK_DSN,
+    dsn: env.SENTRYHAWK_DSN,
     environment: env.NODE_ENV,
     normalizeDepth: 10,
   });
 }
 
 export const sentryCaptureException = (error: Error) => {
-  if (env.WEBAPP_SENTRYHAWK_DSN) {
+  if (env.SENTRYHAWK_DSN) {
     Sentry.captureException(error);
   }
 };
@@ -21,7 +21,7 @@ export const sentryCaptureException = (error: Error) => {
 export const SentryUser = () => {
   const me = useMe();
   useEffect(() => {
-    if (env.WEBAPP_SENTRYHAWK_DSN) {
+    if (env.SENTRYHAWK_DSN) {
       if (me) {
         Sentry.setUser({
           email: me.email,

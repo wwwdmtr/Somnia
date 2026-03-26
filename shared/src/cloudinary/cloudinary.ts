@@ -1,9 +1,6 @@
-/* eslint-disable node/no-process-env */
-const cloudinaryCloudName =
-  process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME ||
-  process.env.EXPO_PUBLIC_WEBAPP_CLOUDINARY_CLOUD_NAME ||
-  process.env.CLOUDINARY_CLOUD_NAME;
-const cloudinaryUrl = `https://res.cloudinary.com/${cloudinaryCloudName}/image/upload`;
+import { sharedEnv } from "../env";
+
+const cloudinaryUrl = `https://res.cloudinary.com/${sharedEnv.CLOUDINARY_CLOUD_NAME}/image/upload`;
 
 type CloudinaryUploadType = {
   folder: string;

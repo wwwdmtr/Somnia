@@ -7,6 +7,7 @@ import { StyleSheet } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { mixpanelTrackSignUp } from "../../lib/mixpanel";
 import { setToken } from "../../lib/tokenStorage";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
@@ -53,6 +54,7 @@ export const SignUpForm = () => {
       const { nickname, email, password } = values;
       const { token } = await signUp.mutateAsync({ nickname, email, password });
       await setToken(token);
+      mixpanelTrackSignUp();
 
       void trpcUtils.invalidate();
       resetForm();

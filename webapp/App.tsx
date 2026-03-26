@@ -5,6 +5,7 @@ import { Platform, StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AppContextProvider } from "./src/lib/ctx";
+import { MixpanelUser } from "./src/lib/mixpanel";
 import { SentryUser } from "./src/lib/sentrySDK";
 import { TrpcProvider } from "./src/lib/trpc";
 import { linking } from "./src/navigation/linking";
@@ -26,6 +27,7 @@ export default function App() {
   return (
     <TrpcProvider>
       <AppContextProvider>
+        <MixpanelUser />
         <SentryUser />
         {isWeb ? (
           <View style={styles.webRoot}>

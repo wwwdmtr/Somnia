@@ -27,6 +27,7 @@ import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import ScreenName from "../../constants/ScreenName";
 import { getAvatarSource } from "../../lib/avatar";
 import { useAppContext } from "../../lib/ctx";
+import { mixpanelTrackPostLike } from "../../lib/mixpanel";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
 
@@ -125,6 +126,8 @@ export const ProfileScreen = () => {
         ),
       };
     });
+
+    mixpanelTrackPostLike(data.post);
   };
 
   const setPostLike = trpc.setPostLike.useMutation({
