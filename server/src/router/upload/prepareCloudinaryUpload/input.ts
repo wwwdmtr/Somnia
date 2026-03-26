@@ -1,5 +1,5 @@
-import { cloudinaryUploadTypes } from "@somnia/shared/src/cloudinary/cloudinary";
-import { getKeysAsArray } from "@somnia/shared/src/cloudinary/getKeysAsArray";
+import { cloudinaryUploadTypes } from "@somnia/shared/dist/cloudinary/cloudinary";
+import { getKeysAsArray } from "@somnia/shared/dist/cloudinary/getKeysAsArray";
 import { z } from "zod";
 
 export const zPrepareCloudinaryUploadTrpcInput = z.object({

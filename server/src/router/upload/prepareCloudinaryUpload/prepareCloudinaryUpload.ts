@@ -1,4 +1,4 @@
-import { cloudinaryUploadTypes } from "@somnia/shared/src/cloudinary/cloudinary";
+import { cloudinaryUploadTypes } from "@somnia/shared/dist/cloudinary/cloudinary";
 import { v2 as cloudinary } from "cloudinary";
 
 import { env } from "../../../lib/env";

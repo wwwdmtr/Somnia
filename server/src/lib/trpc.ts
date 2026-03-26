@@ -1,7 +1,6 @@
 import { initTRPC } from "@trpc/server";
 import * as trpcExpress from "@trpc/server/adapters/express";
 import { type Express } from "express";
-import superjson from "superjson";
 import { expressHandler } from "trpc-playground/handlers/express";
 
 import { type TrpcRouter } from "../router";
@@ -13,7 +12,28 @@ import { logger } from "./logger";
 
 import type { DataTransformerOptions } from "@trpc/server/unstable-core-do-not-import";
 
-const dataTransformer: DataTransformerOptions = superjson;
+const unwrapJsonEnvelope = (obj: unknown) => {
+  if (
+    obj &&
+    typeof obj === "object" &&
+    "json" in obj &&
+    Object.keys(obj as Record<string, unknown>).length <= 2
+  ) {
+    return (obj as { json: unknown }).json;
+  }
+  return obj;
+};
+
+const jsonTransformer: DataTransformerOptions = {
+  input: {
+    serialize: (obj) => obj,
+    deserialize: (obj) => unwrapJsonEnvelope(obj),
+  },
+  output: {
+    serialize: (obj) => obj,
+    deserialize: (obj) => unwrapJsonEnvelope(obj),
+  },
+};
 
 export const getTrpcContext = ({
   appContext,
@@ -34,7 +54,7 @@ const getCreateTrpcContext =
 type TrpcContext = ReturnType<typeof getTrpcContext>;
 
 const trpc = initTRPC.context<TrpcContext>().create({
-  transformer: dataTransformer,
+  transformer: jsonTransformer,
   errorFormatter: ({ shape, error }) => {
     const isExpected = error.cause instanceof ExpectedError;
     return {
@@ -94,7 +114,7 @@ export const applyTrpcToExpressApp = async (
       playgroundEndpoint: "/trpc-playground",
       router: trpcRouter,
       request: {
-        superjson: true,
+        superjson: false,
       },
     }),
   );

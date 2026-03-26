@@ -1,1 +1,1 @@
-export { zUpdatePostTrpcInput } from "@somnia/shared/src/router/updatePost/input";
+export { zUpdatePostTrpcInput } from "@somnia/shared/dist/router/updatePost/input";

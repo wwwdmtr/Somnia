@@ -2,7 +2,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, type TRPCLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import { observable } from "@trpc/server/observable";
-import superjson from "superjson";
 
 import { env } from "./env";
 import { sentryCaptureException } from "./sentrySDK";
@@ -26,6 +25,17 @@ type AppRouter = Omit<ServerAppRouter, "_def"> & {
       };
     };
   };
+};
+
+const jsonTransformer = {
+  input: {
+    serialize: (obj: unknown) => obj,
+    deserialize: (obj: unknown) => obj,
+  },
+  output: {
+    serialize: (obj: unknown) => obj,
+    deserialize: (obj: unknown) => obj,
+  },
 };
 
 export const trpc = createTRPCReact<AppRouter>();
@@ -70,7 +80,7 @@ const trpcClient = trpc.createClient({
     customTrpcLink,
     httpBatchLink({
       url: env.BACKEND_TRPC_URL,
-      transformer: superjson,
+      transformer: jsonTransformer,
 
       async fetch(url, options) {
         const token = await getToken();

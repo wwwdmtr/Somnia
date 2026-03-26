@@ -5,6 +5,7 @@ import { AppContext, createAppContext } from './lib/ctx';
 import { env } from './lib/env';
 import { logger } from './lib/logger';
 import { applyPassportToExpressApp } from './lib/passport';
+import { applyServeWebApp } from './lib/serveWebApp';
 import { applyTrpcToExpressApp } from './lib/trpc';
 import { trpcRouter } from './router/index';
 import { presetDB } from './scripts/presetDB';
@@ -67,7 +68,7 @@ void (async () => {
     );
     applyPassportToExpressApp(expressApp, ctx);
     await applyTrpcToExpressApp(expressApp, ctx, trpcRouter);
-
+    await applyServeWebApp(expressApp);
     expressApp.use(
       (
         error: unknown,
