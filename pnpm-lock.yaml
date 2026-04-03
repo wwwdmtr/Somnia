@@ -189,9 +189,22 @@ importers:
       '@somnia/server':
         specifier: workspace:*
         version: link:../server
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
       zod:
         specifier: ^4.1.12
         version: 4.1.12
+    devDependencies:
+      '@types/lodash':
+        specifier: ^4.17.20
+        version: 4.17.20
+      '@types/node':
+        specifier: ^24.7.2
+        version: 24.9.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   webapp:
     dependencies:

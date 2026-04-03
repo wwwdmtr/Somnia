@@ -11,7 +11,11 @@
     "types": " concurrently 'pnpm b types && pnpm f types'",
     "lint": "concurrently 'pnpm b lint && pnpm f lint'",
     "prettify": "pnpm -r exec prettier --write \"**/*.{js,jsx,ts,tsx,json,md,css,scss,html}\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "docker:build:server": "docker build -f server/Dockerfile -t somnia-server:local .",
+    "docker:run:server": "docker run --rm -p 3000:3000 --env-file server/.env -e DATABASE_URL=\"postgresql://somnia:somnia@host.docker.internal:5432/somnia?schema=public\" somnia-server:local", 
+    "docker:build:webapp": "docker build -f webapp/Dockerfile -t somnia-webapp:local --build-arg EXPO_PUBLIC_BACKEND_TRPC_URL=http://localhost:3000/trpc --build-arg EXPO_PUBLIC_WEBAPP_URL=http://localhost:8081 --build-arg NODE_ENV=production .",
+    "docker:run:webapp": "docker run --rm -p 8081:80 somnia-webapp:local"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
