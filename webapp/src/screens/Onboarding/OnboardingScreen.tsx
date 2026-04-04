@@ -1,13 +1,13 @@
-import { useNavigation } from '@react-navigation/native';
-import { StyleSheet, Text, ImageBackground, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from "@react-navigation/native";
+import { StyleSheet, Text, ImageBackground, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AppButton } from '../../components/ui/AppButton';
-import ScreenName from '../../constants/ScreenName';
-import { typography } from '../../theme/typography';
+import { AppButton } from "../../components/ui/AppButton";
+import ScreenName from "../../constants/ScreenName";
+import { typography } from "../../theme/typography";
 
-import type { AuthStackParamList } from '../../navigation/AuthStackParamList';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { AuthStackParamList } from "../../navigation/AuthStackParamList";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type OnboardingScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -20,15 +20,13 @@ export const OnboardingScreen = () => {
   return (
     <ImageBackground
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      source={require('../../assets/backgrounds/onboarding-main.png')}
+      source={require("../../assets/backgrounds/onboarding-main.png")}
       style={styles.BackgroundImage}
     >
       <SafeAreaView style={styles.container}>
         <View style={styles.logo}>
-          <Text style={typography.h1_white100}>Somnia</Text>
-          <Text style={typography.body_white85}>
-            Облако для ваших сноведений
-          </Text>
+          <Text style={typography.h1_white100}>Универ</Text>
+          <Text style={typography.body_white85}>Пожалуй лучшая соцсеть</Text>
         </View>
 
         <AppButton
@@ -50,7 +48,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     height: 78,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     marginLeft: 16,
     marginTop: 490,
     width: 244,
@@ -59,6 +57,6 @@ const styles = StyleSheet.create({
     height: 40,
     marginHorizontal: 16,
     marginTop: 120,
-    width: 'auto',
+    width: "auto",
   },
 });
