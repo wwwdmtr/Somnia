@@ -60,27 +60,69 @@ jobs:
     needs: changes
     if: needs.changes.outputs.server == 'true'
     steps:
-      - name: Trigger server deploy hook
+      - name: Trigger server deploy via Dokploy API
         env:
-          HOOK_URL: ${{ secrets.DOCKPLOY_SERVER_HOOK }}
+          DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
+          DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+          APPLICATION_ID: ${{ secrets.DOKPLOY_SERVER_APPLICATION_ID }}
         run: |
-          if [ -z "$HOOK_URL" ]; then
-            echo "DOCKPLOY_SERVER_HOOK secret is missing"
+          if [ -z "$DOKPLOY_URL" ]; then
+            echo "DOKPLOY_URL secret is missing"
             exit 1
           fi
-          curl --fail --show-error --silent --request POST "$HOOK_URL"
+          if [ -z "$DOKPLOY_API_KEY" ]; then
+            echo "DOKPLOY_API_KEY secret is missing"
+            exit 1
+          fi
+          if [ -z "$APPLICATION_ID" ]; then
+            echo "DOKPLOY_SERVER_APPLICATION_ID secret is missing"
+            exit 1
+          fi
+
+          API_URL="${DOKPLOY_URL%/}/api/application.deploy"
+          JSON_PAYLOAD="{\"applicationId\":\"$APPLICATION_ID\"}"
+
+          curl --request POST "$API_URL" \
+            --header "accept: application/json" \
+            --header "content-type: application/json" \
+            --header "x-api-key: $DOKPLOY_API_KEY" \
+            --data "$JSON_PAYLOAD" \
+            --fail-with-body \
+            --show-error \
+            --silent
 
   deploy-webapp:
     runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.webapp == 'true'
     steps:
-      - name: Trigger webapp deploy hook
+      - name: Trigger webapp deploy via Dokploy API
         env:
-          HOOK_URL: ${{ secrets.DOCKPLOY_WEBAPP_HOOK }}
+          DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
+          DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+          APPLICATION_ID: ${{ secrets.DOKPLOY_WEBAPP_APPLICATION_ID }}
         run: |
-          if [ -z "$HOOK_URL" ]; then
-            echo "DOCKPLOY_WEBAPP_HOOK secret is missing"
+          if [ -z "$DOKPLOY_URL" ]; then
+            echo "DOKPLOY_URL secret is missing"
             exit 1
           fi
-          curl --fail --show-error --silent --request POST "$HOOK_URL"
+          if [ -z "$DOKPLOY_API_KEY" ]; then
+            echo "DOKPLOY_API_KEY secret is missing"
+            exit 1
+          fi
+          if [ -z "$APPLICATION_ID" ]; then
+            echo "DOKPLOY_WEBAPP_APPLICATION_ID secret is missing"
+            exit 1
+          fi
+
+          API_URL="${DOKPLOY_URL%/}/api/application.deploy"
+          JSON_PAYLOAD="{\"applicationId\":\"$APPLICATION_ID\"}"
+
+          curl --request POST "$API_URL" \
+            --header "accept: application/json" \
+            --header "content-type: application/json" \
+            --header "x-api-key: $DOKPLOY_API_KEY" \
+            --data "$JSON_PAYLOAD" \
+            --fail-with-body \
+            --show-error \
+            --silent
