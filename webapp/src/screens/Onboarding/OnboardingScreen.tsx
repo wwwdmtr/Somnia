@@ -24,6 +24,7 @@ export const OnboardingScreen = () => {
       style={styles.BackgroundImage}
     >
       <SafeAreaView style={styles.container}>
+        <View style={styles.spacer} />
         <View style={styles.logo}>
           <Text style={typography.h1_white100}>Универ</Text>
           <Text style={typography.body_white85}>Пожалуй лучшая соцсеть</Text>
@@ -45,18 +46,20 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    paddingHorizontal: 16,
   },
   logo: {
     height: 78,
     justifyContent: "space-between",
-    marginLeft: 16,
-    marginTop: 490,
+    marginBottom: 132,
     width: 244,
+  },
+  spacer: {
+    flex: 1,
   },
   startButton: {
     height: 40,
-    marginHorizontal: 16,
-    marginTop: 120,
+    marginBottom: 50,
     width: "auto",
   },
 });

@@ -52,7 +52,13 @@ export const SignUpForm = () => {
     validationSchema: toFormikValidationSchema(signUpFormSchema),
     onSubmit: async (values, { resetForm }) => {
       const { nickname, email, password } = values;
-      const { token } = await signUp.mutateAsync({ nickname, email, password });
+      const normalizedNickname = nickname.toLowerCase();
+      const normalizedEmail = email.trim().toLowerCase();
+      const { token } = await signUp.mutateAsync({
+        nickname: normalizedNickname,
+        email: normalizedEmail,
+        password,
+      });
       await setToken(token);
       mixpanelTrackSignUp();
 
@@ -68,7 +74,9 @@ export const SignUpForm = () => {
         placeholder="Имя пользователя"
         placeholderTextColor={COLORS.white25}
         value={formik.values.nickname}
-        onChangeText={(text) => formik.setFieldValue("nickname", text)}
+        onChangeText={(text) =>
+          formik.setFieldValue("nickname", text.toLowerCase())
+        }
         onBlur={() => formik.setFieldTouched("nickname")}
         style={[
           styles.input,
@@ -84,11 +92,13 @@ export const SignUpForm = () => {
         placeholder="E-mail"
         placeholderTextColor={COLORS.white25}
         value={formik.values.email}
-        onChangeText={(text) => formik.setFieldValue("email", text)}
+        onChangeText={(text) =>
+          formik.setFieldValue("email", text.toLowerCase())
+        }
         onBlur={() => formik.setFieldTouched("email")}
         style={[
           styles.input,
-          formik.touched.nickname && formik.errors.nickname
+          formik.touched.email && formik.errors.email
             ? styles.inputError
             : null,
         ]}
@@ -162,6 +172,9 @@ export const SignUpForm = () => {
       {(formik.touched.nickname && formik.errors.nickname && (
         <Text style={styles.errorText}>{formik.errors.nickname}</Text>
       )) ||
+        (formik.touched.email && formik.errors.email && (
+          <Text style={styles.errorText}>{formik.errors.email}</Text>
+        )) ||
         (formik.touched.password && formik.errors.password && (
           <Text style={styles.errorText}>{formik.errors.password}</Text>
         )) ||

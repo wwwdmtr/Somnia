@@ -32,7 +32,7 @@ export const SignInScreen = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={typography.h2_white100}>С возвращением</Text>
-          <Text style={typography.h2_white100}>в Somnia</Text>
+          <Text style={typography.h2_white100}>в Универ</Text>
         </View>
         <View style={styles.form}>
           <SignInForm />

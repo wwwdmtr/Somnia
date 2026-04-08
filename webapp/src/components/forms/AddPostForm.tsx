@@ -26,11 +26,26 @@ type AddPostNavProp = NativeStackNavigationProp<
   "AddPost"
 >;
 
+const EMPTY_POST_ERROR =
+  "Добавьте заголовок, текст или хотя бы одно изображение";
+
+const normalizeTextField = (value: unknown): string =>
+  typeof value === "string" ? value.trim() : "";
+
+const normalizeImageIds = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter(
+        (imageId): imageId is string =>
+          typeof imageId === "string" && imageId.trim().length > 0,
+      )
+    : [];
+
 export const AddPostForm = () => {
   const utils = trpc.useUtils();
   const navigation = useNavigation<AddPostNavProp>();
   const prepareCloudinaryUpload = trpc.prepareCloudinaryUpload.useMutation();
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [pendingImages, setPendingImages] = useState<PickedPostImageFile[]>([]);
   const createPost = trpc.createPost.useMutation({
     onSuccess: () => {
@@ -47,6 +62,23 @@ export const AddPostForm = () => {
     },
     validationSchema: toFormikValidationSchema(zCreatePostTrpcInput),
     onSubmit: async (values, { resetForm }) => {
+      const normalizedTitle = normalizeTextField(values.title);
+      const normalizedText = normalizeTextField(values.text);
+      const normalizedDescription =
+        normalizeTextField(values.description) || "some mock description";
+      const currentImages = normalizeImageIds(values.images);
+      const hasAnyContent =
+        normalizedTitle.length > 0 ||
+        normalizedText.length > 0 ||
+        currentImages.length > 0 ||
+        pendingImages.length > 0;
+
+      if (!hasAnyContent) {
+        setSubmitError(EMPTY_POST_ERROR);
+        return;
+      }
+
+      setSubmitError(null);
       setIsUploadingImages(true);
       try {
         const uploadedImages = await uploadPostImagesToCloudinary({
@@ -57,8 +89,10 @@ export const AddPostForm = () => {
             }),
         });
         await createPost.mutateAsync({
-          ...values,
-          images: [...values.images, ...uploadedImages],
+          title: normalizedTitle,
+          description: normalizedDescription,
+          text: normalizedText,
+          images: [...currentImages, ...uploadedImages],
         });
         setPendingImages([]);
         resetForm();
@@ -72,6 +106,11 @@ export const AddPostForm = () => {
     formik.touched.images && typeof formik.errors.images === "string"
       ? formik.errors.images
       : null;
+  const hasAnyContent =
+    normalizeTextField(formik.values.title).length > 0 ||
+    normalizeTextField(formik.values.text).length > 0 ||
+    normalizeImageIds(formik.values.images).length > 0 ||
+    pendingImages.length > 0;
 
   return (
     <View style={styles.container}>
@@ -79,7 +118,10 @@ export const AddPostForm = () => {
         placeholder="Придумайте заголовок ..."
         placeholderTextColor={COLORS.white25}
         value={formik.values.title}
-        onChangeText={(text) => formik.setFieldValue("title", text)}
+        onChangeText={(text) => {
+          setSubmitError(null);
+          formik.setFieldValue("title", text);
+        }}
         onBlur={() => formik.setFieldTouched("title")}
         style={[
           styles.input,
@@ -97,7 +139,10 @@ export const AddPostForm = () => {
         placeholder="Добавьте описание ..."
         placeholderTextColor={COLORS.white25}
         value={formik.values.text}
-        onChangeText={(text) => formik.setFieldValue("text", text)}
+        onChangeText={(text) => {
+          setSubmitError(null);
+          formik.setFieldValue("text", text);
+        }}
         onBlur={() => formik.setFieldTouched("text")}
         multiline
         style={[
@@ -115,15 +160,20 @@ export const AddPostForm = () => {
         pendingImages={pendingImages}
         disabled={formik.isSubmitting}
         onUploadedImagesChange={(images) => {
+          setSubmitError(null);
           formik.setFieldTouched("images", true, false);
           void formik.setFieldValue("images", images);
         }}
-        onPendingImagesChange={setPendingImages}
+        onPendingImagesChange={(images) => {
+          setSubmitError(null);
+          setPendingImages(images);
+        }}
       />
 
       {imageErrorText ? (
         <Text style={styles.errorText}>{imageErrorText}</Text>
       ) : null}
+      {submitError ? <Text style={styles.errorText}>{submitError}</Text> : null}
 
       <AppButton
         title={
@@ -133,9 +183,15 @@ export const AddPostForm = () => {
               ? "Публикуем..."
               : "Опубликовать"
         }
-        onPress={() => formik.handleSubmit()}
+        onPress={() => {
+          if (!hasAnyContent) {
+            setSubmitError(EMPTY_POST_ERROR);
+            return;
+          }
+          formik.handleSubmit();
+        }}
         style={styles.startButton}
-        disabled={formik.isSubmitting || isUploadingImages || !formik.isValid}
+        disabled={formik.isSubmitting || isUploadingImages || !hasAnyContent}
       />
     </View>
   );

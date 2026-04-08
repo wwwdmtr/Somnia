@@ -38,7 +38,11 @@ export const SignInForm = () => {
     validationSchema: toFormikValidationSchema(zSignInTrpcInput),
     onSubmit: async (values, { resetForm }) => {
       const { nickname, password } = values;
-      const { token } = await signIn.mutateAsync({ nickname, password });
+      const normalizedNickname = nickname.toLowerCase();
+      const { token } = await signIn.mutateAsync({
+        nickname: normalizedNickname,
+        password,
+      });
       await setToken(token);
       mixpanelTrackSignIn();
       trpcUtils.invalidate();
@@ -53,7 +57,9 @@ export const SignInForm = () => {
         placeholder="Имя пользователя"
         placeholderTextColor={COLORS.white25}
         value={formik.values.nickname}
-        onChangeText={(text) => formik.setFieldValue("nickname", text)}
+        onChangeText={(text) =>
+          formik.setFieldValue("nickname", text.toLowerCase())
+        }
         onBlur={() => formik.setFieldTouched("nickname")}
         style={[
           styles.input,
