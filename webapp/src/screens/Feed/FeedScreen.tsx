@@ -5,8 +5,6 @@ import {
   useIsFocused,
   useNavigation,
 } from "@react-navigation/native";
-import { getCloudinaryUploadUrl } from "@somnia/shared/src/cloudinary/cloudinary";
-import { format } from "date-fns";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useMemo, useState } from "react";
 import {
@@ -15,17 +13,19 @@ import {
   View,
   TouchableOpacity,
   ImageBackground,
-  Image,
   RefreshControl,
   FlatList,
-  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
-import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
-import { mixpanelTrackPostLike } from "../../lib/mixpanel";
+import {
+  applyOptimisticLikeToPosts,
+  applyServerLikeToPosts,
+  usePostLikeMutation,
+} from "../../lib/postLikeMutation";
 import { trpc } from "../../lib/trpc";
 import { typography, COLORS } from "../../theme/typography";
 
@@ -55,10 +55,6 @@ export const AllPostsScreen = () => {
     ReturnType<typeof utils.getPosts.getInfiniteData>
   >;
 
-  type LikeMutationContext = {
-    previousData: PostsInfiniteData | undefined;
-  };
-
   const {
     data,
     error,
@@ -74,14 +70,8 @@ export const AllPostsScreen = () => {
     },
   );
 
-  const handleMutate = async (variables: {
-    postId: string;
-    isLikedByMe: boolean;
-  }): Promise<LikeMutationContext> => {
-    await utils.getPosts.cancel();
-    const previousData = utils.getPosts.getInfiniteData({ limit: 15 });
-
-    utils.getPosts.setInfiniteData({ limit: 15 }, (old) => {
+  const setPostLike = usePostLikeMutation<PostsInfiniteData>({
+    applyOptimistic: (old, variables) => {
       if (!old) {
         return old;
       }
@@ -90,38 +80,11 @@ export const AllPostsScreen = () => {
         ...old,
         pages: old.pages.map((page) => ({
           ...page,
-          posts: page.posts.map((post) =>
-            post.id === variables.postId
-              ? {
-                  ...post,
-                  isLikedByMe: variables.isLikedByMe,
-                  likesCount: variables.isLikedByMe
-                    ? post.likesCount + 1
-                    : post.likesCount - 1,
-                }
-              : post,
-          ),
+          posts: applyOptimisticLikeToPosts(page.posts, variables),
         })),
       };
-    });
-
-    return { previousData };
-  };
-
-  const handleError = (
-    _err: unknown,
-    _variables: unknown,
-    context: LikeMutationContext | undefined,
-  ) => {
-    if (context?.previousData) {
-      utils.getPosts.setInfiniteData({ limit: 15 }, context.previousData);
-    }
-  };
-
-  const handleSuccess = (data: {
-    post: { id: string; likesCount: number; isLikedByMe: boolean };
-  }) => {
-    utils.getPosts.setInfiniteData({ limit: 15 }, (old) => {
+    },
+    applyServer: (old, likeData) => {
       if (!old) {
         return old;
       }
@@ -130,26 +93,14 @@ export const AllPostsScreen = () => {
         ...old,
         pages: old.pages.map((page) => ({
           ...page,
-          posts: page.posts.map((post) =>
-            post.id === data.post.id
-              ? {
-                  ...post,
-                  isLikedByMe: data.post.isLikedByMe,
-                  likesCount: data.post.likesCount,
-                }
-              : post,
-          ),
+          posts: applyServerLikeToPosts(page.posts, likeData),
         })),
       };
-    });
-
-    mixpanelTrackPostLike(data.post);
-  };
-
-  const setPostLike = trpc.setPostLike.useMutation({
-    onMutate: handleMutate,
-    onError: handleError,
-    onSuccess: handleSuccess,
+    },
+    cancel: () => utils.getPosts.cancel(),
+    getData: () => utils.getPosts.getInfiniteData({ limit: 15 }),
+    setData: (updater) =>
+      utils.getPosts.setInfiniteData({ limit: 15 }, updater),
   });
 
   const posts = useMemo(
@@ -251,105 +202,16 @@ export const AllPostsScreen = () => {
     </View>
   );
 
-  const renderItem = ({ item: post }: { item: (typeof posts)[number] }) => (
-    <View style={styles.card}>
-      <View style={styles.postHeader}>
-        <Image
-          source={getAvatarSource(post.author.avatar, "small")}
-          style={styles.cardImage}
-        />
-
-        <View style={styles.postHeaderInfo}>
-          <Text style={typography.body_white85}>@{post.author.nickname}</Text>
-          <Text style={typography.additionalInfo_white25}>
-            {format(new Date(post.createdAt), "dd.MM.yyyy")}
-          </Text>
-        </View>
-      </View>
-
-      {post.images.length === 1 ? (
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() => openImageViewer(post.images, 0)}
-        >
-          <Image
-            source={{
-              uri: getCloudinaryUploadUrl(post.images[0], "image", "large"),
-            }}
-            style={styles.singlePostPreviewImage}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      ) : post.images.length > 1 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.postImagesScroller}
-          contentContainerStyle={styles.postImagesContainer}
-        >
-          {post.images.map((imagePublicId, index) => (
-            <TouchableOpacity
-              key={`${imagePublicId}-${index}`}
-              activeOpacity={0.9}
-              onPress={() => openImageViewer(post.images, index)}
-            >
-              <Image
-                source={{
-                  uri: getCloudinaryUploadUrl(imagePublicId, "image", "large"),
-                }}
-                style={styles.postPreviewImage}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      ) : null}
-      <TouchableOpacity onPress={() => handleOpenPost(post.id)}>
-        <View style={styles.dream_info}>
-          <Text style={typography.h4_white_85}>{post.title}</Text>
-          <Text style={typography.body_white100} numberOfLines={3}>
-            {post.text}...
-          </Text>
-        </View>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => handleOpenPost(post.id)}
-        style={styles.read_more}
-      >
-        <Text style={typography.caption_link}>Читать далее...</Text>
-      </TouchableOpacity>
-
-      <View style={styles.actions}>
-        <View style={styles.action}>
-          <TouchableOpacity
-            onPress={() => toggleLike(post.id, post.isLikedByMe)}
-          >
-            <Ionicons
-              name={post.isLikedByMe ? "star" : "star-outline"}
-              size={20}
-              color={post.isLikedByMe ? "red" : "rgba(255,255,255,0.45)"}
-            />
-          </TouchableOpacity>
-          <Text style={typography.caption_white85}>
-            {post.likesCount} нравится
-          </Text>
-        </View>
-
-        <View style={styles.action}>
-          <Image
-            source={require("../../assets/Icons/Activity/comments.png")}
-            style={styles.action_img}
-          />
-          <TouchableOpacity onPress={() => handleOpenPost(post.id)}>
-            <Text style={typography.caption_white85}>
-              {post.commentsCount} комментариев
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
+  const renderItem = ({ item: post }: { item: (typeof posts)[number] }) => {
+    return (
+      <PostCard
+        post={post}
+        onOpenPost={handleOpenPost}
+        onToggleLike={toggleLike}
+        onOpenImageViewer={openImageViewer}
+      />
+    );
+  };
 
   const renderEmpty = () => {
     if (activeTab === "subs") {
@@ -437,41 +299,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  action: {
-    flexDirection: "row",
-    gap: 7,
-  },
-  action_img: {
-    height: 24,
-    width: 24,
-  },
-  actions: {
-    flexDirection: "row",
-    height: 22,
-    justifyContent: "space-between",
-    marginTop: 24,
-    width: 277,
-  },
-
-  card: {
-    backgroundColor: COLORS.postsCardBackground,
-    borderRadius: 32,
-    marginBottom: 8,
-    padding: 20,
-  },
-  cardImage: {
-    borderRadius: 24,
-    height: 48,
-    width: 48,
-  },
-
   centered: {
     alignItems: "center",
     flex: 1,
     justifyContent: "center",
-  },
-  dream_info: {
-    gap: 12,
   },
   emptyContainer: {
     alignItems: "center",
@@ -506,35 +337,6 @@ const styles = StyleSheet.create({
     position: "relative",
     width: 38,
   },
-  postHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 16,
-    height: 48,
-    marginBottom: 24,
-    width: "100%",
-  },
-  postHeaderInfo: {
-    flexDirection: "column",
-    gap: 4,
-    justifyContent: "space-between",
-  },
-  postImagesContainer: {
-    gap: 10,
-    paddingRight: 8,
-  },
-  postImagesScroller: {
-    marginBottom: 16,
-  },
-  postPreviewImage: {
-    backgroundColor: COLORS.imageEmptyFieldsBackground,
-    borderRadius: 14,
-    height: 220,
-    width: 260,
-  },
-  read_more: {
-    marginTop: 8,
-  },
 
   safeArea: {
     flex: 1,
@@ -558,13 +360,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginHorizontal: 7,
     width: 165,
-  },
-  singlePostPreviewImage: {
-    backgroundColor: COLORS.imageEmptyFieldsBackground,
-    borderRadius: 14,
-    height: 220,
-    marginBottom: 16,
-    width: "100%",
   },
   topRow: {
     alignItems: "center",

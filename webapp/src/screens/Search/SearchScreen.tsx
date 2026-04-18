@@ -4,16 +4,13 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { getCloudinaryUploadUrl } from "@somnia/shared/src/cloudinary/cloudinary";
 import { zGetRatedPostsTrpcInput } from "@somnia/shared/src/router/getRatedPosts/input";
-import { format } from "date-fns";
 import { StatusBar } from "expo-status-bar";
 import { useFormik } from "formik";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   ImageBackground,
   Modal,
   RefreshControl,
@@ -22,14 +19,17 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
-import { getAvatarSource } from "../../lib/avatar";
-import { mixpanelTrackPostLike } from "../../lib/mixpanel";
+import {
+  applyOptimisticLikeToPosts,
+  applyServerLikeToPosts,
+  usePostLikeMutation,
+} from "../../lib/postLikeMutation";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
 
@@ -68,10 +68,6 @@ type PostsInfiniteData = NonNullable<
     ReturnType<typeof trpc.useUtils>["getRatedPosts"]["getInfiniteData"]
   >
 >;
-
-type LikeMutationContext = {
-  previousData: PostsInfiniteData | undefined;
-};
 
 export const SearchScreen = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -126,70 +122,37 @@ export const SearchScreen = () => {
   const isUpdating =
     query.isFetching && !query.isFetchingNextPage && !!query.data;
 
-  const setPostLike = trpc.setPostLike.useMutation({
-    onMutate: async (variables: { postId: string; isLikedByMe: boolean }) => {
-      await utils.getRatedPosts.cancel(queryKey);
-
-      const previousData = utils.getRatedPosts.getInfiniteData(queryKey);
-
-      utils.getRatedPosts.setInfiniteData(queryKey, (old) => {
-        if (!old) {
-          return old;
-        }
-
-        return {
-          ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            posts: page.posts.map((post) =>
-              post.id === variables.postId
-                ? {
-                    ...post,
-                    isLikedByMe: variables.isLikedByMe,
-                    likesCount: variables.isLikedByMe
-                      ? post.likesCount + 1
-                      : post.likesCount - 1,
-                  }
-                : post,
-            ),
-          })),
-        };
-      });
-
-      return { previousData } satisfies LikeMutationContext;
-    },
-
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.previousData) {
-        utils.getRatedPosts.setInfiniteData(queryKey, ctx.previousData);
+  const setPostLike = usePostLikeMutation<PostsInfiniteData>({
+    applyOptimistic: (old, variables) => {
+      if (!old) {
+        return old;
       }
+
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          posts: applyOptimisticLikeToPosts(page.posts, variables),
+        })),
+      };
     },
+    applyServer: (old, likeData) => {
+      if (!old) {
+        return old;
+      }
 
-    onSuccess: (data) => {
-      utils.getRatedPosts.setInfiniteData(queryKey, (old) => {
-        if (!old) {
-          return old;
-        }
-
-        return {
-          ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            posts: page.posts.map((post) =>
-              post.id === data.post.id
-                ? {
-                    ...post,
-                    isLikedByMe: data.post.isLikedByMe,
-                    likesCount: data.post.likesCount,
-                  }
-                : post,
-            ),
-          })),
-        };
-      });
-
-      mixpanelTrackPostLike(data.post);
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          posts: applyServerLikeToPosts(page.posts, likeData),
+        })),
+      };
     },
+    cancel: () => utils.getRatedPosts.cancel(queryKey),
+    getData: () => utils.getRatedPosts.getInfiniteData(queryKey),
+    setData: (updater) =>
+      utils.getRatedPosts.setInfiniteData(queryKey, updater),
   });
 
   const onRefresh = async () => {
@@ -337,116 +300,21 @@ export const SearchScreen = () => {
   }: {
     item: (typeof posts)[number];
     index: number;
-  }) => (
-    <View style={styles.card}>
-      {!isSearchMode && index < 3 && (
-        <View
-          style={[
-            styles.badge,
-            styles[`badge${index + 1}` as "badge1" | "badge2" | "badge3"],
-          ]}
-        >
-          <Text style={typography.caption_white85}>#{index + 1}</Text>
-        </View>
-      )}
+  }) => {
+    const badgeColor =
+      index === 0 ? "#FFD700" : index === 1 ? "#C0C0C0" : "#CD7F32";
 
-      <View style={styles.postHeader}>
-        <Image
-          source={getAvatarSource(post.author.avatar, "small")}
-          style={styles.cardImage}
-        />
-        <View style={styles.postHeaderInfo}>
-          <Text style={typography.body_white85}>@{post.author.nickname}</Text>
-          <Text style={typography.additionalInfo_white25}>
-            {format(new Date(post.createdAt), "dd.MM.yyyy")}
-          </Text>
-        </View>
-      </View>
-
-      {post.images.length === 1 ? (
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() => openImageViewer(post.images, 0)}
-        >
-          <Image
-            source={{
-              uri: getCloudinaryUploadUrl(post.images[0], "image", "large"),
-            }}
-            style={styles.singlePostPreviewImage}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      ) : post.images.length > 1 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.postImagesScroller}
-          contentContainerStyle={styles.postImagesContainer}
-        >
-          {post.images.map((imagePublicId, imageIndex) => (
-            <TouchableOpacity
-              key={`${imagePublicId}-${imageIndex}`}
-              activeOpacity={0.9}
-              onPress={() => openImageViewer(post.images, imageIndex)}
-            >
-              <Image
-                source={{
-                  uri: getCloudinaryUploadUrl(imagePublicId, "image", "large"),
-                }}
-                style={styles.postPreviewImage}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      ) : null}
-
-      <TouchableOpacity onPress={() => handleOpenPost(post.id)}>
-        <View style={styles.dream_info}>
-          <Text style={typography.h4_white_85}>{post.title}</Text>
-          <Text style={typography.body_white100} numberOfLines={3}>
-            {post.text}...
-          </Text>
-        </View>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => handleOpenPost(post.id)}
-        style={styles.read_more}
-      >
-        <Text style={typography.caption_link}>Читать далее...</Text>
-      </TouchableOpacity>
-
-      <View style={styles.actions}>
-        <View style={styles.action}>
-          <TouchableOpacity
-            onPress={() => toggleLike(post.id, post.isLikedByMe)}
-          >
-            <Ionicons
-              name={post.isLikedByMe ? "star" : "star-outline"}
-              size={20}
-              color={post.isLikedByMe ? "red" : "rgba(255,255,255,0.45)"}
-            />
-          </TouchableOpacity>
-          <Text style={typography.caption_white85}>
-            {post.likesCount} нравится
-          </Text>
-        </View>
-
-        <View style={styles.action}>
-          <Image
-            source={require("../../assets/Icons/Activity/comments.png")}
-            style={styles.action_img}
-          />
-          <TouchableOpacity onPress={() => handleOpenPost(post.id)}>
-            <Text style={typography.caption_white85}>
-              {post.commentsCount} комментариев
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
+    return (
+      <PostCard
+        post={post}
+        badgeColor={badgeColor}
+        badgeLabel={!isSearchMode && index < 3 ? `#${index + 1}` : undefined}
+        onOpenPost={handleOpenPost}
+        onToggleLike={toggleLike}
+        onOpenImageViewer={openImageViewer}
+      />
+    );
+  };
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
@@ -536,45 +404,7 @@ export const SearchScreen = () => {
 const styles = StyleSheet.create({
   BackgroundImage: { flex: 1 },
 
-  action: { flexDirection: "row", gap: 7 },
-  action_img: { height: 24, width: 24 },
-
-  actions: {
-    flexDirection: "row",
-    height: 22,
-    justifyContent: "space-between",
-    marginTop: 24,
-    width: 277,
-  },
-
-  badge: {
-    alignItems: "center",
-    borderRadius: 12,
-    height: 24,
-    justifyContent: "center",
-    position: "absolute",
-    right: 20,
-    top: 20,
-    width: 40,
-    zIndex: 1,
-  },
-  badge1: { backgroundColor: "#FFD700" },
-  badge2: { backgroundColor: "#C0C0C0" },
-  badge3: { backgroundColor: "#CD7F32" },
-
-  card: {
-    backgroundColor: COLORS.postsCardBackground,
-    borderRadius: 32,
-    marginBottom: 8,
-    padding: 20,
-    position: "relative",
-  },
-
-  cardImage: { borderRadius: 24, height: 48, width: 48 },
-
   centered: { alignItems: "center", flex: 1, justifyContent: "center" },
-
-  dream_info: { gap: 12 },
 
   emptyContainer: { alignItems: "center", marginTop: 32 },
 
@@ -633,39 +463,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
 
-  postHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 16,
-    height: 48,
-    marginBottom: 24,
-    width: "100%",
-  },
-
-  postHeaderInfo: {
-    flexDirection: "column",
-    gap: 4,
-    justifyContent: "space-between",
-  },
-
-  postImagesContainer: {
-    gap: 10,
-    paddingRight: 8,
-  },
-
-  postImagesScroller: {
-    marginBottom: 16,
-  },
-
-  postPreviewImage: {
-    backgroundColor: COLORS.imageEmptyFieldsBackground,
-    borderRadius: 14,
-    height: 220,
-    width: 260,
-  },
-
-  read_more: { marginTop: 8 },
-
   safeArea: { flex: 1, marginBottom: 20 },
 
   searchBox: {
@@ -684,14 +481,6 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.85)",
     flex: 1,
     fontSize: 16,
-  },
-
-  singlePostPreviewImage: {
-    backgroundColor: COLORS.imageEmptyFieldsBackground,
-    borderRadius: 14,
-    height: 220,
-    marginBottom: 16,
-    width: "100%",
   },
   updatingRow: {
     alignItems: "center",

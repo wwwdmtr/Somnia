@@ -41,6 +41,9 @@ export const getMyPostsTrpcRoute = trpcLoggedProcedure
         _count: {
           select: {
             postLikes: true,
+            comments: {
+              where: { deletedAt: null },
+            },
           },
         },
       },
@@ -48,6 +51,7 @@ export const getMyPostsTrpcRoute = trpcLoggedProcedure
 
     const posts = rawPosts.map((post) => ({
       ..._.omit(post, ["_count", "postLikes"]),
+      commentsCount: post._count.comments,
       likesCount: post._count.postLikes,
       isLikedByMe: post.postLikes.length > 0,
     }));

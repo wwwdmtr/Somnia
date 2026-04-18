@@ -31,7 +31,7 @@ import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import ScreenName from "../../constants/ScreenName";
 import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
-import { mixpanelTrackPostLike } from "../../lib/mixpanel";
+import { usePostLikeMutation } from "../../lib/postLikeMutation";
 import { trpc } from "../../lib/trpc";
 import { typography, COLORS } from "../../theme/typography";
 
@@ -101,10 +101,6 @@ export const PostScreen = () => {
   const undoDeletePost = trpc.undoDeletePost.useMutation();
 
   type PostData = NonNullable<ReturnType<typeof utils.getPost.getData>>;
-
-  type LikeMutationContext = {
-    previousData: PostData | undefined;
-  };
 
   const {
     data,
@@ -183,14 +179,8 @@ export const PostScreen = () => {
     setReplyingTo(null);
   }, []);
 
-  const handleMutate = async (variables: {
-    postId: string;
-    isLikedByMe: boolean;
-  }): Promise<LikeMutationContext> => {
-    await utils.getPost.cancel({ id: route.params.id });
-    const previousData = utils.getPost.getData({ id: route.params.id });
-
-    utils.getPost.setData({ id: route.params.id }, (old) => {
+  const setPostLike = usePostLikeMutation<PostData>({
+    applyOptimistic: (old, variables) => {
       if (!old?.post) {
         return old;
       }
@@ -205,25 +195,8 @@ export const PostScreen = () => {
             : old.post.likesCount - 1,
         },
       };
-    });
-
-    return { previousData };
-  };
-
-  const handleError = (
-    _err: unknown,
-    _variables: unknown,
-    context: LikeMutationContext | undefined,
-  ) => {
-    if (context?.previousData) {
-      utils.getPost.setData({ id: route.params.id }, context.previousData);
-    }
-  };
-
-  const handleSuccess = (data: {
-    post: { id: string; likesCount: number; isLikedByMe: boolean };
-  }) => {
-    utils.getPost.setData({ id: route.params.id }, (old) => {
+    },
+    applyServer: (old, likeData) => {
       if (!old?.post) {
         return old;
       }
@@ -232,19 +205,15 @@ export const PostScreen = () => {
         ...old,
         post: {
           ...old.post,
-          isLikedByMe: data.post.isLikedByMe,
-          likesCount: data.post.likesCount,
+          isLikedByMe: likeData.isLikedByMe,
+          likesCount: likeData.likesCount,
         },
       };
-    });
-
-    mixpanelTrackPostLike(data.post);
-  };
-
-  const setPostLike = trpc.setPostLike.useMutation({
-    onMutate: handleMutate,
-    onError: handleError,
-    onSuccess: handleSuccess,
+    },
+    cancel: () => utils.getPost.cancel({ id: route.params.id }),
+    getData: () => utils.getPost.getData({ id: route.params.id }),
+    setData: (updater) =>
+      utils.getPost.setData({ id: route.params.id }, updater),
   });
 
   const deleteComment = trpc.deleteComment.useMutation({

@@ -1,13 +1,10 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { Ionicons } from "@expo/vector-icons";
 import {
   CompositeNavigationProp,
   useNavigation,
 } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { getCloudinaryUploadUrl } from "@somnia/shared/src/cloudinary/cloudinary";
 import { isUserAdmin } from "@somnia/shared/src/utils/can";
-import { format } from "date-fns";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
@@ -19,17 +16,21 @@ import {
   Image,
   FlatList,
   RefreshControl,
-  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import ScreenName from "../../constants/ScreenName";
 import { getAvatarSource } from "../../lib/avatar";
 import { useAppContext } from "../../lib/ctx";
-import { mixpanelTrackPostLike } from "../../lib/mixpanel";
+import {
+  applyOptimisticLikeToPosts,
+  applyServerLikeToPosts,
+  usePostLikeMutation,
+} from "../../lib/postLikeMutation";
 import { trpc } from "../../lib/trpc";
-import { COLORS, typography } from "../../theme/typography";
+import { typography } from "../../theme/typography";
 
 import type { ProfileStackParamList } from "../../navigation/ProfileStackParamList";
 import type { RootStackParamList } from "../../navigation/RootStackParamList";
@@ -60,80 +61,31 @@ export const ProfileScreen = () => {
 
   type MyPostsData = NonNullable<ReturnType<typeof utils.getMyPosts.getData>>;
 
-  type LikeMutationContext = {
-    previousData: MyPostsData | undefined;
-  };
-
-  const handleMutate = async (variables: {
-    postId: string;
-    isLikedByMe: boolean;
-  }): Promise<LikeMutationContext> => {
-    await utils.getMyPosts.cancel({ authorId: me.id || "" });
-    const previousData = utils.getMyPosts.getData({ authorId: me.id || "" });
-
-    utils.getMyPosts.setData({ authorId: me.id || "" }, (old) => {
+  const setPostLike = usePostLikeMutation<MyPostsData>({
+    applyOptimistic: (old, variables) => {
       if (!old?.posts) {
         return old;
       }
 
       return {
         ...old,
-        posts: old.posts.map((post) =>
-          post.id === variables.postId
-            ? {
-                ...post,
-                isLikedByMe: variables.isLikedByMe,
-                likesCount: variables.isLikedByMe
-                  ? post.likesCount + 1
-                  : post.likesCount - 1,
-              }
-            : post,
-        ),
+        posts: applyOptimisticLikeToPosts(old.posts, variables),
       };
-    });
-
-    return { previousData };
-  };
-
-  const handleError = (
-    _err: unknown,
-    _variables: unknown,
-    context: LikeMutationContext | undefined,
-  ) => {
-    if (context?.previousData) {
-      utils.getMyPosts.setData({ authorId: me.id || "" }, context.previousData);
-    }
-  };
-
-  const handleSuccess = (data: {
-    post: { id: string; likesCount: number; isLikedByMe: boolean };
-  }) => {
-    utils.getMyPosts.setData({ authorId: me.id || "" }, (old) => {
+    },
+    applyServer: (old, likeData) => {
       if (!old?.posts) {
         return old;
       }
 
       return {
         ...old,
-        posts: old.posts.map((post) =>
-          post.id === data.post.id
-            ? {
-                ...post,
-                isLikedByMe: data.post.isLikedByMe,
-                likesCount: data.post.likesCount,
-              }
-            : post,
-        ),
+        posts: applyServerLikeToPosts(old.posts, likeData),
       };
-    });
-
-    mixpanelTrackPostLike(data.post);
-  };
-
-  const setPostLike = trpc.setPostLike.useMutation({
-    onMutate: handleMutate,
-    onError: handleError,
-    onSuccess: handleSuccess,
+    },
+    cancel: () => utils.getMyPosts.cancel({ authorId: me.id || "" }),
+    getData: () => utils.getMyPosts.getData({ authorId: me.id || "" }),
+    setData: (updater) =>
+      utils.getMyPosts.setData({ authorId: me.id || "" }, updater),
   });
 
   const toggleLike = (postId: string, currentLikeState: boolean) => {
@@ -235,93 +187,20 @@ export const ProfileScreen = () => {
     item: post,
   }: {
     item: (typeof data.posts)[number];
-  }) => (
-    <View style={styles.card}>
-      <View style={styles.postHeader}>
-        <Text style={typography.additionalInfo_white25}>
-          {format(new Date(post.createdAt), "dd.MM.yyyy")}
-        </Text>
-      </View>
-
-      <View style={styles.dream_info}>
-        <Text style={typography.h4_white_85}>{post.title}</Text>
-
-        <Text style={typography.body_white100} numberOfLines={3}>
-          {post.text}...
-        </Text>
-      </View>
-
-      {post.images.length === 1 ? (
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() => openImageViewer(post.images, 0)}
-        >
-          <Image
-            source={{
-              uri: getCloudinaryUploadUrl(post.images[0], "image", "large"),
-            }}
-            style={styles.singlePostPreviewImage}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      ) : post.images.length > 1 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.postImagesScroller}
-          contentContainerStyle={styles.postImagesContainer}
-        >
-          {post.images.map((imagePublicId, index) => (
-            <TouchableOpacity
-              key={`${imagePublicId}-${index}`}
-              activeOpacity={0.9}
-              onPress={() => openImageViewer(post.images, index)}
-            >
-              <Image
-                source={{
-                  uri: getCloudinaryUploadUrl(imagePublicId, "image", "large"),
-                }}
-                style={styles.postPreviewImage}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      ) : null}
-
-      <TouchableOpacity
-        onPress={() => handleOpenPost(post.id)}
-        style={styles.read_more}
-      >
-        <Text style={typography.caption_link}>Читать далее...</Text>
-      </TouchableOpacity>
-
-      <View style={styles.actions}>
-        <View style={styles.action}>
-          <TouchableOpacity
-            onPress={() => toggleLike(post.id, post.isLikedByMe)}
-          >
-            <Ionicons
-              name={post.isLikedByMe ? "star" : "star-outline"}
-              size={20}
-              color={post.isLikedByMe ? "red" : "rgba(255,255,255, 0.45)"}
-            />
-          </TouchableOpacity>
-          <Text style={typography.caption_white85}>
-            {post.likesCount} нравится
-          </Text>
-        </View>
-
-        <View style={styles.action}>
-          <Image
-            source={require("../../assets/Icons/Activity/comments.png")}
-            style={styles.action_img}
-          />
-          <Text style={typography.caption_white85}>комментариев</Text>
-        </View>
-      </View>
-    </View>
-  );
+  }) => {
+    return (
+      <PostCard
+        post={post}
+        contentOrder="textFirst"
+        imageHeight={180}
+        onOpenPost={handleOpenPost}
+        onToggleLike={toggleLike}
+        onOpenImageViewer={openImageViewer}
+        openPostOnTextPress={false}
+        showAuthor={false}
+      />
+    );
+  };
 
   return (
     <ImageBackground
@@ -361,39 +240,15 @@ const styles = StyleSheet.create({
   BackgroundImage: {
     flex: 1,
   },
-  action: {
-    flexDirection: "row",
-    gap: 7,
-  },
-  action_img: {
-    height: 24,
-    width: 24,
-  },
-  actions: {
-    flexDirection: "row",
-    height: 22,
-    justifyContent: "space-between",
-    marginTop: 24,
-    width: 277,
-  },
   avatar: {
     borderRadius: 50,
     height: 100,
     width: 100,
   },
-  card: {
-    backgroundColor: COLORS.postsCardBackground,
-    borderRadius: 32,
-    marginBottom: 8,
-    padding: 20,
-  },
   centered: {
     alignItems: "center",
     flex: 1,
     justifyContent: "center",
-  },
-  dream_info: {
-    gap: 12,
   },
   edit_user_name: {
     height: 24,
@@ -431,41 +286,9 @@ const styles = StyleSheet.create({
     paddingBottom: 70,
   },
 
-  postHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 16,
-
-    marginBottom: 24,
-    width: "100%",
-  },
-  postImagesContainer: {
-    gap: 10,
-    paddingRight: 8,
-  },
-  postImagesScroller: {
-    marginBottom: 16,
-  },
-  postPreviewImage: {
-    backgroundColor: COLORS.imageEmptyFieldsBackground,
-    borderRadius: 14,
-    height: 180,
-    width: 260,
-  },
-  read_more: {
-    marginTop: 8,
-  },
-
   safeArea: {
     flex: 1,
     marginBottom: 20,
     marginHorizontal: 14,
-  },
-  singlePostPreviewImage: {
-    backgroundColor: COLORS.imageEmptyFieldsBackground,
-    borderRadius: 14,
-    height: 180,
-    marginBottom: 16,
-    width: "100%",
   },
 });
