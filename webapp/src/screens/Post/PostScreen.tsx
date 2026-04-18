@@ -23,6 +23,7 @@ import {
   Alert,
   RefreshControl,
   ScrollView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -226,10 +227,11 @@ export const PostScreen = () => {
     if (!data?.post) {
       return;
     }
+    const post = data.post;
 
     setPostLike.mutate({
-      postId: data.post.id,
-      isLikedByMe: !data.post.isLikedByMe,
+      postId: post.id,
+      isLikedByMe: !post.isLikedByMe,
     });
   }, [data, setPostLike]);
 
@@ -404,42 +406,38 @@ export const PostScreen = () => {
     if (!data?.post) {
       return null;
     }
+    const post = data.post;
 
     return (
       <View>
         <View style={styles.card}>
           <View style={styles.postHeader}>
             <Image
-              source={getAvatarSource(data.post.author.avatar, "small")}
+              source={getAvatarSource(post.author.avatar, "small")}
               style={styles.cardImage}
             />
             <View style={styles.postHeaderInfo}>
               <Text style={typography.body_white85}>
-                @{data.post.author.nickname}
+                @{post.author.nickname}
               </Text>
               <Text style={typography.additionalInfo_white25}>
-                {format(new Date(data.post.createdAt), "dd.MM.yyyy")}
+                {format(new Date(post.createdAt), "dd.MM.yyyy")}
               </Text>
             </View>
           </View>
 
-          <View style={styles.dream_info}>
-            <Text style={typography.h4_white_85}>{data.post.title}</Text>
-            <Text style={typography.body_white100}>{data.post.text}</Text>
-          </View>
-
-          {data.post.images.length > 0 ? (
+          {post.images.length > 0 ? (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.postImagesScroller}
               contentContainerStyle={styles.postImagesContainer}
             >
-              {data.post.images.map((imagePublicId, index) => (
+              {post.images.map((imagePublicId, index) => (
                 <TouchableOpacity
                   key={`${imagePublicId}-${index}`}
                   activeOpacity={0.9}
-                  onPress={() => openImageViewer(data.post.images, index)}
+                  onPress={() => openImageViewer(post.images, index)}
                 >
                   <Image
                     source={{
@@ -457,19 +455,22 @@ export const PostScreen = () => {
             </ScrollView>
           ) : null}
 
+          <View style={styles.dream_info}>
+            <Text style={typography.h4_white_85}>{post.title}</Text>
+            <Text style={typography.body_white100}>{post.text}</Text>
+          </View>
+
           <View style={styles.actions}>
             <View style={styles.action}>
               <TouchableOpacity onPress={toggleLike}>
                 <Ionicons
-                  name={data.post.isLikedByMe ? "star" : "star-outline"}
+                  name={post.isLikedByMe ? "star" : "star-outline"}
                   size={20}
-                  color={
-                    data.post.isLikedByMe ? "red" : "rgba(255,255,255,0.45)"
-                  }
+                  color={post.isLikedByMe ? "red" : "rgba(255,255,255,0.45)"}
                 />
               </TouchableOpacity>
               <Text style={typography.caption_white85}>
-                {data.post.likesCount} нравится
+                {post.likesCount} нравится
               </Text>
             </View>
 
@@ -530,8 +531,39 @@ export const PostScreen = () => {
       </ImageBackground>
     );
   }
+  const post = data.post;
 
   const onDeletePress = () => {
+    const postId = String(post.id);
+
+    const executeDeletePost = async () => {
+      try {
+        await deletePost.mutateAsync({ postId });
+
+        utils.getPosts.invalidate();
+        utils.getMyPosts.invalidate();
+        utils.getRatedPosts.invalidate();
+        navigation.goBack();
+      } catch (error) {
+        Alert.alert(
+          "Ошибка",
+          error instanceof Error ? error.message : "Не удалось удалить пост",
+        );
+      }
+    };
+
+    if (Platform.OS === "web") {
+      const shouldDelete =
+        typeof window !== "undefined"
+          ? window.confirm("Удалить пост? Пост будет скрыт (soft delete).")
+          : true;
+      if (!shouldDelete) {
+        return;
+      }
+      void executeDeletePost();
+      return;
+    }
+
     Alert.alert(
       "Удалить пост?",
       "Пост будет скрыт (soft delete).",
@@ -540,17 +572,8 @@ export const PostScreen = () => {
         {
           text: "Удалить",
           style: "destructive",
-          onPress: async () => {
-            try {
-              await deletePost.mutateAsync({ postId: String(data.post.id) });
-
-              utils.getPosts.invalidate();
-              utils.getMyPosts.invalidate();
-              utils.getRatedPosts.invalidate();
-              navigation.goBack();
-            } catch (e) {
-              Alert.alert("Ошибка", e?.message ?? "Не удалось удалить пост");
-            }
+          onPress: () => {
+            void executeDeletePost();
           },
         },
       ],
@@ -559,6 +582,39 @@ export const PostScreen = () => {
   };
 
   const onUndoDeletePress = () => {
+    const postId = String(post.id);
+
+    const executeUndoDeletePost = async () => {
+      try {
+        await undoDeletePost.mutateAsync({
+          postId,
+        });
+
+        utils.getPosts.invalidate();
+        utils.getMyPosts.invalidate();
+        utils.getRatedPosts.invalidate();
+        utils.getDeletedPosts.invalidate();
+        navigation.goBack();
+      } catch (error) {
+        Alert.alert(
+          "Ошибка",
+          error instanceof Error ? error.message : "Не удалось вернуть пост",
+        );
+      }
+    };
+
+    if (Platform.OS === "web") {
+      const shouldUndoDelete =
+        typeof window !== "undefined"
+          ? window.confirm("Вернуть пост? Пост будет восстановлен.")
+          : true;
+      if (!shouldUndoDelete) {
+        return;
+      }
+      void executeUndoDeletePost();
+      return;
+    }
+
     Alert.alert(
       "Вернуть пост?",
       "Пост будет восстановлен.",
@@ -567,20 +623,8 @@ export const PostScreen = () => {
         {
           text: "Вернуть",
           style: "destructive",
-          onPress: async () => {
-            try {
-              await undoDeletePost.mutateAsync({
-                postId: String(data.post.id),
-              });
-
-              utils.getPosts.invalidate();
-              utils.getMyPosts.invalidate();
-              utils.getRatedPosts.invalidate();
-              utils.getDeletedPosts.invalidate();
-              navigation.goBack();
-            } catch (e) {
-              Alert.alert("Ошибка", e?.message ?? "Не удалось вернуть пост");
-            }
+          onPress: () => {
+            void executeUndoDeletePost();
           },
         },
       ],
@@ -603,18 +647,18 @@ export const PostScreen = () => {
             <Text style={typography.body_white85}>Назад</Text>
           </TouchableOpacity>
 
-          {me?.id === data.post.author.id && (
+          {me?.id === post.author.id && (
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate(ScreenName.EditPost, {
-                  id: String(data.post.id),
+                  id: String(post.id),
                 })
               }
             >
               <Ionicons name="create-outline" size={24} color="white" />
             </TouchableOpacity>
           )}
-          {canDeletePost(me) && data.post.deletedAt == null && (
+          {canDeletePost(me) && post.deletedAt == null && (
             <TouchableOpacity
               onPress={onDeletePress}
               disabled={deletePost.isPending}
@@ -623,7 +667,7 @@ export const PostScreen = () => {
             </TouchableOpacity>
           )}
 
-          {isUserAdmin(me) && data.post.deletedAt && (
+          {isUserAdmin(me) && post.deletedAt && (
             <TouchableOpacity
               onPress={onUndoDeletePress}
               disabled={undoDeletePost.isPending}
@@ -667,7 +711,7 @@ export const PostScreen = () => {
 
         <View style={styles.commentFormWrapper}>
           <AddCommentForm
-            postId={data.post.id}
+            postId={post.id}
             parentId={replyingTo?.commentId}
             replyToNickname={replyingTo?.nickname}
             onSuccess={handleCommentSuccess}
@@ -854,5 +898,6 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    paddingBottom: 120,
   },
 });

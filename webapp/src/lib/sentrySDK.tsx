@@ -1,38 +1,68 @@
-import * as Sentry from "@sentry/react";
-import { useEffect } from "react";
+import { Platform } from "react-native";
 
-import { useMe } from "./ctx";
 import { env } from "./env";
 
-if (env.SENTRYHAWK_DSN) {
-  Sentry.init({
-    dsn: env.SENTRYHAWK_DSN,
-    environment: env.NODE_ENV,
-    normalizeDepth: 10,
-  });
-}
+type SentryModule = typeof import("@sentry/react");
+type SentryUserPayload = {
+  email?: string | null;
+  id: string;
+  username?: string | null;
+} | null;
 
-export const sentryCaptureException = (error: Error) => {
-  if (env.SENTRYHAWK_DSN) {
-    Sentry.captureException(error);
+const isSentryEnabled = Platform.OS === "web" && Boolean(env.SENTRYHAWK_DSN);
+let sentryModulePromise: Promise<SentryModule | null> | null = null;
+let isSentryInitialized = false;
+
+const getSentryModule = async (): Promise<SentryModule | null> => {
+  if (!isSentryEnabled) {
+    return null;
   }
+
+  if (!sentryModulePromise) {
+    sentryModulePromise = import("@sentry/react")
+      .then((sentryModule) => {
+        if (!isSentryInitialized) {
+          sentryModule.init({
+            dsn: env.SENTRYHAWK_DSN,
+            environment: env.NODE_ENV,
+            normalizeDepth: 10,
+          });
+          isSentryInitialized = true;
+        }
+
+        return sentryModule;
+      })
+      .catch(() => null);
+  }
+
+  return sentryModulePromise;
 };
 
-export const SentryUser = () => {
-  const me = useMe();
-  useEffect(() => {
-    if (env.SENTRYHAWK_DSN) {
-      if (me) {
-        Sentry.setUser({
-          email: me.email,
-          id: me.id,
-          ip_address: "{{auto}}",
-          username: me.nickname,
-        });
-      } else {
-        Sentry.setUser(null);
-      }
+export const sentryCaptureException = (error: unknown) => {
+  void getSentryModule().then((sentryModule) => {
+    if (!sentryModule) {
+      return;
     }
-  }, [me]);
-  return null;
+    sentryModule.captureException(error);
+  });
+};
+
+export const sentrySetUser = (user: SentryUserPayload) => {
+  void getSentryModule().then((sentryModule) => {
+    if (!sentryModule) {
+      return;
+    }
+
+    if (!user) {
+      sentryModule.setUser(null);
+      return;
+    }
+
+    sentryModule.setUser({
+      email: user.email ?? undefined,
+      id: user.id,
+      ip_address: "{{auto}}",
+      username: user.username ?? undefined,
+    });
+  });
 };

@@ -62,14 +62,13 @@ export const UpdateProfileScreen = () => {
             <Text style={typography.h4_white_85}>Изменение пароля</Text>
             <UpdatePasswordForm />
           </View>
+          <AppButton
+            title="Выйти из профиля"
+            onPress={() => navigation.navigate(ScreenName.SignOut)}
+            style={styles.signOutButton}
+          />
         </ScrollView>
       </SafeAreaView>
-
-      <AppButton
-        title="Выйти из профиля"
-        onPress={() => navigation.navigate(ScreenName.SignOut)}
-        style={styles.signOutButton}
-      />
     </ImageBackground>
   );
 };
@@ -105,11 +104,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   signOutButton: {
-    bottom: 40,
     height: 40,
-    left: 16,
-    position: "absolute",
-    right: 16,
     width: "auto",
   },
 });

@@ -1,12 +1,10 @@
 import { zUpdatePostTrpcInput } from "@somnia/shared/src/router/updatePost/input";
-import { canDeleteThisPost } from "@somnia/shared/src/utils/can";
 import { useFormik } from "formik";
 import React, { useState } from "react";
-import { View, TextInput, Text, TouchableOpacity, Alert } from "react-native";
+import { View, TextInput, Text } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
-import { useMe } from "../../lib/ctx";
 import {
   uploadPostImagesToCloudinary,
   type PickedPostImageFile,
@@ -35,11 +33,16 @@ type UpdatePostFormsProps = {
   onSuccess?: () => void;
 };
 
+const TEXT_AREA_MIN_HEIGHT = 120;
+const TEXT_AREA_PADDING_VERTICAL = 20;
+const TEXT_AREA_PADDING_HORIZONTAL = 20;
+const TEXT_AREA_LINE_HEIGHT = 24;
+
 export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
-  const me = useMe();
   const utils = trpc.useUtils();
   const prepareCloudinaryUpload = trpc.prepareCloudinaryUpload.useMutation();
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [measuredTextHeight, setMeasuredTextHeight] = useState(0);
   const [pendingImages, setPendingImages] = useState<PickedPostImageFile[]>([]);
   const updatePost = trpc.updatePost.useMutation({
     onSuccess: async () => {
@@ -51,38 +54,6 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
       onSuccess?.();
     },
   });
-  const deletePost = trpc.deletePost.useMutation({
-    onSuccess: async () => {
-      await Promise.all([
-        utils.getPosts.invalidate(),
-        utils.getMyPosts.invalidate(),
-        utils.getRatedPosts.invalidate(),
-      ]);
-      onSuccess?.();
-    },
-  });
-
-  const onDeletePress = () => {
-    Alert.alert(
-      "Удалить пост?",
-      "Пост будет скрыт и исчезнет из ленты.",
-      [
-        { text: "Отмена", style: "cancel" },
-        {
-          text: "Удалить",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deletePost.mutateAsync({ postId: post.id });
-            } catch (e) {
-              Alert.alert("Ошибка", e?.message ?? "Не удалось удалить пост");
-            }
-          },
-        },
-      ],
-      { cancelable: true },
-    );
-  };
 
   const formik = useFormik<UpdatePostFormsValues>({
     initialValues: {
@@ -122,6 +93,10 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
     formik.touched.images && typeof formik.errors.images === "string"
       ? formik.errors.images
       : null;
+  const textAreaHeight = Math.max(
+    TEXT_AREA_MIN_HEIGHT,
+    measuredTextHeight + TEXT_AREA_PADDING_VERTICAL * 2,
+  );
 
   return (
     <View style={styles.container}>
@@ -142,18 +117,36 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
         <Text style={styles.errorText}>{formik.errors.title}</Text>
       )}
 
-      <TextInput
-        placeholder="Опишите, что вам снилось ..."
-        placeholderTextColor={COLORS.white25}
-        value={formik.values.text}
-        onChangeText={(text) => formik.setFieldValue("text", text)}
-        onBlur={() => formik.setFieldTouched("text")}
-        multiline
-        style={[
-          styles.textArea,
-          formik.touched.text && formik.errors.text ? styles.inputError : null,
-        ]}
-      />
+      <View style={styles.textAreaWrapper}>
+        <Text
+          style={styles.textAreaMeasure}
+          onLayout={(event) => {
+            const nextHeight = Math.ceil(event.nativeEvent.layout.height);
+            setMeasuredTextHeight((prev) =>
+              prev === nextHeight ? prev : nextHeight,
+            );
+          }}
+          accessible={false}
+        >
+          {formik.values.text || " "}
+        </Text>
+        <TextInput
+          placeholder="Напишите текст ..."
+          placeholderTextColor={COLORS.white25}
+          value={formik.values.text}
+          onChangeText={(text) => formik.setFieldValue("text", text)}
+          onBlur={() => formik.setFieldTouched("text")}
+          multiline
+          scrollEnabled={false}
+          style={[
+            styles.textArea,
+            { height: textAreaHeight },
+            formik.touched.text && formik.errors.text
+              ? styles.inputError
+              : null,
+          ]}
+        />
+      </View>
       {formik.touched.text && formik.errors.text && (
         <Text style={styles.errorText}>{formik.errors.text}</Text>
       )}
@@ -161,7 +154,7 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
       <PostImagesUploader
         uploadedImages={formik.values.images}
         pendingImages={pendingImages}
-        disabled={formik.isSubmitting}
+        disabled={formik.isSubmitting || isUploadingImages}
         onUploadedImagesChange={(images) => {
           formik.setFieldTouched("images", true, false);
           void formik.setFieldValue("images", images);
@@ -172,15 +165,6 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
       {imageErrorText ? (
         <Text style={styles.errorText}>{imageErrorText}</Text>
       ) : null}
-
-      {canDeleteThisPost(me, { authorId: post.authorId }) && (
-        <TouchableOpacity
-          onPress={onDeletePress}
-          disabled={deletePost.isPending || isUploadingImages}
-        >
-          <Text>{deletePost.isPending ? "Удаление..." : "Удалить пост"}</Text>
-        </TouchableOpacity>
-      )}
 
       <AppButton
         title={
@@ -201,8 +185,6 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
 const styles = {
   container: {
     gap: 14,
-    flex: 1,
-    height: 680,
   },
   input: {
     padding: 20,
@@ -213,11 +195,26 @@ const styles = {
   },
   textArea: {
     backgroundColor: COLORS.postsCardBackground,
-    padding: 20,
+    fontSize: 16,
+    lineHeight: TEXT_AREA_LINE_HEIGHT,
+    paddingHorizontal: TEXT_AREA_PADDING_HORIZONTAL,
+    paddingVertical: TEXT_AREA_PADDING_VERTICAL,
     borderRadius: 32,
-    height: 200,
     textAlignVertical: "top" as const,
     color: COLORS.white100,
+  },
+  textAreaMeasure: {
+    fontSize: 16,
+    left: TEXT_AREA_PADDING_HORIZONTAL,
+    lineHeight: TEXT_AREA_LINE_HEIGHT,
+    opacity: 0,
+    pointerEvents: "none" as const,
+    position: "absolute" as const,
+    right: TEXT_AREA_PADDING_HORIZONTAL,
+    top: 0,
+  },
+  textAreaWrapper: {
+    position: "relative" as const,
   },
   inputError: {
     borderColor: "white",
@@ -228,9 +225,8 @@ const styles = {
     marginBottom: 4,
   },
   startButton: {
-    height: 40,
-    position: "absolute",
-    width: "100%",
-    bottom: 40,
+    height: 44,
+    marginBottom: 24,
+    marginTop: 8,
   } as const,
 };

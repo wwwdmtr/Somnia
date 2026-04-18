@@ -163,8 +163,12 @@ export const DeletedPostsScreen = () => {
 
         <View style={styles.dream_info}>
           <Text style={typography.h4_white_85}>{post.title}</Text>
-          <Text style={typography.body_white100} numberOfLines={3}>
-            {post.text}...
+          <Text
+            style={typography.body_white100}
+            numberOfLines={3}
+            ellipsizeMode="clip"
+          >
+            {post.text}
           </Text>
         </View>
 

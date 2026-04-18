@@ -4,13 +4,12 @@ import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { SentryUser } from "./src/lib/SentryUser";
 import { AppContextProvider } from "./src/lib/ctx";
 import { MixpanelUser } from "./src/lib/mixpanel";
-import { SentryUser } from "./src/lib/sentrySDK";
 import { TrpcProvider } from "./src/lib/trpc";
 import { linking } from "./src/navigation/linking";
 import { RootNavigation } from "./src/navigation/navigation";
-import "./src/lib/sentrySDK";
 const WEB_WIDTH = 393;
 const WEB_HEIGHT = 852;
 

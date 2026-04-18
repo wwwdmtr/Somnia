@@ -2,8 +2,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { getCloudinaryUploadUrl } from "@somnia/shared/src/cloudinary/cloudinary";
 import { format } from "date-fns";
+import { useCallback, useState } from "react";
 import {
   Image,
+  type LayoutChangeEvent,
   ScrollView,
   StyleSheet,
   Text,
@@ -43,14 +45,17 @@ type PostCardProps = {
   onToggleLike: (postId: string, currentLikeState: boolean) => void;
   openPostOnTextPress?: boolean;
   post: PostCardModel;
+  readMoreLabel?: string;
   showAuthor?: boolean;
   showCommentsCount?: boolean;
+  showReadMoreOnlyWhenTruncated?: boolean;
   showReadMore?: boolean;
   textNumberOfLines?: number;
 };
 
 const DEFAULT_IMAGE_HEIGHT = 220;
 const DEFAULT_IMAGE_WIDTH = 260;
+const PREVIEW_TEXT_LINE_HEIGHT = 24;
 
 export const PostCard = ({
   badgeColor = "rgba(255,255,255,0.2)",
@@ -64,23 +69,58 @@ export const PostCard = ({
   onToggleLike,
   openPostOnTextPress = true,
   post,
+  readMoreLabel = "Читать весь пост",
   showAuthor = true,
   showCommentsCount = true,
+  showReadMoreOnlyWhenTruncated = true,
   showReadMore = true,
-  textNumberOfLines = 3,
+  textNumberOfLines = 20,
 }: PostCardProps) => {
   const createdAt = format(new Date(post.createdAt), "dd.MM.yyyy");
+  const [previewTextHeight, setPreviewTextHeight] = useState(0);
+  const [fullTextHeight, setFullTextHeight] = useState(0);
+  const shouldMeasureTruncation = showReadMore && showReadMoreOnlyWhenTruncated;
+
+  const handlePreviewTextLayout = useCallback((event: LayoutChangeEvent) => {
+    const nextHeight = event.nativeEvent.layout.height;
+    setPreviewTextHeight((prev) => (prev === nextHeight ? prev : nextHeight));
+  }, []);
+
+  const handleFullTextLayout = useCallback((event: LayoutChangeEvent) => {
+    const nextHeight = event.nativeEvent.layout.height;
+    setFullTextHeight((prev) => (prev === nextHeight ? prev : nextHeight));
+  }, []);
 
   const renderTextBlock = () => {
     const text = (
       <View style={styles.textContainer}>
         <Text style={typography.h4_white_85}>{post.title}</Text>
-        <Text
-          style={typography.body_white100}
-          numberOfLines={textNumberOfLines}
-        >
-          {post.text}...
-        </Text>
+        <View style={styles.bodyTextWrapper}>
+          {shouldMeasureTruncation ? (
+            <Text
+              style={[typography.body_white100, styles.measurementText]}
+              onLayout={handleFullTextLayout}
+              accessible={false}
+            >
+              {post.text}
+            </Text>
+          ) : null}
+          <View
+            style={[
+              styles.previewTextContainer,
+              {
+                maxHeight: textNumberOfLines * PREVIEW_TEXT_LINE_HEIGHT,
+              },
+            ]}
+            onLayout={
+              shouldMeasureTruncation ? handlePreviewTextLayout : undefined
+            }
+          >
+            <Text style={[typography.body_white100, styles.previewText]}>
+              {post.text}
+            </Text>
+          </View>
+        </View>
       </View>
     );
 
@@ -162,6 +202,14 @@ export const PostCard = ({
     return commentsFallbackLabel;
   };
 
+  const isTextTruncated =
+    shouldMeasureTruncation &&
+    fullTextHeight > 0 &&
+    previewTextHeight > 0 &&
+    fullTextHeight > previewTextHeight + 1;
+  const shouldShowReadMore =
+    showReadMore && (!showReadMoreOnlyWhenTruncated || isTextTruncated);
+
   return (
     <View style={styles.card}>
       {badgeLabel ? (
@@ -208,12 +256,12 @@ export const PostCard = ({
         </>
       )}
 
-      {showReadMore ? (
+      {shouldShowReadMore ? (
         <TouchableOpacity
           onPress={() => onOpenPost(post.id)}
           style={styles.readMore}
         >
-          <Text style={typography.caption_link}>Читать далее...</Text>
+          <Text style={typography.caption_link}>{readMoreLabel}</Text>
         </TouchableOpacity>
       ) : null}
 
@@ -276,6 +324,9 @@ const styles = StyleSheet.create({
     width: 40,
     zIndex: 1,
   },
+  bodyTextWrapper: {
+    position: "relative",
+  },
   card: {
     backgroundColor: COLORS.postsCardBackground,
     borderRadius: 32,
@@ -287,6 +338,13 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     height: 48,
     width: 48,
+  },
+  measurementText: {
+    left: 0,
+    opacity: 0,
+    pointerEvents: "none",
+    position: "absolute",
+    right: 0,
   },
   postHeader: {
     alignItems: "center",
@@ -310,6 +368,12 @@ const styles = StyleSheet.create({
   postPreviewImage: {
     backgroundColor: COLORS.imageEmptyFieldsBackground,
     borderRadius: 14,
+  },
+  previewText: {
+    lineHeight: PREVIEW_TEXT_LINE_HEIGHT,
+  },
+  previewTextContainer: {
+    overflow: "hidden",
   },
   readMore: {
     marginTop: 8,

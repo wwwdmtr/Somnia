@@ -37,6 +37,7 @@ COPY server/src ./server/src
 
 RUN test -n "$EXPO_PUBLIC_BACKEND_TRPC_URL"
 RUN test -n "$EXPO_PUBLIC_WEBAPP_URL"
+RUN test -n "$EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME"
 RUN pnpm --filter @somnia/webapp build:web
 
 FROM nginx:1.27-alpine AS runtime

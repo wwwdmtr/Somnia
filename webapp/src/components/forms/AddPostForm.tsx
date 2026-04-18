@@ -26,6 +26,11 @@ type AddPostNavProp = NativeStackNavigationProp<
   "AddPost"
 >;
 
+const TEXT_AREA_MIN_HEIGHT = 120;
+const TEXT_AREA_PADDING_VERTICAL = 20;
+const TEXT_AREA_PADDING_HORIZONTAL = 20;
+const TEXT_AREA_LINE_HEIGHT = 24;
+
 const EMPTY_POST_ERROR =
   "Добавьте заголовок, текст или хотя бы одно изображение";
 
@@ -45,6 +50,7 @@ export const AddPostForm = () => {
   const navigation = useNavigation<AddPostNavProp>();
   const prepareCloudinaryUpload = trpc.prepareCloudinaryUpload.useMutation();
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [measuredTextHeight, setMeasuredTextHeight] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pendingImages, setPendingImages] = useState<PickedPostImageFile[]>([]);
   const createPost = trpc.createPost.useMutation({
@@ -111,6 +117,10 @@ export const AddPostForm = () => {
     normalizeTextField(formik.values.text).length > 0 ||
     normalizeImageIds(formik.values.images).length > 0 ||
     pendingImages.length > 0;
+  const textAreaHeight = Math.max(
+    TEXT_AREA_MIN_HEIGHT,
+    measuredTextHeight + TEXT_AREA_PADDING_VERTICAL * 2,
+  );
 
   return (
     <View style={styles.container}>
@@ -135,21 +145,39 @@ export const AddPostForm = () => {
         <Text style={styles.errorText}>{formik.errors.title}</Text>
       )}
 
-      <TextInput
-        placeholder="Добавьте описание ..."
-        placeholderTextColor={COLORS.white25}
-        value={formik.values.text}
-        onChangeText={(text) => {
-          setSubmitError(null);
-          formik.setFieldValue("text", text);
-        }}
-        onBlur={() => formik.setFieldTouched("text")}
-        multiline
-        style={[
-          styles.textArea,
-          formik.touched.text && formik.errors.text ? styles.inputError : null,
-        ]}
-      />
+      <View style={styles.textAreaWrapper}>
+        <Text
+          style={styles.textAreaMeasure}
+          onLayout={(event) => {
+            const nextHeight = Math.ceil(event.nativeEvent.layout.height);
+            setMeasuredTextHeight((prev) =>
+              prev === nextHeight ? prev : nextHeight,
+            );
+          }}
+          accessible={false}
+        >
+          {formik.values.text || " "}
+        </Text>
+        <TextInput
+          placeholder="Добавьте описание ..."
+          placeholderTextColor={COLORS.white25}
+          value={formik.values.text}
+          onChangeText={(text) => {
+            setSubmitError(null);
+            formik.setFieldValue("text", text);
+          }}
+          onBlur={() => formik.setFieldTouched("text")}
+          multiline
+          scrollEnabled={false}
+          style={[
+            styles.textArea,
+            { height: textAreaHeight },
+            formik.touched.text && formik.errors.text
+              ? styles.inputError
+              : null,
+          ]}
+        />
+      </View>
 
       {formik.touched.text && formik.errors.text && (
         <Text style={styles.errorText}>{formik.errors.text}</Text>
@@ -213,13 +241,27 @@ const styles = {
   },
   textArea: {
     backgroundColor: COLORS.postsCardBackground,
-    padding: 20,
+    fontSize: 16,
+    lineHeight: TEXT_AREA_LINE_HEIGHT,
+    paddingHorizontal: TEXT_AREA_PADDING_HORIZONTAL,
+    paddingVertical: TEXT_AREA_PADDING_VERTICAL,
     borderRadius: 32,
-    height: 200,
-    minHeight: 200,
     textAlignVertical: "top" as const,
     color: COLORS.white100,
     flexShrink: 0,
+  },
+  textAreaMeasure: {
+    fontSize: 16,
+    left: TEXT_AREA_PADDING_HORIZONTAL,
+    lineHeight: TEXT_AREA_LINE_HEIGHT,
+    opacity: 0,
+    pointerEvents: "none" as const,
+    position: "absolute" as const,
+    right: TEXT_AREA_PADDING_HORIZONTAL,
+    top: 0,
+  },
+  textAreaWrapper: {
+    position: "relative" as const,
   },
   inputError: {
     borderColor: "white",
