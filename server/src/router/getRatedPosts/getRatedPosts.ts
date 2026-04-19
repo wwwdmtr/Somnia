@@ -97,7 +97,7 @@ export const getRatedPostsTrpcRoute = trpcLoggedProcedure
         },
 
         author: {
-          select: { nickname: true, avatar: true },
+          select: { id: true, nickname: true, avatar: true },
         },
 
         _count: {

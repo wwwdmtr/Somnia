@@ -50,6 +50,7 @@ export const UpdatePostScreen = () => {
       await Promise.all([
         utils.getPosts.invalidate(),
         utils.getMyPosts.invalidate(),
+        utils.getUserPosts.invalidate(),
         utils.getRatedPosts.invalidate(),
         utils.getDeletedPosts.invalidate(),
       ]);

@@ -13,6 +13,7 @@ export enum ScreenName {
   SignUp = "SignUp",
   Search = "Search",
   Community = "Community",
+  UserConnections = "UserConnections",
   Notifications = "Notifications",
   AdminHome = "AdminHome",
   DeletedPosts = "DeletedPosts",

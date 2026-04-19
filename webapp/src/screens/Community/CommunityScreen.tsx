@@ -155,6 +155,10 @@ export const CommunityScreen = () => {
     navigation.push(ScreenName.Community, { id });
   };
 
+  const handleOpenProfile = (userId: string) => {
+    navigation.push(ScreenName.Profile, { userId });
+  };
+
   const openImageViewer = (images: string[], index: number) => {
     setImageViewerState({
       isOpen: true,
@@ -286,6 +290,7 @@ export const CommunityScreen = () => {
               onToggleLike={toggleLike}
               onOpenImageViewer={openImageViewer}
               onOpenCommunity={handleOpenCommunity}
+              onOpenUser={handleOpenProfile}
             />
           )}
           ListHeaderComponent={header}

@@ -67,6 +67,7 @@ export const AddPostForm = ({
     onSuccess: () => {
       utils.getPosts.invalidate();
       utils.getMyPosts.invalidate();
+      utils.getUserPosts.invalidate();
       utils.getRatedPosts.invalidate();
     },
   });

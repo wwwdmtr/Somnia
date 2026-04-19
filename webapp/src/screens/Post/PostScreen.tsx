@@ -42,6 +42,9 @@ type PostScreenStackParamList = {
   [ScreenName.Post]: { id: string };
   [ScreenName.EditPost]: { id: string };
   [ScreenName.Community]: { id: string };
+  [ScreenName.Profile]: {
+    userId?: string;
+  };
 };
 
 type PostScreenRouteProp = RouteProp<PostScreenStackParamList, ScreenName.Post>;
@@ -250,6 +253,14 @@ export const PostScreen = () => {
     },
     [navigation],
   );
+  const handleOpenProfile = useCallback(
+    (userId: string) => {
+      navigation.navigate(ScreenName.Profile, {
+        userId,
+      });
+    },
+    [navigation],
+  );
 
   const loadMoreComments = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -280,9 +291,13 @@ export const PostScreen = () => {
                 style={styles.commentAvatar}
               />
               <View style={styles.commentHeaderInfo}>
-                <Text style={typography.body_white85}>
-                  @{comment.author.nickname}
-                </Text>
+                <TouchableOpacity
+                  onPress={() => handleOpenProfile(comment.author.id)}
+                >
+                  <Text style={typography.body_white85}>
+                    @{comment.author.nickname}
+                  </Text>
+                </TouchableOpacity>
                 <Text style={typography.additionalInfo_white25}>
                   {format(new Date(comment.createdAt), "dd.MM.yyyy HH:mm")}
                 </Text>
@@ -340,9 +355,13 @@ export const PostScreen = () => {
                     style={styles.replyAvatar}
                   />
                   <View style={styles.commentHeaderInfo}>
-                    <Text style={typography.body_white85}>
-                      @{reply.author.nickname}
-                    </Text>
+                    <TouchableOpacity
+                      onPress={() => handleOpenProfile(reply.author.id)}
+                    >
+                      <Text style={typography.body_white85}>
+                        @{reply.author.nickname}
+                      </Text>
+                    </TouchableOpacity>
                     <Text style={typography.additionalInfo_white25}>
                       {format(new Date(reply.createdAt), "dd.MM.yyyy HH:mm")}
                     </Text>
@@ -393,6 +412,7 @@ export const PostScreen = () => {
       expandedComments,
       toggleCommentExpand,
       handleReplyToComment,
+      handleOpenProfile,
       deleteComment,
       me?.id,
     ],
@@ -431,11 +451,14 @@ export const PostScreen = () => {
         <View style={styles.card}>
           <TouchableOpacity
             style={styles.postHeader}
-            disabled={!(isCommunityPost && post.publisherCommunity)}
+            disabled={false}
             onPress={() => {
               if (isCommunityPost && post.publisherCommunity) {
                 handleOpenCommunity(post.publisherCommunity.id);
+                return;
               }
+
+              handleOpenProfile(post.author.id);
             }}
           >
             <Image
@@ -518,6 +541,7 @@ export const PostScreen = () => {
   }, [
     data,
     handleOpenCommunity,
+    handleOpenProfile,
     openImageViewer,
     toggleLike,
     totalCommentsCount,
@@ -572,6 +596,7 @@ export const PostScreen = () => {
 
         utils.getPosts.invalidate();
         utils.getMyPosts.invalidate();
+        utils.getUserPosts.invalidate();
         utils.getRatedPosts.invalidate();
         navigation.goBack();
       } catch (error) {
@@ -622,6 +647,7 @@ export const PostScreen = () => {
 
         utils.getPosts.invalidate();
         utils.getMyPosts.invalidate();
+        utils.getUserPosts.invalidate();
         utils.getRatedPosts.invalidate();
         utils.getDeletedPosts.invalidate();
         navigation.goBack();

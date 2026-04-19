@@ -40,6 +40,7 @@ export const getPostsTrpcRoute = trpcLoggedProcedure
 
         author: {
           select: {
+            id: true,
             nickname: true,
             avatar: true,
           },

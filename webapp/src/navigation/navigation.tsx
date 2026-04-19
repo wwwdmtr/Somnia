@@ -26,6 +26,7 @@ import { UpdatePostScreen } from "../screens/Post/UpdatePostModalScreen";
 import { ProfileScreen } from "../screens/Profile/ProfileScreen";
 import { SignOutScreen } from "../screens/Profile/SignOutScreen";
 import { UpdateProfileScreen } from "../screens/Profile/UpdateProfileScreen";
+import { UserConnectionsScreen } from "../screens/Profile/UserConnectionsScreen";
 import { SearchScreen } from "../screens/Search/SearchScreen";
 
 import { AddPostStackParamList } from "./AddPostStackParamList";
@@ -49,8 +50,18 @@ function FeedStackNav() {
         options={{ headerShown: false }}
       />
       <FeedStack.Screen
+        name={ScreenName.Profile}
+        component={ProfileScreen}
+        options={{ headerShown: false }}
+      />
+      <FeedStack.Screen
         name={ScreenName.Community}
         component={CommunityScreen}
+        options={{ headerShown: false }}
+      />
+      <FeedStack.Screen
+        name={ScreenName.UserConnections}
+        component={UserConnectionsScreen}
         options={{ headerShown: false }}
       />
       <FeedStack.Screen
@@ -112,6 +123,11 @@ function ProfileStackNav() {
         options={{ headerShown: false }}
       />
       <ProfileStack.Screen
+        name={ScreenName.UserConnections}
+        component={UserConnectionsScreen}
+        options={{ headerShown: false }}
+      />
+      <ProfileStack.Screen
         name={ScreenName.Post}
         component={PostScreen}
         options={{ headerShown: false }}
@@ -139,8 +155,18 @@ function SearchStackNav() {
         options={{ headerShown: false }}
       />
       <SearchStack.Screen
+        name={ScreenName.Profile}
+        component={ProfileScreen}
+        options={{ headerShown: false }}
+      />
+      <SearchStack.Screen
         name={ScreenName.Community}
         component={CommunityScreen}
+        options={{ headerShown: false }}
+      />
+      <SearchStack.Screen
+        name={ScreenName.UserConnections}
+        component={UserConnectionsScreen}
         options={{ headerShown: false }}
       />
       <SearchStack.Screen
@@ -175,8 +201,18 @@ function AdminStackNav() {
         options={{ headerShown: false }}
       />
       <AdminStack.Screen
+        name={ScreenName.Profile}
+        component={ProfileScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStack.Screen
         name={ScreenName.Community}
         component={CommunityScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStack.Screen
+        name={ScreenName.UserConnections}
+        component={UserConnectionsScreen}
         options={{ headerShown: false }}
       />
       <AdminStack.Screen

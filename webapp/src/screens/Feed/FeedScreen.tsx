@@ -204,6 +204,9 @@ export const AllPostsScreen = () => {
   const handleOpenCommunity = (id: string) => {
     navigation.navigate("Community", { id });
   };
+  const handleOpenUser = (userId: string) => {
+    navigation.navigate("Profile", { userId });
+  };
 
   const handleOpenNotifications = () => {
     navigation.navigate("Notifications");
@@ -284,6 +287,7 @@ export const AllPostsScreen = () => {
         post={post}
         onOpenPost={handleOpenPost}
         onOpenCommunity={handleOpenCommunity}
+        onOpenUser={handleOpenUser}
         onToggleLike={toggleLike}
         onOpenImageViewer={openImageViewer}
       />

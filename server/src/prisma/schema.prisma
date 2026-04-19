@@ -25,6 +25,8 @@ model User {
     ownedCommunities       Community[]             @relation("CommunityOwner")
     communityMemberships   CommunityMember[]
     communitySubscriptions CommunitySubscription[]
+    followers              UserFollow[]            @relation("UserFollowers")
+    following              UserFollow[]            @relation("UserFollowing")
 }
 
 enum UserPermission {
@@ -104,6 +106,20 @@ model CommunitySubscription {
     @@unique([communityId, userId])
     @@index([userId, createdAt])
     @@index([communityId])
+}
+
+model UserFollow {
+    id          String   @id @default(uuid())
+    seq         Int      @unique @default(autoincrement())
+    createdAt   DateTime @default(now())
+    followerId  String
+    followingId String
+    follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+    following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+    @@unique([followerId, followingId])
+    @@index([followerId, seq])
+    @@index([followingId, seq])
 }
 
 model PostLike {

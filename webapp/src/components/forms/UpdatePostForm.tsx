@@ -50,6 +50,7 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
         utils.getPosts.invalidate(),
         utils.getPost.invalidate({ id: post.id }),
         utils.getMyPosts.invalidate(),
+        utils.getUserPosts.invalidate(),
       ]);
       onSuccess?.();
     },

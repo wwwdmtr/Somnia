@@ -24,6 +24,7 @@ beforeEach(async () => {
   await appContext.prisma.comment.deleteMany();
   await appContext.prisma.postLike.deleteMany();
   await appContext.prisma.communitySubscription.deleteMany();
+  await appContext.prisma.userFollow.deleteMany();
   await appContext.prisma.communityMember.deleteMany();
   await appContext.prisma.post.deleteMany();
   await appContext.prisma.community.deleteMany();

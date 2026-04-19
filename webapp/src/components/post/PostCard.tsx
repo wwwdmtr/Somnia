@@ -18,6 +18,7 @@ import { COLORS, typography } from "../../theme/typography";
 
 type PostAuthor = {
   avatar: string | null;
+  id: string;
   nickname: string;
 };
 
@@ -51,6 +52,7 @@ type PostCardProps = {
   onOpenCommunity?: (communityId: string) => void;
   onOpenImageViewer: (images: string[], index: number) => void;
   onOpenPost: (postId: string) => void;
+  onOpenUser?: (userId: string) => void;
   onToggleLike: (postId: string, currentLikeState: boolean) => void;
   openPostOnTextPress?: boolean;
   post: PostCardModel;
@@ -76,6 +78,7 @@ export const PostCard = ({
   onOpenCommunity,
   onOpenImageViewer,
   onOpenPost,
+  onOpenUser,
   onToggleLike,
   openPostOnTextPress = true,
   post,
@@ -251,11 +254,18 @@ export const PostCard = ({
         <TouchableOpacity
           style={styles.postHeader}
           disabled={
-            !(isCommunityPost && post.publisherCommunity && onOpenCommunity)
+            isCommunityPost
+              ? !(post.publisherCommunity && onOpenCommunity)
+              : !(post.author?.id && onOpenUser)
           }
           onPress={() => {
             if (isCommunityPost && post.publisherCommunity && onOpenCommunity) {
               onOpenCommunity(post.publisherCommunity.id);
+              return;
+            }
+
+            if (!isCommunityPost && post.author?.id && onOpenUser) {
+              onOpenUser(post.author.id);
             }
           }}
         >

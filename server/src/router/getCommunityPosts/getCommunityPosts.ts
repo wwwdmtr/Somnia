@@ -55,6 +55,7 @@ export const getCommunityPostsTrpcRoute = trpcLoggedProcedure
         },
         author: {
           select: {
+            id: true,
             nickname: true,
             avatar: true,
           },

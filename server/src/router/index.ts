@@ -20,10 +20,14 @@ import { getPostsTrpcRoute } from "./getPosts/getPosts";
 import { getRatedPostsTrpcRoute } from "./getRatedPosts/getRatedPosts";
 import { getSubscribedPostsTrpcRoute } from "./getSubscribedPosts/getSubscribedPosts";
 import { getUnreadNotificationsCountTrpcRoute } from "./getUnreadNotificationsCount/getUnreadNotificationsCount";
+import { getUserFollowsTrpcRoute } from "./getUserFollows/getUserFollows";
+import { getUserPostsTrpcRoute } from "./getUserPosts/getUserPosts";
+import { getUserProfileTrpcRoute } from "./getUserProfile/getUserProfile";
 import { markAllNotificationsReadTrpcRoute } from "./markAllNotificationsRead/markAllNotificationsRead";
 import { setCommunitySubscriptionTrpcRoute } from "./setCommunitySubscription/setCommunitySubscription";
 import { setMyAvatarTrpcRoute } from "./setMyAvatar/setMyAvatar";
 import { setPostLikeTrpcRoute } from "./setPostLike/setPostLike";
+import { setUserFollowTrpcRoute } from "./setUserFollow/setUserFollow";
 import { signInTrpcRoute } from "./signIn/signIn";
 import { signUpTrpcRoute } from "./signUp/signUp";
 import { undoDeletePostTrpcRoute } from "./undoDeletePost/undoDeletePost";
@@ -36,6 +40,9 @@ export const trpcRouter = createTrpcRouter({
   getPosts: getPostsTrpcRoute,
   getPost: getPostTrpcRoute,
   getMyPosts: getMyPostsTrpcRoute,
+  getUserPosts: getUserPostsTrpcRoute,
+  getUserProfile: getUserProfileTrpcRoute,
+  getUserFollows: getUserFollowsTrpcRoute,
   getMyNotifications: getMyNotificationsTrpcRoute,
   getUnreadNotificationsCount: getUnreadNotificationsCountTrpcRoute,
   getRatedPosts: getRatedPostsTrpcRoute,
@@ -55,6 +62,7 @@ export const trpcRouter = createTrpcRouter({
   updatePassword: updatePasswordTrpcRoute,
   setPostLike: setPostLikeTrpcRoute,
   setCommunitySubscription: setCommunitySubscriptionTrpcRoute,
+  setUserFollow: setUserFollowTrpcRoute,
   deleteComment: deleteCommentTrpcRoute,
   deletePost: deletePostTrpcRoute,
   markAllNotificationsRead: markAllNotificationsReadTrpcRoute,

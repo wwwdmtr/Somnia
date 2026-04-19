@@ -63,6 +63,7 @@ export const getSubscribedPostsTrpcRoute = trpcLoggedProcedure
         },
         author: {
           select: {
+            id: true,
             nickname: true,
             avatar: true,
           },

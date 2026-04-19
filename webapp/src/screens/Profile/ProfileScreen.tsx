@@ -1,21 +1,24 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import {
   CompositeNavigationProp,
+  RouteProp,
   useNavigation,
+  useRoute,
 } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { isUserAdmin } from "@somnia/shared/src/utils/can";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
+  ActivityIndicator,
+  FlatList,
+  Image,
   ImageBackground,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Image,
-  FlatList,
-  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -30,23 +33,40 @@ import {
   usePostLikeMutation,
 } from "../../lib/postLikeMutation";
 import { trpc } from "../../lib/trpc";
-import { typography } from "../../theme/typography";
+import { COLORS, typography } from "../../theme/typography";
 
+import type { AdminStackParamList } from "../../navigation/AdminStackParamList";
+import type { FeedStackParamList } from "../../navigation/FeedStackParamList";
 import type { ProfileStackParamList } from "../../navigation/ProfileStackParamList";
 import type { RootStackParamList } from "../../navigation/RootStackParamList";
+import type { SearchStackParamList } from "../../navigation/SearchStackParamList";
+
+type ProfileRouteParams = {
+  [ScreenName.Profile]:
+    | {
+        userId?: string;
+      }
+    | undefined;
+};
+
+type ProfileRouteProp = RouteProp<ProfileRouteParams, ScreenName.Profile>;
 
 type ProfileScreenNavigationProp = CompositeNavigationProp<
-  NativeStackNavigationProp<ProfileStackParamList, ScreenName.Profile>,
+  NativeStackNavigationProp<
+    FeedStackParamList &
+      SearchStackParamList &
+      ProfileStackParamList &
+      AdminStackParamList,
+    ScreenName.Profile
+  >,
   NativeStackNavigationProp<RootStackParamList>
 >;
 
 export const ProfileScreen = () => {
-  const { me, isLoading } = useAppContext();
-  const utils = trpc.useUtils();
-  const { data, error, refetch } = trpc.getMyPosts.useQuery({
-    authorId: me.id || "",
-  });
+  const route = useRoute<ProfileRouteProp>();
+  const { me, isLoading: isMeLoading } = useAppContext();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const utils = trpc.useUtils();
 
   const [refreshing, setRefreshing] = useState(false);
   const [imageViewerState, setImageViewerState] = useState<{
@@ -59,9 +79,44 @@ export const ProfileScreen = () => {
     index: 0,
   });
 
-  type MyPostsData = NonNullable<ReturnType<typeof utils.getMyPosts.getData>>;
+  const targetUserId = route.params?.userId ?? me?.id ?? "";
+  const shouldShowBackButton = Boolean(route.params?.userId);
 
-  const setPostLike = usePostLikeMutation<MyPostsData>({
+  const profileQuery = trpc.getUserProfile.useQuery(
+    {
+      userId: targetUserId,
+    },
+    {
+      enabled: Boolean(targetUserId),
+    },
+  );
+
+  const postsQuery = trpc.getUserPosts.useQuery(
+    {
+      userId: targetUserId,
+    },
+    {
+      enabled: Boolean(targetUserId),
+    },
+  );
+
+  const setUserFollow = trpc.setUserFollow.useMutation({
+    onSuccess: async () => {
+      await Promise.all([
+        utils.getUserProfile.invalidate({ userId: targetUserId }),
+        me?.id
+          ? utils.getUserProfile.invalidate({ userId: me.id })
+          : Promise.resolve(),
+        utils.getUserFollows.invalidate(),
+      ]);
+    },
+  });
+
+  type UserPostsData = NonNullable<
+    ReturnType<typeof utils.getUserPosts.getData>
+  >;
+
+  const setPostLike = usePostLikeMutation<UserPostsData>({
     applyOptimistic: (old, variables) => {
       if (!old?.posts) {
         return old;
@@ -82,10 +137,10 @@ export const ProfileScreen = () => {
         posts: applyServerLikeToPosts(old.posts, likeData),
       };
     },
-    cancel: () => utils.getMyPosts.cancel({ authorId: me.id || "" }),
-    getData: () => utils.getMyPosts.getData({ authorId: me.id || "" }),
+    cancel: () => utils.getUserPosts.cancel({ userId: targetUserId }),
+    getData: () => utils.getUserPosts.getData({ userId: targetUserId }),
     setData: (updater) =>
-      utils.getMyPosts.setData({ authorId: me.id || "" }, updater),
+      utils.getUserPosts.setData({ userId: targetUserId }, updater),
   });
 
   const toggleLike = (postId: string, currentLikeState: boolean) => {
@@ -106,73 +161,148 @@ export const ProfileScreen = () => {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await refetch();
+      await Promise.all([profileQuery.refetch(), postsQuery.refetch()]);
     } finally {
       setRefreshing(false);
     }
   };
 
   const handleOpenPost = (id: string) => {
-    navigation.navigate("Post", { id });
+    navigation.navigate(ScreenName.Post, { id });
   };
+
   const handleOpenCommunity = (id: string) => {
-    navigation.navigate("Community", { id });
+    navigation.navigate(ScreenName.Community, { id });
   };
 
-  if (isLoading) {
+  const handleOpenProfile = (userId: string) => {
+    if (userId === targetUserId) {
+      return;
+    }
+
+    navigation.push(ScreenName.Profile, { userId });
+  };
+
+  if (isMeLoading || profileQuery.isLoading || postsQuery.isLoading) {
     return (
       <View style={styles.centered}>
-        <Text>Loading...</Text>
+        <ActivityIndicator color={COLORS.white85} size="large" />
         <StatusBar style="auto" />
       </View>
     );
   }
 
-  if (error || !data) {
+  if (profileQuery.error || postsQuery.error || !profileQuery.data?.profile) {
     return (
       <View style={styles.centered}>
-        <Text>Error: {error?.message ?? "Unknown error"}</Text>
+        <Text style={typography.body_white85}>
+          {profileQuery.error?.message ??
+            postsQuery.error?.message ??
+            "Не удалось загрузить профиль"}
+        </Text>
         <StatusBar style="auto" />
       </View>
     );
   }
+
+  const profile = profileQuery.data.profile;
+  const posts = postsQuery.data?.posts ?? [];
 
   const renderHeader = () => (
     <View style={styles.header}>
-      <Image
-        source={getAvatarSource(me.avatar, "big")}
-        style={styles.avatar}
-      ></Image>
-      {me.name ? <Text style={typography.h3_white85}>{me.name}</Text> : null}
+      {shouldShowBackButton ? (
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.goBackWrapper}
+          >
+            <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
+            <Text style={typography.body_white85}>Назад</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
-      <View style={styles.header_user_name}>
-        <Text style={typography.body_white85}>@{me.nickname}</Text>
+      <Image
+        source={getAvatarSource(profile.avatar, "big")}
+        style={styles.avatar}
+      />
+
+      {profile.name ? (
+        <Text style={typography.h3_white85}>{profile.name}</Text>
+      ) : null}
+
+      <View style={styles.headerUserNameRow}>
+        <Text style={typography.body_white85}>@{profile.nickname}</Text>
+        {profile.isMe ? (
+          <TouchableOpacity
+            onPress={() => navigation.navigate(ScreenName.UpdateProfile)}
+          >
+            <Image
+              source={require("../../assets/Icons/decorIcons/edit-outline.png")}
+              style={styles.editUserName}
+            />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      {!profile.isMe ? (
         <TouchableOpacity
-          onPress={() => navigation.navigate(ScreenName.UpdateProfile)}
+          style={[
+            styles.followButton,
+            profile.isFollowedByMe ? styles.unfollowButton : null,
+          ]}
+          onPress={() => {
+            setUserFollow.mutate({
+              userId: profile.id,
+              isFollowing: !profile.isFollowedByMe,
+            });
+          }}
+          disabled={setUserFollow.isPending}
         >
-          <Image
-            source={require("../../assets/Icons/decorIcons/edit-outline.png")}
-            style={styles.edit_user_name}
-          ></Image>
+          <Text style={styles.followButtonText}>
+            {setUserFollow.isPending
+              ? "Сохраняем..."
+              : profile.isFollowedByMe
+                ? "Отписаться"
+                : "Подписаться"}
+          </Text>
+        </TouchableOpacity>
+      ) : null}
+
+      <View style={styles.statsRow}>
+        <View style={styles.statItem}>
+          <Text style={typography.h3_white85}>{profile.postsCount}</Text>
+          <Text style={typography.body_white85}>постов</Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.statItem}
+          onPress={() =>
+            navigation.navigate(ScreenName.UserConnections, {
+              userId: profile.id,
+              type: "followers",
+            })
+          }
+        >
+          <Text style={typography.h3_white85}>{profile.followersCount}</Text>
+          <Text style={typography.body_white85}>подписчики</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.statItem}
+          onPress={() =>
+            navigation.navigate(ScreenName.UserConnections, {
+              userId: profile.id,
+              type: "following",
+            })
+          }
+        >
+          <Text style={typography.h3_white85}>{profile.followingCount}</Text>
+          <Text style={typography.body_white85}>подписки</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.game_info_bar_wrapper}>
-        <View style={styles.game_dreams}>
-          <Text style={typography.h3_white85}>324</Text>
-          <Text style={typography.body_white85}>сон</Text>
-        </View>
-        <View style={styles.game_dreams}>
-          <Text style={typography.h3_white85}>125</Text>
-          <Text style={typography.body_white85}>орбит</Text>
-        </View>
-        <View style={styles.game_dreams}>
-          <Text style={typography.h3_white85}>107</Text>
-          <Text style={typography.body_white85}>спутник</Text>
-        </View>
-      </View>
-
-      {isUserAdmin(me) ? (
+      {profile.isMe && isUserAdmin(me) ? (
         <TouchableOpacity
           onPress={() =>
             navigation.navigate(ScreenName.AdminStack, {
@@ -186,11 +316,7 @@ export const ProfileScreen = () => {
     </View>
   );
 
-  const renderItem = ({
-    item: post,
-  }: {
-    item: (typeof data.posts)[number];
-  }) => {
+  const renderItem = ({ item: post }: { item: (typeof posts)[number] }) => {
     return (
       <PostCard
         post={post}
@@ -198,10 +324,11 @@ export const ProfileScreen = () => {
         imageHeight={180}
         onOpenPost={handleOpenPost}
         onOpenCommunity={handleOpenCommunity}
+        onOpenUser={handleOpenProfile}
         onToggleLike={toggleLike}
         onOpenImageViewer={openImageViewer}
         openPostOnTextPress={false}
-        showAuthor={post.publisherType === "COMMUNITY"}
+        showAuthor={false}
       />
     );
   };
@@ -209,11 +336,11 @@ export const ProfileScreen = () => {
   return (
     <ImageBackground
       source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.BackgroundImage}
+      style={styles.backgroundImage}
     >
       <SafeAreaView style={styles.safeArea}>
         <FlatList
-          data={data.posts}
+          data={posts}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           ListHeaderComponent={renderHeader}
@@ -226,13 +353,17 @@ export const ProfileScreen = () => {
               tintColor="#ffffff"
             />
           }
-        ></FlatList>
+        />
+
         <PostImageViewerModal
           visible={imageViewerState.isOpen}
           imagePublicIds={imageViewerState.images}
           initialIndex={imageViewerState.index}
           onClose={() =>
-            setImageViewerState((prev) => ({ ...prev, isOpen: false }))
+            setImageViewerState((prev) => ({
+              ...prev,
+              isOpen: false,
+            }))
           }
         />
       </SafeAreaView>
@@ -241,58 +372,84 @@ export const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  BackgroundImage: {
-    flex: 1,
-  },
   avatar: {
     borderRadius: 50,
     height: 100,
     width: 100,
   },
+  backgroundImage: {
+    flex: 1,
+  },
   centered: {
     alignItems: "center",
     flex: 1,
     justifyContent: "center",
+    padding: 16,
   },
-  edit_user_name: {
+  editUserName: {
     height: 24,
     width: 24,
   },
-  game_dreams: {
+  followButton: {
     alignItems: "center",
-    flexDirection: "column",
-    height: 60,
-    justifyContent: "space-between",
+    backgroundColor: COLORS.buttonBackground,
+    borderRadius: 999,
+    justifyContent: "center",
+    minHeight: 36,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
   },
-  game_info_bar_wrapper: {
+  followButtonText: {
+    color: COLORS.white100,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  goBackWrapper: {
+    alignItems: "center",
     flexDirection: "row",
-    gap: 16,
-    height: 60,
-    justifyContent: "space-between",
-    marginHorizontal: 220,
-    marginTop: 20,
-    paddingHorizontal: 24,
-    width: 321,
+    gap: 8,
   },
   header: {
     alignItems: "center",
-    gap: 20,
-    marginVertical: 44,
+    gap: 16,
+    marginTop: 24,
+    marginVertical: 36,
   },
-
-  header_user_name: {
+  headerRow: {
+    alignItems: "center",
+    alignSelf: "stretch",
+    backgroundColor: COLORS.navBarBackground,
+    borderRadius: 99,
+    flexDirection: "row",
+    height: 44,
+    justifyContent: "flex-start",
+    marginBottom: 8,
+    paddingHorizontal: 16,
+  },
+  headerUserNameRow: {
     alignItems: "center",
     flexDirection: "row",
     gap: 10,
   },
-
   listContent: {
     paddingBottom: 70,
   },
-
   safeArea: {
     flex: 1,
     marginBottom: 20,
     marginHorizontal: 14,
+  },
+  statItem: {
+    alignItems: "center",
+    minWidth: 90,
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  unfollowButton: {
+    backgroundColor: COLORS.postsCardBackground,
+    borderColor: COLORS.white25,
+    borderWidth: 1,
   },
 });
