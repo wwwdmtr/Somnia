@@ -16,11 +16,19 @@ export const getMyPostsTrpcRoute = trpcLoggedProcedure
       where: {
         authorId: input.authorId,
         deletedAt: null,
+        publisherType: "USER",
       },
       orderBy: {
         createdAt: "desc",
       },
       include: {
+        publisherCommunity: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
         author: {
           select: {
             id: true,

@@ -115,6 +115,9 @@ export const ProfileScreen = () => {
   const handleOpenPost = (id: string) => {
     navigation.navigate("Post", { id });
   };
+  const handleOpenCommunity = (id: string) => {
+    navigation.navigate("Community", { id });
+  };
 
   if (isLoading) {
     return (
@@ -194,10 +197,11 @@ export const ProfileScreen = () => {
         contentOrder="textFirst"
         imageHeight={180}
         onOpenPost={handleOpenPost}
+        onOpenCommunity={handleOpenCommunity}
         onToggleLike={toggleLike}
         onOpenImageViewer={openImageViewer}
         openPostOnTextPress={false}
-        showAuthor={false}
+        showAuthor={post.publisherType === "COMMUNITY"}
       />
     );
   };

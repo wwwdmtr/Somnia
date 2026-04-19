@@ -26,6 +26,12 @@ type AddPostNavProp = NativeStackNavigationProp<
   "AddPost"
 >;
 
+type AddPostFormProps = {
+  communityId?: string;
+  contextTitle?: string;
+  onSuccess?: () => void;
+};
+
 const TEXT_AREA_MIN_HEIGHT = 120;
 const TEXT_AREA_PADDING_VERTICAL = 20;
 const TEXT_AREA_PADDING_HORIZONTAL = 20;
@@ -45,7 +51,11 @@ const normalizeImageIds = (value: unknown): string[] =>
       )
     : [];
 
-export const AddPostForm = () => {
+export const AddPostForm = ({
+  communityId,
+  contextTitle,
+  onSuccess,
+}: AddPostFormProps) => {
   const utils = trpc.useUtils();
   const navigation = useNavigation<AddPostNavProp>();
   const prepareCloudinaryUpload = trpc.prepareCloudinaryUpload.useMutation();
@@ -57,6 +67,7 @@ export const AddPostForm = () => {
     onSuccess: () => {
       utils.getPosts.invalidate();
       utils.getMyPosts.invalidate();
+      utils.getRatedPosts.invalidate();
     },
   });
   const formik = useFormik<PostFormValues>({
@@ -99,10 +110,15 @@ export const AddPostForm = () => {
           description: normalizedDescription,
           text: normalizedText,
           images: [...currentImages, ...uploadedImages],
+          ...(communityId ? { communityId } : {}),
         });
         setPendingImages([]);
         resetForm();
-        navigation.goBack();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          navigation.goBack();
+        }
       } finally {
         setIsUploadingImages(false);
       }
@@ -124,6 +140,10 @@ export const AddPostForm = () => {
 
   return (
     <View style={styles.container}>
+      {contextTitle ? (
+        <Text style={styles.contextTitle}>{contextTitle}</Text>
+      ) : null}
+
       <TextInput
         placeholder="Придумайте заголовок ..."
         placeholderTextColor={COLORS.white25}
@@ -230,6 +250,11 @@ const styles = {
     gap: 14,
     marginTop: 28,
     paddingBottom: 24,
+  },
+  contextTitle: {
+    color: COLORS.white85,
+    fontSize: 14,
+    lineHeight: 20,
   },
   input: {
     padding: 20,

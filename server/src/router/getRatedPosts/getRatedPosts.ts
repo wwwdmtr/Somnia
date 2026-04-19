@@ -87,6 +87,14 @@ export const getRatedPostsTrpcRoute = trpcLoggedProcedure
         text: true,
         images: true,
         createdAt: true,
+        publisherType: true,
+        publisherCommunity: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
 
         author: {
           select: { nickname: true, avatar: true },

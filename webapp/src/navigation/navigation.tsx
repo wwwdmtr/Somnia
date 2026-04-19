@@ -15,6 +15,7 @@ import { useAppContext } from "../lib/ctx";
 import { AddPostScreen } from "../screens/AddPost/AddYourPost";
 import { AdminScreen } from "../screens/Admin/AdminScreen";
 import { DeletedPostsScreen } from "../screens/Admin/DeletedPosts";
+import { CommunityScreen } from "../screens/Community/CommunityScreen";
 import { AllPostsScreen } from "../screens/Feed/FeedScreen";
 import { NotificationsScreen } from "../screens/Notifications/NotificationsScreen";
 import { OnboardingScreen } from "../screens/Onboarding/OnboardingScreen";
@@ -45,6 +46,11 @@ function FeedStackNav() {
       <FeedStack.Screen
         name={ScreenName.Feed}
         component={AllPostsScreen}
+        options={{ headerShown: false }}
+      />
+      <FeedStack.Screen
+        name={ScreenName.Community}
+        component={CommunityScreen}
         options={{ headerShown: false }}
       />
       <FeedStack.Screen
@@ -100,12 +106,17 @@ function ProfileStackNav() {
         component={UpdateProfileScreen}
         options={{ headerShown: false }}
       />
-      <FeedStack.Screen
+      <ProfileStack.Screen
+        name={ScreenName.Community}
+        component={CommunityScreen}
+        options={{ headerShown: false }}
+      />
+      <ProfileStack.Screen
         name={ScreenName.Post}
         component={PostScreen}
         options={{ headerShown: false }}
       />
-      <FeedStack.Screen
+      <ProfileStack.Screen
         name={ScreenName.EditPost}
         component={UpdatePostScreen}
         options={{
@@ -125,6 +136,11 @@ function SearchStackNav() {
       <SearchStack.Screen
         name={ScreenName.Search}
         component={SearchScreen}
+        options={{ headerShown: false }}
+      />
+      <SearchStack.Screen
+        name={ScreenName.Community}
+        component={CommunityScreen}
         options={{ headerShown: false }}
       />
       <SearchStack.Screen
@@ -156,6 +172,11 @@ function AdminStackNav() {
       <AdminStack.Screen
         name={ScreenName.DeletedPosts}
         component={DeletedPostsScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStack.Screen
+        name={ScreenName.Community}
+        component={CommunityScreen}
         options={{ headerShown: false }}
       />
       <AdminStack.Screen

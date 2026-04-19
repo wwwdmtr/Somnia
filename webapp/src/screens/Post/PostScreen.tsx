@@ -36,15 +36,15 @@ import { usePostLikeMutation } from "../../lib/postLikeMutation";
 import { trpc } from "../../lib/trpc";
 import { typography, COLORS } from "../../theme/typography";
 
-import type { AddPostStackParamList } from "../../navigation/AddPostStackParamList";
-import type { FeedStackParamList } from "../../navigation/FeedStackParamList";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-type PostScreenRouteProp = RouteProp<
-  FeedStackParamList & AddPostStackParamList,
-  ScreenName.Post
->;
-type PostScreenStackParamList = FeedStackParamList & AddPostStackParamList;
+type PostScreenStackParamList = {
+  [ScreenName.Post]: { id: string };
+  [ScreenName.EditPost]: { id: string };
+  [ScreenName.Community]: { id: string };
+};
+
+type PostScreenRouteProp = RouteProp<PostScreenStackParamList, ScreenName.Post>;
 type PostScreenNavProp = NativeStackNavigationProp<
   PostScreenStackParamList,
   ScreenName.Post
@@ -242,6 +242,14 @@ export const PostScreen = () => {
       index,
     });
   }, []);
+  const handleOpenCommunity = useCallback(
+    (communityId: string) => {
+      navigation.navigate(ScreenName.Community, {
+        id: communityId,
+      });
+    },
+    [navigation],
+  );
 
   const loadMoreComments = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -407,24 +415,40 @@ export const PostScreen = () => {
       return null;
     }
     const post = data.post;
+    const isCommunityPost =
+      post.publisherType === "COMMUNITY" && Boolean(post.publisherCommunity);
+    const headerName =
+      isCommunityPost && post.publisherCommunity
+        ? post.publisherCommunity.name
+        : `@${post.author.nickname}`;
+    const headerAvatar =
+      isCommunityPost && post.publisherCommunity
+        ? post.publisherCommunity.avatar
+        : post.author.avatar;
 
     return (
       <View>
         <View style={styles.card}>
-          <View style={styles.postHeader}>
+          <TouchableOpacity
+            style={styles.postHeader}
+            disabled={!(isCommunityPost && post.publisherCommunity)}
+            onPress={() => {
+              if (isCommunityPost && post.publisherCommunity) {
+                handleOpenCommunity(post.publisherCommunity.id);
+              }
+            }}
+          >
             <Image
-              source={getAvatarSource(post.author.avatar, "small")}
+              source={getAvatarSource(headerAvatar, "small")}
               style={styles.cardImage}
             />
             <View style={styles.postHeaderInfo}>
-              <Text style={typography.body_white85}>
-                @{post.author.nickname}
-              </Text>
+              <Text style={typography.body_white85}>{headerName}</Text>
               <Text style={typography.additionalInfo_white25}>
                 {format(new Date(post.createdAt), "dd.MM.yyyy")}
               </Text>
             </View>
-          </View>
+          </TouchableOpacity>
 
           {post.images.length > 0 ? (
             <ScrollView
@@ -491,7 +515,13 @@ export const PostScreen = () => {
         </View>
       </View>
     );
-  }, [data, openImageViewer, toggleLike, totalCommentsCount]);
+  }, [
+    data,
+    handleOpenCommunity,
+    openImageViewer,
+    toggleLike,
+    totalCommentsCount,
+  ]);
 
   if (isLoading) {
     return (

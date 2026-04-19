@@ -1,17 +1,33 @@
 import _ from "lodash";
 
+import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 
-import { zGetDeletedPostsTrpcInput } from "./input";
+import { zGetCommunityPostsTrpcInput } from "./input";
 
-export const getDeletedPostsTrpcRoute = trpcLoggedProcedure
-  .input(zGetDeletedPostsTrpcInput)
+export const getCommunityPostsTrpcRoute = trpcLoggedProcedure
+  .input(zGetCommunityPostsTrpcInput)
   .query(async ({ ctx, input }) => {
     const userId = ctx.me?.id;
 
+    const community = await ctx.prisma.community.findUnique({
+      where: {
+        id: input.communityId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!community) {
+      throw new ExpectedError("Сообщество не найдено");
+    }
+
     const rawPosts = await ctx.prisma.post.findMany({
       where: {
-        deletedAt: { not: null },
+        deletedAt: null,
+        publisherType: "COMMUNITY",
+        publisherCommunityId: input.communityId,
       },
       take: input.limit + 1,
       ...(input.cursor && {
@@ -37,14 +53,12 @@ export const getDeletedPostsTrpcRoute = trpcLoggedProcedure
             avatar: true,
           },
         },
-
         author: {
           select: {
             nickname: true,
             avatar: true,
           },
         },
-
         _count: {
           select: {
             postLikes: true,
@@ -53,7 +67,6 @@ export const getDeletedPostsTrpcRoute = trpcLoggedProcedure
             },
           },
         },
-
         postLikes: userId
           ? {
               where: {

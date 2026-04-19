@@ -17,6 +17,7 @@
   "include": [
     "src/env.ts",
     "src/cloudinary/**/*.ts",
+    "src/router/createCommunity/input.ts",
     "src/router/createPost/input.ts",
     "src/router/updatePost/input.ts"
   ],

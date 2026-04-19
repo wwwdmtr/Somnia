@@ -22,6 +22,13 @@ export const getPostTrpcRoute = trpcLoggedProcedure
             avatar: true,
           },
         },
+        publisherCommunity: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
         postLikes: {
           select: {
             id: true,

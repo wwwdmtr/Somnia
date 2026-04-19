@@ -10,4 +10,5 @@ export const zCreatePostTrpcInput = z.object({
   description: z.string().trim().default(''),
   text: z.string().trim().default(''),
   images: zPostImages,
+  communityId: z.string().trim().min(1).optional(),
 });

@@ -1,30 +1,36 @@
-import { type inferRouterInputs, type inferRouterOutputs } from '@trpc/server';
+import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 
-import { createTrpcRouter } from '../lib/trpc';
+import { createTrpcRouter } from "../lib/trpc";
 
-import { createCommentTrpcRoute } from './createComment/createComment';
-import { createPostTrpcRoute } from './createPost/createPost';
-import { deleteCommentTrpcRoute } from './deleteComment/deleteComment';
-import { deletePostTrpcRoute } from './deletePost/deletePost';
-import { getCommentsByPostTrpcRoute } from './getCommentByPost/getCommentByPost';
-import { getDeletedPostsTrpcRoute } from './getDeletedPosts/getDeletedPosts';
-import { getMeTrpcRoute } from './getMe/getMe';
-import { getMyNotificationsTrpcRoute } from './getMyNotifications/getMyNotifications';
-import { getMyPostsTrpcRoute } from './getMyPosts';
-import { getPostTrpcRoute } from './getPost';
-import { getPostsTrpcRoute } from './getPosts/getPosts';
-import { getRatedPostsTrpcRoute } from './getRatedPosts/getRatedPosts';
-import { getUnreadNotificationsCountTrpcRoute } from './getUnreadNotificationsCount/getUnreadNotificationsCount';
-import { markAllNotificationsReadTrpcRoute } from './markAllNotificationsRead/markAllNotificationsRead';
-import { setMyAvatarTrpcRoute } from './setMyAvatar/setMyAvatar';
-import { setPostLikeTrpcRoute } from './setPostLike/setPostLike';
-import { signInTrpcRoute } from './signIn/signIn';
-import { signUpTrpcRoute } from './signUp/signUp';
-import { undoDeletePostTrpcRoute } from './undoDeletePost/undoDeletePost';
-import { updatePasswordTrpcRoute } from './updatePassword/updatePassword';
-import { updatePostTrpcRoute } from './updatePost/updatePost';
-import { updateProfileTrpcRoute } from './updateProfile/updateProfile';
-import { prepareCloudinaryUploadTrpcRoute } from './upload/prepareCloudinaryUpload/prepareCloudinaryUpload';
+import { createCommentTrpcRoute } from "./createComment/createComment";
+import { createCommunityTrpcRoute } from "./createCommunity/createCommunity";
+import { createPostTrpcRoute } from "./createPost/createPost";
+import { deleteCommentTrpcRoute } from "./deleteComment/deleteComment";
+import { deletePostTrpcRoute } from "./deletePost/deletePost";
+import { getCommentsByPostTrpcRoute } from "./getCommentByPost/getCommentByPost";
+import { getCommunityTrpcRoute } from "./getCommunity/getCommunity";
+import { getCommunityPostsTrpcRoute } from "./getCommunityPosts/getCommunityPosts";
+import { getDeletedPostsTrpcRoute } from "./getDeletedPosts/getDeletedPosts";
+import { getMeTrpcRoute } from "./getMe/getMe";
+import { getMyNotificationsTrpcRoute } from "./getMyNotifications/getMyNotifications";
+import { getMyPostsTrpcRoute } from "./getMyPosts";
+import { getMyPublishingIdentitiesTrpcRoute } from "./getMyPublishingIdentities/getMyPublishingIdentities";
+import { getPostTrpcRoute } from "./getPost";
+import { getPostsTrpcRoute } from "./getPosts/getPosts";
+import { getRatedPostsTrpcRoute } from "./getRatedPosts/getRatedPosts";
+import { getSubscribedPostsTrpcRoute } from "./getSubscribedPosts/getSubscribedPosts";
+import { getUnreadNotificationsCountTrpcRoute } from "./getUnreadNotificationsCount/getUnreadNotificationsCount";
+import { markAllNotificationsReadTrpcRoute } from "./markAllNotificationsRead/markAllNotificationsRead";
+import { setCommunitySubscriptionTrpcRoute } from "./setCommunitySubscription/setCommunitySubscription";
+import { setMyAvatarTrpcRoute } from "./setMyAvatar/setMyAvatar";
+import { setPostLikeTrpcRoute } from "./setPostLike/setPostLike";
+import { signInTrpcRoute } from "./signIn/signIn";
+import { signUpTrpcRoute } from "./signUp/signUp";
+import { undoDeletePostTrpcRoute } from "./undoDeletePost/undoDeletePost";
+import { updatePasswordTrpcRoute } from "./updatePassword/updatePassword";
+import { updatePostTrpcRoute } from "./updatePost/updatePost";
+import { updateProfileTrpcRoute } from "./updateProfile/updateProfile";
+import { prepareCloudinaryUploadTrpcRoute } from "./upload/prepareCloudinaryUpload/prepareCloudinaryUpload";
 
 export const trpcRouter = createTrpcRouter({
   getPosts: getPostsTrpcRoute,
@@ -33,16 +39,22 @@ export const trpcRouter = createTrpcRouter({
   getMyNotifications: getMyNotificationsTrpcRoute,
   getUnreadNotificationsCount: getUnreadNotificationsCountTrpcRoute,
   getRatedPosts: getRatedPostsTrpcRoute,
+  getMyPublishingIdentities: getMyPublishingIdentitiesTrpcRoute,
   createComment: createCommentTrpcRoute,
+  createCommunity: createCommunityTrpcRoute,
   createPost: createPostTrpcRoute,
   signUp: signUpTrpcRoute,
   signIn: signInTrpcRoute,
   getMe: getMeTrpcRoute,
   getCommentsByPost: getCommentsByPostTrpcRoute,
+  getCommunity: getCommunityTrpcRoute,
+  getCommunityPosts: getCommunityPostsTrpcRoute,
+  getSubscribedPosts: getSubscribedPostsTrpcRoute,
   updatePost: updatePostTrpcRoute,
   updateProfile: updateProfileTrpcRoute,
   updatePassword: updatePasswordTrpcRoute,
   setPostLike: setPostLikeTrpcRoute,
+  setCommunitySubscription: setCommunitySubscriptionTrpcRoute,
   deleteComment: deleteCommentTrpcRoute,
   deletePost: deletePostTrpcRoute,
   markAllNotificationsRead: markAllNotificationsReadTrpcRoute,

@@ -21,6 +21,12 @@ type PostAuthor = {
   nickname: string;
 };
 
+type PostPublisherCommunity = {
+  avatar: string | null;
+  id: string;
+  name: string;
+};
+
 export type PostCardModel = {
   author?: PostAuthor;
   commentsCount?: number;
@@ -29,6 +35,8 @@ export type PostCardModel = {
   images: string[];
   isLikedByMe: boolean;
   likesCount: number;
+  publisherCommunity?: PostPublisherCommunity | null;
+  publisherType?: "USER" | "COMMUNITY";
   text: string;
   title: string;
 };
@@ -40,6 +48,7 @@ type PostCardProps = {
   contentOrder?: "mediaFirst" | "textFirst";
   imageHeight?: number;
   imageWidth?: number;
+  onOpenCommunity?: (communityId: string) => void;
   onOpenImageViewer: (images: string[], index: number) => void;
   onOpenPost: (postId: string) => void;
   onToggleLike: (postId: string, currentLikeState: boolean) => void;
@@ -64,6 +73,7 @@ export const PostCard = ({
   contentOrder = "mediaFirst",
   imageHeight = DEFAULT_IMAGE_HEIGHT,
   imageWidth = DEFAULT_IMAGE_WIDTH,
+  onOpenCommunity,
   onOpenImageViewer,
   onOpenPost,
   onToggleLike,
@@ -80,6 +90,18 @@ export const PostCard = ({
   const [previewTextHeight, setPreviewTextHeight] = useState(0);
   const [fullTextHeight, setFullTextHeight] = useState(0);
   const shouldMeasureTruncation = showReadMore && showReadMoreOnlyWhenTruncated;
+  const isCommunityPost =
+    post.publisherType === "COMMUNITY" && Boolean(post.publisherCommunity);
+  const publisherName =
+    isCommunityPost && post.publisherCommunity
+      ? post.publisherCommunity.name
+      : post.author
+        ? `@${post.author.nickname}`
+        : null;
+  const publisherAvatar =
+    isCommunityPost && post.publisherCommunity
+      ? post.publisherCommunity.avatar
+      : post.author?.avatar;
 
   const handlePreviewTextLayout = useCallback((event: LayoutChangeEvent) => {
     const nextHeight = event.nativeEvent.layout.height;
@@ -225,24 +247,32 @@ export const PostCard = ({
         </View>
       ) : null}
 
-      <View style={styles.postHeader}>
-        {showAuthor && post.author ? (
-          <>
-            <Image
-              source={getAvatarSource(post.author.avatar, "small")}
-              style={styles.cardImage}
-            />
-            <View style={styles.postHeaderInfo}>
-              <Text style={typography.body_white85}>
-                @{post.author.nickname}
-              </Text>
-              <Text style={typography.additionalInfo_white25}>{createdAt}</Text>
-            </View>
-          </>
-        ) : (
+      {showAuthor && publisherName ? (
+        <TouchableOpacity
+          style={styles.postHeader}
+          disabled={
+            !(isCommunityPost && post.publisherCommunity && onOpenCommunity)
+          }
+          onPress={() => {
+            if (isCommunityPost && post.publisherCommunity && onOpenCommunity) {
+              onOpenCommunity(post.publisherCommunity.id);
+            }
+          }}
+        >
+          <Image
+            source={getAvatarSource(publisherAvatar, "small")}
+            style={styles.cardImage}
+          />
+          <View style={styles.postHeaderInfo}>
+            <Text style={typography.body_white85}>{publisherName}</Text>
+            <Text style={typography.additionalInfo_white25}>{createdAt}</Text>
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.postHeader}>
           <Text style={typography.additionalInfo_white25}>{createdAt}</Text>
-        )}
-      </View>
+        </View>
+      )}
 
       {contentOrder === "textFirst" ? (
         <>

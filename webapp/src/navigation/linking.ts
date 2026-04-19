@@ -17,6 +17,7 @@ export const linking = {
             screens: {
               [ScreenName.Feed]: "feed",
               [ScreenName.Notifications]: "feed/notifications",
+              [ScreenName.Community]: "feed/community/:id",
               [ScreenName.Post]: "feed/post/:id",
               [ScreenName.EditPost]: "feed/post/:id/edit",
             },
@@ -24,6 +25,7 @@ export const linking = {
           [TabName.SearchTab]: {
             screens: {
               [ScreenName.Search]: "search",
+              [ScreenName.Community]: "search/community/:id",
               [ScreenName.Post]: "search/post/:id",
               [ScreenName.EditPost]: "search/post/:id/edit",
             },
@@ -38,6 +40,7 @@ export const linking = {
               [ScreenName.Profile]: "profile",
               [ScreenName.UpdateProfile]: "profile/edit",
               [ScreenName.SignOut]: "sign-out",
+              [ScreenName.Community]: "profile/community/:id",
               [ScreenName.Post]: "profile/post/:id",
               [ScreenName.EditPost]: "profile/post/:id/edit",
             },
@@ -49,6 +52,7 @@ export const linking = {
         screens: {
           [ScreenName.AdminHome]: "",
           [ScreenName.DeletedPosts]: "deleted-posts",
+          [ScreenName.Community]: "community/:id",
           [ScreenName.Post]: "post/:id",
           [ScreenName.EditPost]: "post/:id/edit",
         },

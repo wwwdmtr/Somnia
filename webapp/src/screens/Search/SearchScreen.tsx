@@ -164,6 +164,9 @@ export const SearchScreen = () => {
   const handleOpenPost = (id: string) => {
     navigation.navigate("Post", { id });
   };
+  const handleOpenCommunity = (id: string) => {
+    navigation.navigate("Community", { id });
+  };
 
   const toggleLike = (postId: string, currentLikeState: boolean) => {
     setPostLike.mutate({
@@ -310,6 +313,7 @@ export const SearchScreen = () => {
         badgeColor={badgeColor}
         badgeLabel={!isSearchMode && index < 3 ? `#${index + 1}` : undefined}
         onOpenPost={handleOpenPost}
+        onOpenCommunity={handleOpenCommunity}
         onToggleLike={toggleLike}
         onOpenImageViewer={openImageViewer}
       />

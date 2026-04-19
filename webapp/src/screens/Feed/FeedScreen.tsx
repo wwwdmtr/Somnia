@@ -8,13 +8,13 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useMemo, useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
+  FlatList,
   ImageBackground,
   RefreshControl,
-  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -27,12 +27,13 @@ import {
   usePostLikeMutation,
 } from "../../lib/postLikeMutation";
 import { trpc } from "../../lib/trpc";
-import { typography, COLORS } from "../../theme/typography";
+import { COLORS, typography } from "../../theme/typography";
 
 import type { FeedStackParamList } from "../../navigation/FeedStackParamList";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type NavigationProp = NativeStackNavigationProp<FeedStackParamList, "Feed">;
+const FEED_QUERY_KEY = { limit: 15 };
 
 export const AllPostsScreen = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -51,26 +52,29 @@ export const AllPostsScreen = () => {
     index: 0,
   });
 
-  type PostsInfiniteData = NonNullable<
+  const isAuthorized = Boolean(me?.id);
+  const isFeedTab = activeTab === "feed";
+
+  type FeedPostsInfiniteData = NonNullable<
     ReturnType<typeof utils.getPosts.getInfiniteData>
   >;
+  type SubscribedPostsInfiniteData = NonNullable<
+    ReturnType<typeof utils.getSubscribedPosts.getInfiniteData>
+  >;
 
-  const {
-    data,
-    error,
-    isLoading,
-    refetch,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = trpc.getPosts.useInfiniteQuery(
-    { limit: 15 },
+  const feedQuery = trpc.getPosts.useInfiniteQuery(FEED_QUERY_KEY, {
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+  });
+
+  const subscribedQuery = trpc.getSubscribedPosts.useInfiniteQuery(
+    FEED_QUERY_KEY,
     {
+      enabled: isAuthorized && activeTab === "subs",
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
   );
 
-  const setPostLike = usePostLikeMutation<PostsInfiniteData>({
+  const setFeedPostLike = usePostLikeMutation<FeedPostsInfiniteData>({
     applyOptimistic: (old, variables) => {
       if (!old) {
         return old;
@@ -98,16 +102,66 @@ export const AllPostsScreen = () => {
       };
     },
     cancel: () => utils.getPosts.cancel(),
-    getData: () => utils.getPosts.getInfiniteData({ limit: 15 }),
+    getData: () => utils.getPosts.getInfiniteData(FEED_QUERY_KEY),
     setData: (updater) =>
-      utils.getPosts.setInfiniteData({ limit: 15 }, updater),
+      utils.getPosts.setInfiniteData(FEED_QUERY_KEY, updater),
   });
 
-  const posts = useMemo(
-    () => data?.pages.flatMap((page) => page.posts) ?? [],
-    [data],
+  const setSubscribedPostLike =
+    usePostLikeMutation<SubscribedPostsInfiniteData>({
+      applyOptimistic: (old, variables) => {
+        if (!old) {
+          return old;
+        }
+
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            posts: applyOptimisticLikeToPosts(page.posts, variables),
+          })),
+        };
+      },
+      applyServer: (old, likeData) => {
+        if (!old) {
+          return old;
+        }
+
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            posts: applyServerLikeToPosts(page.posts, likeData),
+          })),
+        };
+      },
+      cancel: () => utils.getSubscribedPosts.cancel(FEED_QUERY_KEY),
+      getData: () => utils.getSubscribedPosts.getInfiniteData(FEED_QUERY_KEY),
+      setData: (updater) =>
+        utils.getSubscribedPosts.setInfiniteData(FEED_QUERY_KEY, updater),
+    });
+
+  const feedPosts = useMemo(
+    () => feedQuery.data?.pages.flatMap((page) => page.posts) ?? [],
+    [feedQuery.data],
   );
-  const isAuthorized = Boolean(me?.id);
+  const subscribedPosts = useMemo(
+    () => subscribedQuery.data?.pages.flatMap((page) => page.posts) ?? [],
+    [subscribedQuery.data],
+  );
+
+  const activePosts = isFeedTab ? feedPosts : subscribedPosts;
+  const activeError = isFeedTab ? feedQuery.error : subscribedQuery.error;
+  const activeIsLoading = isFeedTab
+    ? feedQuery.isLoading
+    : subscribedQuery.isLoading;
+  const activeHasNextPage = isFeedTab
+    ? feedQuery.hasNextPage
+    : subscribedQuery.hasNextPage;
+  const activeIsFetchingNextPage = isFeedTab
+    ? feedQuery.isFetchingNextPage
+    : subscribedQuery.isFetchingNextPage;
+
   const { data: unreadNotificationsData, refetch: refetchUnreadNotifications } =
     trpc.getUnreadNotificationsCount.useQuery(
       {},
@@ -124,9 +178,15 @@ export const AllPostsScreen = () => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([refetch(), refetchUnreadNotifications()]);
-    setRefreshing(false);
-  }, [refetch, refetchUnreadNotifications]);
+    try {
+      await Promise.all([
+        isFeedTab ? feedQuery.refetch() : subscribedQuery.refetch(),
+        refetchUnreadNotifications(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [feedQuery, isFeedTab, refetchUnreadNotifications, subscribedQuery]);
 
   useFocusEffect(
     useCallback(() => {
@@ -140,15 +200,27 @@ export const AllPostsScreen = () => {
   const handleOpenPost = (id: string) => {
     navigation.navigate("Post", { id });
   };
+
+  const handleOpenCommunity = (id: string) => {
+    navigation.navigate("Community", { id });
+  };
+
   const handleOpenNotifications = () => {
     navigation.navigate("Notifications");
   };
 
   const toggleLike = (postId: string, currentLikeState: boolean) => {
-    setPostLike.mutate({
+    const input = {
       postId,
       isLikedByMe: !currentLikeState,
-    });
+    };
+
+    if (isFeedTab) {
+      setFeedPostLike.mutate(input);
+      return;
+    }
+
+    setSubscribedPostLike.mutate(input);
   };
 
   const openImageViewer = (images: string[], index: number) => {
@@ -202,11 +274,16 @@ export const AllPostsScreen = () => {
     </View>
   );
 
-  const renderItem = ({ item: post }: { item: (typeof posts)[number] }) => {
+  const renderItem = ({
+    item: post,
+  }: {
+    item: (typeof activePosts)[number];
+  }) => {
     return (
       <PostCard
         post={post}
         onOpenPost={handleOpenPost}
+        onOpenCommunity={handleOpenCommunity}
         onToggleLike={toggleLike}
         onOpenImageViewer={openImageViewer}
       />
@@ -214,11 +291,11 @@ export const AllPostsScreen = () => {
   };
 
   const renderEmpty = () => {
-    if (activeTab === "subs") {
+    if (!isFeedTab) {
       return (
         <View style={styles.emptyContainer}>
-          <Text style={typography.h2_white100}>
-            Модуль находится в разработке ✨
+          <Text style={typography.body_white85}>
+            Подпишитесь на сообщества, чтобы видеть их посты
           </Text>
         </View>
       );
@@ -233,7 +310,7 @@ export const AllPostsScreen = () => {
     );
   };
 
-  if (isLoading) {
+  if (activeIsLoading) {
     return (
       <View style={styles.centered}>
         <Text>Loading...</Text>
@@ -242,10 +319,10 @@ export const AllPostsScreen = () => {
     );
   }
 
-  if (error || !data) {
+  if (activeError) {
     return (
       <View style={styles.centered}>
-        <Text>Error: {error?.message ?? "Unknown error"}</Text>
+        <Text>Error: {activeError.message ?? "Unknown error"}</Text>
         <StatusBar style="auto" />
       </View>
     );
@@ -258,7 +335,7 @@ export const AllPostsScreen = () => {
     >
       <SafeAreaView style={styles.safeArea}>
         <FlatList
-          data={activeTab === "feed" ? posts : []}
+          data={activePosts}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           ListHeaderComponent={renderHeader}
@@ -273,11 +350,16 @@ export const AllPostsScreen = () => {
             />
           }
           onEndReached={() => {
-            if (!hasNextPage || isFetchingNextPage) {
+            if (!activeHasNextPage || activeIsFetchingNextPage) {
               return;
             }
 
-            fetchNextPage();
+            if (isFeedTab) {
+              feedQuery.fetchNextPage();
+              return;
+            }
+
+            subscribedQuery.fetchNextPage();
           }}
           onEndReachedThreshold={0.15}
         />

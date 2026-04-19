@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { afterAll, beforeEach } from '@jest/globals';
-import { type Post, type User } from '@prisma/client';
-import _ from 'lodash';
+import { afterAll, beforeEach } from "@jest/globals";
+import { type Post, type User } from "@prisma/client";
+import _ from "lodash";
 
-import { createAppContext } from '../lib/ctx';
-import { env } from '../lib/env';
-import { getTrpcContext } from '../lib/trpc';
-import { trpcRouter } from '../router';
-import { deepMap } from '../utils/deepMap';
-import { getPasswordHash } from '../utils/getPasswordHash';
-import { type ExpressRequest } from '../utils/types';
+import { createAppContext } from "../lib/ctx";
+import { env } from "../lib/env";
+import { getTrpcContext } from "../lib/trpc";
+import { trpcRouter } from "../router";
+import { deepMap } from "../utils/deepMap";
+import { getPasswordHash } from "../utils/getPasswordHash";
+import { type ExpressRequest } from "../utils/types";
 
 export const appContext = createAppContext();
 
-if (env.NODE_ENV !== 'test') {
-  throw new Error('Integration tests should be run with NODE_ENV=test');
+if (env.NODE_ENV !== "test") {
+  throw new Error("Integration tests should be run with NODE_ENV=test");
 }
 
 afterAll(appContext.stop);
@@ -23,7 +23,10 @@ beforeEach(async () => {
   await appContext.prisma.notification.deleteMany();
   await appContext.prisma.comment.deleteMany();
   await appContext.prisma.postLike.deleteMany();
+  await appContext.prisma.communitySubscription.deleteMany();
+  await appContext.prisma.communityMember.deleteMany();
   await appContext.prisma.post.deleteMany();
+  await appContext.prisma.community.deleteMany();
   await appContext.prisma.user.deleteMany();
 });
 
@@ -62,8 +65,8 @@ export const createUser = async ({
       nickname: `user${number}`,
       name: `User ${number}`,
       email: `user${number}@example.com`,
-      password: getPasswordHash(safeUser.password || '1234'),
-      ..._.omit(safeUser, ['password']),
+      password: getPasswordHash(safeUser.password || "1234"),
+      ..._.omit(safeUser, ["password"]),
     },
   });
 };
@@ -74,7 +77,7 @@ export const createPost = async ({
   number = 1,
 }: {
   post?: Partial<Post>;
-  author: Pick<User, 'id'>;
+  author: Pick<User, "id">;
   number?: number;
 }) => {
   return await appContext.prisma.post.create({
@@ -119,8 +122,8 @@ export const createPostLike = async ({
   liker,
   createdAt,
 }: {
-  post: Pick<Post, 'id'>;
-  liker: Pick<User, 'id'>;
+  post: Pick<Post, "id">;
+  liker: Pick<User, "id">;
   createdAt?: Date;
 }) => {
   return await appContext.prisma.postLike.create({

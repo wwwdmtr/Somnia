@@ -9,19 +9,22 @@ datasource db {
 }
 
 model User {
-    id                    String           @id @default(uuid())
-    nickname              String           @unique
-    email                 String           @unique
-    name                  String           @default("")
-    password              String
-    avatar                String?
-    createdAt             DateTime         @default(now())
-    posts                 Post[]
-    comments              Comment[]
-    postLikes             PostLike[]
-    sentNotifications     Notification[]   @relation("NotificationActor")
-    receivedNotifications Notification[]   @relation("NotificationRecipient")
-    permissions           UserPermission[]
+    id                     String                  @id @default(uuid())
+    nickname               String                  @unique
+    email                  String                  @unique
+    name                   String                  @default("")
+    password               String
+    avatar                 String?
+    createdAt              DateTime                @default(now())
+    posts                  Post[]
+    comments               Comment[]
+    postLikes              PostLike[]
+    sentNotifications      Notification[]          @relation("NotificationActor")
+    receivedNotifications  Notification[]          @relation("NotificationRecipient")
+    permissions            UserPermission[]
+    ownedCommunities       Community[]             @relation("CommunityOwner")
+    communityMemberships   CommunityMember[]
+    communitySubscriptions CommunitySubscription[]
 }
 
 enum UserPermission {
@@ -30,19 +33,77 @@ enum UserPermission {
 }
 
 model Post {
-    id            String         @id @default(uuid())
-    seq           Int            @unique @default(autoincrement())
-    title         String
-    description   String
-    text          String
-    images        String[]
-    createdAt     DateTime       @default(now())
-    authorId      String
-    author        User           @relation(fields: [authorId], references: [id])
-    comments      Comment[]
-    postLikes     PostLike[]
-    notifications Notification[]
-    deletedAt     DateTime?
+    id                   String            @id @default(uuid())
+    seq                  Int               @unique @default(autoincrement())
+    title                String
+    description          String
+    text                 String
+    images               String[]
+    createdAt            DateTime          @default(now())
+    authorId             String
+    author               User              @relation(fields: [authorId], references: [id])
+    publisherType        PostPublisherType @default(USER)
+    publisherCommunityId String?
+    publisherCommunity   Community?        @relation("CommunityPosts", fields: [publisherCommunityId], references: [id], onDelete: SetNull)
+    comments             Comment[]
+    postLikes            PostLike[]
+    notifications        Notification[]
+    deletedAt            DateTime?
+
+    @@index([publisherType, seq])
+    @@index([publisherCommunityId])
+}
+
+enum PostPublisherType {
+    USER
+    COMMUNITY
+}
+
+model Community {
+    id            String                  @id @default(uuid())
+    name          String                  @unique
+    description   String                  @default("")
+    avatar        String?
+    createdAt     DateTime                @default(now())
+    ownerId       String
+    owner         User                    @relation("CommunityOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+    members       CommunityMember[]
+    subscriptions CommunitySubscription[]
+    posts         Post[]                  @relation("CommunityPosts")
+}
+
+enum CommunityMemberRole {
+    OWNER
+    MODERATOR
+    MEMBER
+}
+
+model CommunityMember {
+    id          String              @id @default(uuid())
+    createdAt   DateTime            @default(now())
+    updatedAt   DateTime            @updatedAt
+    role        CommunityMemberRole
+    userId      String
+    communityId String
+    user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+    community   Community           @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+    @@unique([communityId, userId])
+    @@index([userId])
+    @@index([communityId, role])
+}
+
+model CommunitySubscription {
+    id          String    @id @default(uuid())
+    createdAt   DateTime  @default(now())
+    userId      String
+    communityId String
+    user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+    @@unique([communityId, userId])
+    @@index([userId, createdAt])
+    @@index([communityId])
 }
 
 model PostLike {

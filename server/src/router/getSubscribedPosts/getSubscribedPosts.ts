@@ -2,16 +2,40 @@ import _ from "lodash";
 
 import { trpcLoggedProcedure } from "../../lib/trpc";
 
-import { zGetDeletedPostsTrpcInput } from "./input";
+import { zGetSubscribedPostsTrpcInput } from "./input";
 
-export const getDeletedPostsTrpcRoute = trpcLoggedProcedure
-  .input(zGetDeletedPostsTrpcInput)
+export const getSubscribedPostsTrpcRoute = trpcLoggedProcedure
+  .input(zGetSubscribedPostsTrpcInput)
   .query(async ({ ctx, input }) => {
-    const userId = ctx.me?.id;
+    if (!ctx.me) {
+      throw new Error("Unauthorized");
+    }
 
     const rawPosts = await ctx.prisma.post.findMany({
       where: {
-        deletedAt: { not: null },
+        deletedAt: null,
+        publisherType: "COMMUNITY",
+        publisherCommunity: {
+          OR: [
+            {
+              subscriptions: {
+                some: {
+                  userId: ctx.me.id,
+                },
+              },
+            },
+            {
+              members: {
+                some: {
+                  userId: ctx.me.id,
+                  role: {
+                    in: ["OWNER", "MODERATOR"],
+                  },
+                },
+              },
+            },
+          ],
+        },
       },
       take: input.limit + 1,
       ...(input.cursor && {
@@ -37,14 +61,12 @@ export const getDeletedPostsTrpcRoute = trpcLoggedProcedure
             avatar: true,
           },
         },
-
         author: {
           select: {
             nickname: true,
             avatar: true,
           },
         },
-
         _count: {
           select: {
             postLikes: true,
@@ -53,17 +75,14 @@ export const getDeletedPostsTrpcRoute = trpcLoggedProcedure
             },
           },
         },
-
-        postLikes: userId
-          ? {
-              where: {
-                userId,
-              },
-              select: {
-                id: true,
-              },
-            }
-          : false,
+        postLikes: {
+          where: {
+            userId: ctx.me.id,
+          },
+          select: {
+            id: true,
+          },
+        },
       },
     });
 
