@@ -2,7 +2,7 @@ import { zUpadteProfileTrpcInput } from "@somnia/shared/src/router/updateProfile
 import { TRPCClientError } from "@trpc/client";
 import { useFormik } from "formik";
 import React from "react";
-import { View, TextInput, Text } from "react-native";
+import { View, TextInput, Text, Platform } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
@@ -106,6 +106,7 @@ const styles = {
     borderRadius: 99,
     borderWidth: 1,
     color: COLORS.white100,
+    ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
 
     padding: 11,
   },

@@ -2,7 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { zCreateCommentTrpcInput } from "@somnia/shared/src/router/createComment/input";
 import { useFormik } from "formik";
 import React, { useEffect } from "react";
-import { View, TextInput, Text, TouchableOpacity } from "react-native";
+import {
+  View,
+  TextInput,
+  Text,
+  TouchableOpacity,
+  Platform,
+} from "react-native";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
 import { trpc } from "../../lib/trpc";
@@ -134,6 +140,7 @@ const styles = {
     minHeight: 48,
     maxHeight: 140,
     color: COLORS.white100,
+    ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
     textAlignVertical: "top" as const,
   },
   inputError: {

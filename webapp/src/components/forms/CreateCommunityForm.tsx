@@ -1,7 +1,14 @@
 import { zCreateCommunityTrpcInput } from "@somnia/shared/src/router/createCommunity/input";
 import { useFormik } from "formik";
 import React, { useState } from "react";
-import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Platform,
+} from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
@@ -247,6 +254,7 @@ const styles = {
     backgroundColor: COLORS.postsCardBackground,
     borderRadius: 20,
     color: COLORS.white100,
+    ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
     minHeight: 110,
     padding: 16,
     textAlignVertical: "top" as const,
@@ -259,6 +267,7 @@ const styles = {
     backgroundColor: COLORS.postsCardBackground,
     borderRadius: 32,
     color: COLORS.white100,
+    ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
     height: 60,
     padding: 20,
   },

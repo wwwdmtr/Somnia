@@ -2,7 +2,7 @@ import { useNavigation } from "@react-navigation/native";
 import { zCreatePostTrpcInput } from "@somnia/shared/src/router/createPost/input";
 import { useFormik } from "formik";
 import React, { useState } from "react";
-import { View, TextInput, Text } from "react-native";
+import { View, TextInput, Text, Platform } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
@@ -263,6 +263,7 @@ const styles = {
     backgroundColor: COLORS.postsCardBackground,
     height: 60,
     color: COLORS.white100,
+    ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
     flexShrink: 0,
   },
   textArea: {

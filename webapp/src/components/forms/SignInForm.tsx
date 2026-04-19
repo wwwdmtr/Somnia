@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { zSignInTrpcInput } from "@somnia/shared/src/router/signIn/input";
 import { useFormik } from "formik";
 import React from "react";
-import { View, TextInput, Text, Pressable } from "react-native";
+import { View, TextInput, Text, Pressable, Platform } from "react-native";
 import { StyleSheet } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
@@ -134,6 +134,7 @@ const styles = StyleSheet.create({
     borderRadius: 99,
     borderWidth: 1,
     color: COLORS.white100,
+    ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
     marginBottom: 28,
     marginTop: 12,
     padding: 11,
