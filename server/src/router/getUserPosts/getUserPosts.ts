@@ -31,10 +31,23 @@ export const getUserPostsTrpcRoute = trpcLoggedProcedure
         deletedAt: null,
         publisherType: "USER",
       },
+      take: input.limit + 1,
+      ...(input.cursor && {
+        cursor: { seq: input.cursor },
+        skip: 1,
+      }),
       orderBy: {
-        createdAt: "desc",
+        seq: "desc",
       },
-      include: {
+      select: {
+        id: true,
+        seq: true,
+        title: true,
+        description: true,
+        text: true,
+        images: true,
+        createdAt: true,
+        publisherType: true,
         publisherCommunity: {
           select: {
             id: true,
@@ -68,6 +81,12 @@ export const getUserPostsTrpcRoute = trpcLoggedProcedure
       },
     });
 
+    let nextCursor: number | null = null;
+    if (rawPosts.length > input.limit) {
+      rawPosts.pop();
+      nextCursor = rawPosts[rawPosts.length - 1]?.seq ?? null;
+    }
+
     const posts = rawPosts.map((post) => ({
       ..._.omit(post, ["_count", "postLikes"]),
       commentsCount: post._count.comments,
@@ -75,5 +94,5 @@ export const getUserPostsTrpcRoute = trpcLoggedProcedure
       isLikedByMe: post.postLikes.length > 0,
     }));
 
-    return { posts };
+    return { posts, nextCursor };
   });

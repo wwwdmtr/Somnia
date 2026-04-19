@@ -161,6 +161,7 @@ enum NotificationType {
     POST_LIKED
     POST_COMMENTED
     COMMENT_REPLIED
+    USER_FOLLOWED
 }
 
 model Notification {
@@ -175,8 +176,8 @@ model Notification {
     actorId String
     actor   User   @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
 
-    postId String
-    post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+    postId String?
+    post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
 
     commentId String?
     comment   Comment? @relation(fields: [commentId], references: [id], onDelete: SetNull)

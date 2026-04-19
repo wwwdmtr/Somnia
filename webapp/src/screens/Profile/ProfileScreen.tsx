@@ -8,7 +8,7 @@ import {
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { isUserAdmin } from "@somnia/shared/src/utils/can";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -62,6 +62,9 @@ type ProfileScreenNavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<RootStackParamList>
 >;
 
+const PROFILE_POSTS_LIMIT = 15;
+const MAX_INFINITE_PAGES = 10;
+
 export const ProfileScreen = () => {
   const route = useRoute<ProfileRouteProp>();
   const { me, isLoading: isMeLoading } = useAppContext();
@@ -91,14 +94,18 @@ export const ProfileScreen = () => {
     },
   );
 
-  const postsQuery = trpc.getUserPosts.useQuery(
-    {
+  const postsQueryKey = useMemo(
+    () => ({
       userId: targetUserId,
-    },
-    {
-      enabled: Boolean(targetUserId),
-    },
+      limit: PROFILE_POSTS_LIMIT,
+    }),
+    [targetUserId],
   );
+  const postsQuery = trpc.getUserPosts.useInfiniteQuery(postsQueryKey, {
+    enabled: Boolean(targetUserId),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    maxPages: MAX_INFINITE_PAGES,
+  });
 
   const setUserFollow = trpc.setUserFollow.useMutation({
     onSuccess: async () => {
@@ -113,34 +120,40 @@ export const ProfileScreen = () => {
   });
 
   type UserPostsData = NonNullable<
-    ReturnType<typeof utils.getUserPosts.getData>
+    ReturnType<typeof utils.getUserPosts.getInfiniteData>
   >;
 
   const setPostLike = usePostLikeMutation<UserPostsData>({
     applyOptimistic: (old, variables) => {
-      if (!old?.posts) {
+      if (!old) {
         return old;
       }
 
       return {
         ...old,
-        posts: applyOptimisticLikeToPosts(old.posts, variables),
+        pages: old.pages.map((page) => ({
+          ...page,
+          posts: applyOptimisticLikeToPosts(page.posts, variables),
+        })),
       };
     },
     applyServer: (old, likeData) => {
-      if (!old?.posts) {
+      if (!old) {
         return old;
       }
 
       return {
         ...old,
-        posts: applyServerLikeToPosts(old.posts, likeData),
+        pages: old.pages.map((page) => ({
+          ...page,
+          posts: applyServerLikeToPosts(page.posts, likeData),
+        })),
       };
     },
-    cancel: () => utils.getUserPosts.cancel({ userId: targetUserId }),
-    getData: () => utils.getUserPosts.getData({ userId: targetUserId }),
+    cancel: () => utils.getUserPosts.cancel(postsQueryKey),
+    getData: () => utils.getUserPosts.getInfiniteData(postsQueryKey),
     setData: (updater) =>
-      utils.getUserPosts.setData({ userId: targetUserId }, updater),
+      utils.getUserPosts.setInfiniteData(postsQueryKey, updater),
   });
 
   const toggleLike = (postId: string, currentLikeState: boolean) => {
@@ -183,7 +196,16 @@ export const ProfileScreen = () => {
     navigation.push(ScreenName.Profile, { userId });
   };
 
-  if (isMeLoading || profileQuery.isLoading || postsQuery.isLoading) {
+  const posts = useMemo(
+    () => postsQuery.data?.pages.flatMap((page) => page.posts) ?? [],
+    [postsQuery.data],
+  );
+
+  if (
+    isMeLoading ||
+    profileQuery.isLoading ||
+    (postsQuery.isLoading && !postsQuery.data)
+  ) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator color={COLORS.white85} size="large" />
@@ -206,8 +228,6 @@ export const ProfileScreen = () => {
   }
 
   const profile = profileQuery.data.profile;
-  const posts = postsQuery.data?.posts ?? [];
-
   const renderHeader = () => (
     <View style={styles.header}>
       {shouldShowBackButton ? (
@@ -344,6 +364,20 @@ export const ProfileScreen = () => {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           ListHeaderComponent={renderHeader}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={typography.body_white85}>
+                У пользователя пока нет постов
+              </Text>
+            </View>
+          }
+          ListFooterComponent={
+            postsQuery.isFetchingNextPage ? (
+              <View style={styles.footerLoader}>
+                <ActivityIndicator color={COLORS.white85} />
+              </View>
+            ) : null
+          }
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
           refreshControl={
@@ -353,6 +387,14 @@ export const ProfileScreen = () => {
               tintColor="#ffffff"
             />
           }
+          onEndReached={() => {
+            if (!postsQuery.hasNextPage || postsQuery.isFetchingNextPage) {
+              return;
+            }
+
+            postsQuery.fetchNextPage();
+          }}
+          onEndReachedThreshold={0.2}
         />
 
         <PostImageViewerModal
@@ -390,6 +432,10 @@ const styles = StyleSheet.create({
     height: 24,
     width: 24,
   },
+  emptyState: {
+    alignItems: "center",
+    marginTop: 24,
+  },
   followButton: {
     alignItems: "center",
     backgroundColor: COLORS.buttonBackground,
@@ -403,6 +449,10 @@ const styles = StyleSheet.create({
     color: COLORS.white100,
     fontSize: 14,
     lineHeight: 20,
+  },
+  footerLoader: {
+    alignItems: "center",
+    marginVertical: 12,
   },
   goBackWrapper: {
     alignItems: "center",

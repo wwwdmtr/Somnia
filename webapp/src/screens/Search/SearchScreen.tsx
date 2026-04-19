@@ -38,6 +38,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type NavigationProp = NativeStackNavigationProp<SearchStackParamList, "Search">;
 type Period = "day" | "week" | "month" | "all";
+const MAX_INFINITE_PAGES = 10;
 
 const PERIOD_LABELS: Record<Period, string> = {
   day: "За день",
@@ -109,6 +110,7 @@ export const SearchScreen = () => {
 
   const query = trpc.getRatedPosts.useInfiniteQuery(queryKey, {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+    maxPages: MAX_INFINITE_PAGES,
 
     placeholderData: (prev) => prev,
   });

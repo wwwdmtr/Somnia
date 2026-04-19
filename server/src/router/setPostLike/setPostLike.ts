@@ -17,6 +17,7 @@ export const setPostLikeTrpcRoute = trpcLoggedProcedure
       select: {
         id: true,
         authorId: true,
+        publisherType: true,
       },
     });
 
@@ -43,7 +44,7 @@ export const setPostLikeTrpcRoute = trpcLoggedProcedure
           },
         });
 
-        if (post.authorId !== ctx.me.id) {
+        if (post.authorId !== ctx.me.id && post.publisherType !== "COMMUNITY") {
           await ctx.prisma.notification.create({
             data: {
               type: "POST_LIKED",

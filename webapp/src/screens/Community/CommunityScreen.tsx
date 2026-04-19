@@ -34,6 +34,8 @@ import type { SearchStackParamList } from "../../navigation/SearchStackParamList
 import type { RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
+const MAX_INFINITE_PAGES = 10;
+
 type CommunityRouteParams = {
   [ScreenName.Community]: {
     id: string;
@@ -75,6 +77,7 @@ export const CommunityScreen = () => {
 
   const postsQuery = trpc.getCommunityPosts.useInfiniteQuery(postsQueryKey, {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+    maxPages: MAX_INFINITE_PAGES,
   });
   const setCommunitySubscription = trpc.setCommunitySubscription.useMutation({
     onSuccess: async () => {

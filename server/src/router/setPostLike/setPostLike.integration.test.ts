@@ -128,4 +128,36 @@ describe("setPostLike", () => {
       await appContext.prisma.notification.findMany();
     expect(notificationsAfterUnlike).toHaveLength(0);
   });
+
+  it("does not create like notification for community post", async () => {
+    const author = await createUser({ number: 40 });
+    const liker = await createUser({ number: 41 });
+    const trpcCallerForLiker = getTrpcCaller(liker);
+
+    const community = await appContext.prisma.community.create({
+      data: {
+        name: "Community 40",
+        ownerId: author.id,
+      },
+    });
+
+    const post = await appContext.prisma.post.create({
+      data: {
+        authorId: author.id,
+        title: "Community post",
+        description: "Community post description",
+        text: "Community post text",
+        publisherType: "COMMUNITY",
+        publisherCommunityId: community.id,
+      },
+    });
+
+    await trpcCallerForLiker.setPostLike({
+      postId: post.id,
+      isLikedByMe: true,
+    });
+
+    const notifications = await appContext.prisma.notification.findMany();
+    expect(notifications).toHaveLength(0);
+  });
 });

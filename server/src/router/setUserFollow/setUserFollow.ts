@@ -28,6 +28,18 @@ export const setUserFollowTrpcRoute = trpcLoggedProcedure
     }
 
     if (input.isFollowing) {
+      const existingFollow = await ctx.prisma.userFollow.findUnique({
+        where: {
+          followerId_followingId: {
+            followerId: ctx.me.id,
+            followingId: input.userId,
+          },
+        },
+        select: {
+          id: true,
+        },
+      });
+
       await ctx.prisma.userFollow.upsert({
         where: {
           followerId_followingId: {
@@ -41,6 +53,16 @@ export const setUserFollowTrpcRoute = trpcLoggedProcedure
         },
         update: {},
       });
+
+      if (!existingFollow) {
+        await ctx.prisma.notification.create({
+          data: {
+            type: "USER_FOLLOWED",
+            recipientId: input.userId,
+            actorId: ctx.me.id,
+          },
+        });
+      }
 
       return {
         userId: input.userId,

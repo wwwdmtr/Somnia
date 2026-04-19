@@ -34,6 +34,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type NavigationProp = NativeStackNavigationProp<FeedStackParamList, "Feed">;
 const FEED_QUERY_KEY = { limit: 15 };
+const MAX_INFINITE_PAGES = 10;
 
 export const AllPostsScreen = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -64,6 +65,7 @@ export const AllPostsScreen = () => {
 
   const feedQuery = trpc.getPosts.useInfiniteQuery(FEED_QUERY_KEY, {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+    maxPages: MAX_INFINITE_PAGES,
   });
 
   const subscribedQuery = trpc.getSubscribedPosts.useInfiniteQuery(
@@ -71,6 +73,7 @@ export const AllPostsScreen = () => {
     {
       enabled: isAuthorized && activeTab === "subs",
       getNextPageParam: (lastPage) => lastPage.nextCursor,
+      maxPages: MAX_INFINITE_PAGES,
     },
   );
 

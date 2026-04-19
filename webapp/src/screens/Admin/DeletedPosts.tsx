@@ -27,6 +27,7 @@ type NavigationProp = NativeStackNavigationProp<
   AdminStackParamList,
   ScreenName.DeletedPosts
 >;
+const MAX_INFINITE_PAGES = 10;
 
 // Если хочешь — можешь принимать пропсы/навигацию и открывать Post
 export const DeletedPostsScreen = () => {
@@ -49,6 +50,7 @@ export const DeletedPostsScreen = () => {
     {
       // ВАЖНО: твой эндпоинт возвращает nextCursor
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      maxPages: MAX_INFINITE_PAGES,
       // по желанию, чтобы не дёргать лишний раз
       staleTime: 10_000,
     },

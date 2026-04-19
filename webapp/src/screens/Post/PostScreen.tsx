@@ -52,6 +52,7 @@ type PostScreenNavProp = NativeStackNavigationProp<
   PostScreenStackParamList,
   ScreenName.Post
 >;
+const MAX_INFINITE_PAGES = 10;
 
 type Comment = {
   id: string;
@@ -129,6 +130,7 @@ export const PostScreen = () => {
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
+      maxPages: MAX_INFINITE_PAGES,
     },
   );
 

@@ -24,13 +24,14 @@ type NavigationProp = NativeStackNavigationProp<
   FeedStackParamList,
   "Notifications"
 >;
+const MAX_INFINITE_PAGES = 10;
 
 type NotificationItem = {
   id: string;
-  type: "POST_LIKED" | "POST_COMMENTED" | "COMMENT_REPLIED";
+  type: "POST_LIKED" | "POST_COMMENTED" | "COMMENT_REPLIED" | "USER_FOLLOWED";
   createdAt: Date;
   readAt: Date | null;
-  postId: string;
+  postId: string | null;
   actor: {
     id: string;
     nickname: string;
@@ -39,7 +40,7 @@ type NotificationItem = {
   post: {
     id: string;
     title: string;
-  };
+  } | null;
 };
 
 const getNotificationText = (notification: NotificationItem) => {
@@ -49,6 +50,10 @@ const getNotificationText = (notification: NotificationItem) => {
 
   if (notification.type === "POST_COMMENTED") {
     return `@${notification.actor.nickname} прокомментировал(а) ваш пост`;
+  }
+
+  if (notification.type === "USER_FOLLOWED") {
+    return `@${notification.actor.nickname} подписался(ась) на вас`;
   }
 
   return `@${notification.actor.nickname} ответил(а) на ваш комментарий`;
@@ -71,6 +76,7 @@ export const NotificationsScreen = () => {
     { limit: 20 },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
+      maxPages: MAX_INFINITE_PAGES,
     },
   );
 
@@ -116,9 +122,17 @@ export const NotificationsScreen = () => {
     await utils.getUnreadNotificationsCount.invalidate();
   }, [unreadNotifications.length, markAllNotificationsRead, utils]);
 
-  const handleOpenPost = async (postId: string) => {
+  const handleOpenNotification = async (notification: NotificationItem) => {
     await markAllRead();
-    navigation.navigate("Post", { id: postId });
+
+    if (notification.type === "USER_FOLLOWED") {
+      navigation.navigate("Profile", { userId: notification.actor.id });
+      return;
+    }
+
+    if (notification.postId) {
+      navigation.navigate("Post", { id: notification.postId });
+    }
   };
 
   const handleGoBack = async () => {
@@ -194,7 +208,7 @@ export const NotificationsScreen = () => {
             )}
             renderItem={({ item }) => (
               <TouchableOpacity
-                onPress={() => handleOpenPost(item.postId)}
+                onPress={() => handleOpenNotification(item)}
                 style={[
                   styles.card,
                   !item.readAt ? styles.cardUnread : styles.cardRead,
@@ -203,9 +217,15 @@ export const NotificationsScreen = () => {
                 <Text style={typography.body_white85}>
                   {getNotificationText(item)}
                 </Text>
-                <Text style={typography.caption_white85} numberOfLines={1}>
-                  Пост: {item.post.title}
-                </Text>
+                {item.post ? (
+                  <Text style={typography.caption_white85} numberOfLines={1}>
+                    Пост: {item.post.title}
+                  </Text>
+                ) : (
+                  <Text style={typography.caption_white85} numberOfLines={1}>
+                    Нажмите, чтобы открыть профиль
+                  </Text>
+                )}
                 <Text style={typography.additionalInfo_white25}>
                   {format(new Date(item.createdAt), "dd.MM.yyyy HH:mm")}
                 </Text>

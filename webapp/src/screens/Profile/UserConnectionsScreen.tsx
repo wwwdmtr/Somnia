@@ -28,6 +28,8 @@ import type { SearchStackParamList } from "../../navigation/SearchStackParamList
 import type { RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
+const MAX_INFINITE_PAGES = 10;
+
 type UserConnectionsRouteParams = {
   [ScreenName.UserConnections]: {
     userId: string;
@@ -65,6 +67,7 @@ export const UserConnectionsScreen = () => {
 
   const followsQuery = trpc.getUserFollows.useInfiniteQuery(followsQueryKey, {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+    maxPages: MAX_INFINITE_PAGES,
   });
 
   const setUserFollow = trpc.setUserFollow.useMutation({
