@@ -7,7 +7,7 @@ import {
   useFocusEffect,
 } from "@react-navigation/native";
 import { getCloudinaryUploadUrl } from "@somnia/shared/src/cloudinary/cloudinary";
-import { canDeletePost, isUserAdmin } from "@somnia/shared/src/utils/can";
+import { isUserAdmin } from "@somnia/shared/src/utils/can";
 import { format } from "date-fns/format";
 import { StatusBar } from "expo-status-bar";
 import { useState, useCallback } from "react";
@@ -102,7 +102,6 @@ export const PostScreen = () => {
     index: 0,
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const deletePost = trpc.deletePost.useMutation();
   const undoDeletePost = trpc.undoDeletePost.useMutation();
 
   type PostData = NonNullable<ReturnType<typeof utils.getPost.getData>>;
@@ -441,26 +440,34 @@ export const PostScreen = () => {
       post.publisherType === "COMMUNITY" && Boolean(post.publisherCommunity);
     const headerName =
       isCommunityPost && post.publisherCommunity
-        ? post.publisherCommunity.name
-        : `@${post.author.nickname}`;
+        ? post.author
+          ? `${post.publisherCommunity.name} • @${post.author.nickname}`
+          : post.publisherCommunity.name
+        : post.author
+          ? `@${post.author.nickname}`
+          : "Пользователь";
     const headerAvatar =
       isCommunityPost && post.publisherCommunity
         ? post.publisherCommunity.avatar
-        : post.author.avatar;
+        : post.author?.avatar;
 
     return (
       <View>
         <View style={styles.card}>
           <TouchableOpacity
             style={styles.postHeader}
-            disabled={false}
+            disabled={
+              isCommunityPost ? !post.publisherCommunity : !post.author?.id
+            }
             onPress={() => {
               if (isCommunityPost && post.publisherCommunity) {
                 handleOpenCommunity(post.publisherCommunity.id);
                 return;
               }
 
-              handleOpenProfile(post.author.id);
+              if (post.author?.id) {
+                handleOpenProfile(post.author.id);
+              }
             }}
           >
             <Image
@@ -589,55 +596,6 @@ export const PostScreen = () => {
   }
   const post = data.post;
 
-  const onDeletePress = () => {
-    const postId = String(post.id);
-
-    const executeDeletePost = async () => {
-      try {
-        await deletePost.mutateAsync({ postId });
-
-        utils.getPosts.invalidate();
-        utils.getMyPosts.invalidate();
-        utils.getUserPosts.invalidate();
-        utils.getRatedPosts.invalidate();
-        navigation.goBack();
-      } catch (error) {
-        Alert.alert(
-          "Ошибка",
-          error instanceof Error ? error.message : "Не удалось удалить пост",
-        );
-      }
-    };
-
-    if (Platform.OS === "web") {
-      const shouldDelete =
-        typeof window !== "undefined"
-          ? window.confirm("Удалить пост? Пост будет скрыт (soft delete).")
-          : true;
-      if (!shouldDelete) {
-        return;
-      }
-      void executeDeletePost();
-      return;
-    }
-
-    Alert.alert(
-      "Удалить пост?",
-      "Пост будет скрыт (soft delete).",
-      [
-        { text: "Отмена", style: "cancel" },
-        {
-          text: "Удалить",
-          style: "destructive",
-          onPress: () => {
-            void executeDeletePost();
-          },
-        },
-      ],
-      { cancelable: true },
-    );
-  };
-
   const onUndoDeletePress = () => {
     const postId = String(post.id);
 
@@ -705,7 +663,7 @@ export const PostScreen = () => {
             <Text style={typography.body_white85}>Назад</Text>
           </TouchableOpacity>
 
-          {me?.id === post.author.id && (
+          {post.canEditByMe && (
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate(ScreenName.EditPost, {
@@ -714,14 +672,6 @@ export const PostScreen = () => {
               }
             >
               <Ionicons name="create-outline" size={24} color="white" />
-            </TouchableOpacity>
-          )}
-          {canDeletePost(me) && post.deletedAt == null && (
-            <TouchableOpacity
-              onPress={onDeletePress}
-              disabled={deletePost.isPending}
-            >
-              <Ionicons name="trash-outline" size={24} color="white" />
             </TouchableOpacity>
           )}
 

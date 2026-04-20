@@ -182,7 +182,9 @@ export const DeletedPostsScreen = () => {
               color="rgba(255,255,255,0.45)"
             />
             <Text style={typography.caption_white85}>
-              @{post.author.nickname}
+              {post.author?.nickname
+                ? `@${post.author.nickname}`
+                : "Автор скрыт"}
             </Text>
           </View>
 

@@ -3,7 +3,6 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
-import { canDeleteThisPost } from "@somnia/shared/src/utils/can";
 import {
   Alert,
   ImageBackground,
@@ -20,7 +19,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { UpdatePostForms } from "../../components/forms/UpdatePostForm";
 import ScreenName from "../../constants/ScreenName";
-import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
 
@@ -39,7 +37,6 @@ type EditPostNavProp = NativeStackNavigationProp<
 export const UpdatePostScreen = () => {
   const route = useRoute<EditPostRouteProp>();
   const navigation = useNavigation<EditPostNavProp>();
-  const me = useMe();
   const utils = trpc.useUtils();
 
   const { data, isLoading, error } = trpc.getPost.useQuery({
@@ -77,7 +74,7 @@ export const UpdatePostScreen = () => {
     if (!data?.post) {
       return;
     }
-    if (!canDeleteThisPost(me, { authorId: data.post.authorId })) {
+    if (!data.post.canDeleteByMe) {
       Alert.alert("Нет прав", "Вы не можете удалить этот пост.");
       return;
     }
@@ -163,9 +160,7 @@ export const UpdatePostScreen = () => {
                 name="trash-outline"
                 size={20}
                 color={
-                  canDeleteThisPost(me, { authorId: data.post.authorId })
-                    ? COLORS.white85
-                    : COLORS.white25
+                  data.post.canDeleteByMe ? COLORS.white85 : COLORS.white25
                 }
               />
             </Pressable>

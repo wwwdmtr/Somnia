@@ -9,6 +9,7 @@ export type AdminStackParamList = {
       }
     | undefined;
   [ScreenName.Community]: { id: string };
+  [ScreenName.UpdateCommunity]: { id: string };
   [ScreenName.UserConnections]: {
     userId: string;
     type: "followers" | "following";

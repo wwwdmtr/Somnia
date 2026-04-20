@@ -9,6 +9,7 @@ export const getCommunityPostsTrpcRoute = trpcLoggedProcedure
   .input(zGetCommunityPostsTrpcInput)
   .query(async ({ ctx, input }) => {
     const userId = ctx.me?.id;
+    let canSeeCommunityAuthor = false;
 
     const community = await ctx.prisma.community.findUnique({
       where: {
@@ -21,6 +22,23 @@ export const getCommunityPostsTrpcRoute = trpcLoggedProcedure
 
     if (!community) {
       throw new ExpectedError("Сообщество не найдено");
+    }
+
+    if (userId) {
+      const membership = await ctx.prisma.communityMember.findUnique({
+        where: {
+          communityId_userId: {
+            communityId: input.communityId,
+            userId,
+          },
+        },
+        select: {
+          role: true,
+        },
+      });
+
+      canSeeCommunityAuthor =
+        membership?.role === "OWNER" || membership?.role === "MODERATOR";
     }
 
     const rawPosts = await ctx.prisma.post.findMany({
@@ -88,7 +106,8 @@ export const getCommunityPostsTrpcRoute = trpcLoggedProcedure
     }
 
     const posts = rawPosts.map((post) => ({
-      ..._.omit(post, ["_count", "postLikes"]),
+      ..._.omit(post, ["_count", "postLikes", "author"]),
+      ...(canSeeCommunityAuthor ? { author: post.author } : {}),
       likesCount: post._count.postLikes,
       commentsCount: post._count.comments,
       isLikedByMe: post.postLikes.length > 0,

@@ -113,7 +113,7 @@ export const AddPostScreen = () => {
         </View>
 
         <View style={styles.addDreamHeader}>
-          <Text style={typography.h2_white85}>Новый сон</Text>
+          <Text style={typography.h2_white85}>Новый пост</Text>
 
           <TouchableOpacity
             style={styles.publisherSwitch}

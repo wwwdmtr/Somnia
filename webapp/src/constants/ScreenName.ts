@@ -8,6 +8,7 @@ export enum ScreenName {
   SignOut = "SignOut",
   EditPost = "EditPost",
   UpdateProfile = "UpdateProfile",
+  UpdateCommunity = "UpdateCommunity",
   Onboarding = "Onboarding",
   SignIn = "SignIn",
   SignUp = "SignUp",

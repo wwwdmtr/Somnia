@@ -5,6 +5,7 @@ export type FeedStackParamList = {
     userId?: string;
   };
   Community: { id: string };
+  UpdateCommunity: { id: string };
   UserConnections: {
     userId: string;
     type: "followers" | "following";

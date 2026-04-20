@@ -17,8 +17,14 @@
   "include": [
     "src/env.ts",
     "src/cloudinary/**/*.ts",
+    "src/router/deleteCommunity/input.ts",
     "src/router/createCommunity/input.ts",
     "src/router/createPost/input.ts",
+    "src/router/getCommunityModeration/input.ts",
+    "src/router/setCommunityAvatar/input.ts",
+    "src/router/setCommunityModerator/input.ts",
+    "src/router/transferCommunityOwnership/input.ts",
+    "src/router/updateCommunity/input.ts",
     "src/router/updatePost/input.ts"
   ],
   "exclude": ["dist"]

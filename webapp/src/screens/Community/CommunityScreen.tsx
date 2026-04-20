@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { useMemo, useState } from "react";
@@ -209,6 +210,22 @@ export const CommunityScreen = () => {
           <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
           <Text style={typography.body_white85}>Назад</Text>
         </TouchableOpacity>
+        {community.myRole === "OWNER" ? (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate(ScreenName.UpdateCommunity, {
+                id: community.id,
+              })
+            }
+            style={styles.settingsButton}
+          >
+            <Ionicons
+              name="settings-outline"
+              size={22}
+              color={COLORS.white85}
+            />
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       <View style={styles.communityCard}>
@@ -382,6 +399,7 @@ const styles = StyleSheet.create({
     borderRadius: 99,
     flexDirection: "row",
     height: 44,
+    justifyContent: "space-between",
     paddingHorizontal: 16,
   },
   headerWrap: {
@@ -401,6 +419,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 28,
     marginTop: 16,
+  },
+  settingsButton: {
+    alignItems: "center",
+    height: 32,
+    justifyContent: "center",
+    width: 32,
   },
   subscribeButton: {
     alignItems: "center",

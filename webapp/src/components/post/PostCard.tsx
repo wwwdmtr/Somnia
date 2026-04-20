@@ -97,7 +97,9 @@ export const PostCard = ({
     post.publisherType === "COMMUNITY" && Boolean(post.publisherCommunity);
   const publisherName =
     isCommunityPost && post.publisherCommunity
-      ? post.publisherCommunity.name
+      ? post.author
+        ? `${post.publisherCommunity.name} • @${post.author.nickname}`
+        : post.publisherCommunity.name
       : post.author
         ? `@${post.author.nickname}`
         : null;

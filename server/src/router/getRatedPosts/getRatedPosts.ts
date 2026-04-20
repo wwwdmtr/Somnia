@@ -8,6 +8,7 @@ export const getRatedPostsTrpcRoute = trpcLoggedProcedure
   .input(zGetRatedPostsTrpcInput)
   .query(async ({ ctx, input }) => {
     const userId = ctx.me?.id;
+    const managedCommunityIds = new Set<string>();
 
     let dateFrom: Date | undefined;
 
@@ -126,12 +127,53 @@ export const getRatedPostsTrpcRoute = trpcLoggedProcedure
       nextCursor = rawPosts[rawPosts.length - 1]?.seq ?? null;
     }
 
-    const posts = rawPosts.map((post) => ({
-      ..._.omit(post, ["_count", "postLikes"]),
-      likesCount: post._count.postLikes,
-      commentsCount: post._count.comments,
-      isLikedByMe: userId ? post.postLikes.length > 0 : false,
-    }));
+    if (userId) {
+      const communityIds = Array.from(
+        new Set(
+          rawPosts
+            .map((post) => post.publisherCommunity?.id)
+            .filter((communityId): communityId is string =>
+              Boolean(communityId),
+            ),
+        ),
+      );
+
+      if (communityIds.length > 0) {
+        const memberships = await ctx.prisma.communityMember.findMany({
+          where: {
+            userId,
+            communityId: {
+              in: communityIds,
+            },
+            role: {
+              in: ["OWNER", "MODERATOR"],
+            },
+          },
+          select: {
+            communityId: true,
+          },
+        });
+
+        memberships.forEach((membership) => {
+          managedCommunityIds.add(membership.communityId);
+        });
+      }
+    }
+
+    const posts = rawPosts.map((post) => {
+      const canSeeCommunityAuthor =
+        post.publisherType !== "COMMUNITY" ||
+        (!!post.publisherCommunity?.id &&
+          managedCommunityIds.has(post.publisherCommunity.id));
+
+      return {
+        ..._.omit(post, ["_count", "postLikes", "author"]),
+        ...(canSeeCommunityAuthor ? { author: post.author } : {}),
+        likesCount: post._count.postLikes,
+        commentsCount: post._count.comments,
+        isLikedByMe: userId ? post.postLikes.length > 0 : false,
+      };
+    });
 
     return { posts, nextCursor };
   });

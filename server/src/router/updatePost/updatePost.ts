@@ -1,4 +1,5 @@
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import { isPostOwner } from "../../utils/can";
 
 import { zUpdatePostTrpcInput } from "./input";
 
@@ -12,14 +13,44 @@ export const updatePostTrpcRoute = trpcLoggedProcedure
 
     const post = await ctx.prisma.post.findUnique({
       where: { id: postId },
+      select: {
+        id: true,
+        authorId: true,
+        publisherType: true,
+        publisherCommunityId: true,
+      },
     });
 
     if (!post) {
       throw new Error("Post not found");
     }
 
-    if (post.authorId !== ctx.me.id) {
-      throw new Error("Not your idea");
+    const isAuthor = isPostOwner(ctx.me, post);
+    let canManageCommunityPost = false;
+
+    if (!isAuthor && post.publisherType === "COMMUNITY") {
+      if (!post.publisherCommunityId) {
+        throw new Error("Post community is missing");
+      }
+
+      const membership = await ctx.prisma.communityMember.findUnique({
+        where: {
+          communityId_userId: {
+            communityId: post.publisherCommunityId,
+            userId: ctx.me.id,
+          },
+        },
+        select: {
+          role: true,
+        },
+      });
+
+      canManageCommunityPost =
+        membership?.role === "OWNER" || membership?.role === "MODERATOR";
+    }
+
+    if (!isAuthor && !canManageCommunityPost) {
+      throw new Error("Unauthorized");
     }
 
     await ctx.prisma.post.update({

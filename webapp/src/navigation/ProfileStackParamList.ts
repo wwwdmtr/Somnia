@@ -7,6 +7,7 @@ export type ProfileStackParamList = {
   SignOut: undefined;
   UpdateProfile: undefined;
   Community: { id: string };
+  UpdateCommunity: { id: string };
   UserConnections: {
     userId: string;
     type: "followers" | "following";

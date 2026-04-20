@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { ExpectedError } from "../lib/error";
 import { trpcLoggedProcedure } from "../lib/trpc";
-import { isUserAdmin } from "../utils/can";
+import { canDeleteThisPost, isPostOwner, isUserAdmin } from "../utils/can";
 
 export const getPostTrpcRoute = trpcLoggedProcedure
   .input(
@@ -12,6 +12,7 @@ export const getPostTrpcRoute = trpcLoggedProcedure
     }),
   )
   .query(async ({ ctx, input }) => {
+    const userId = ctx.me?.id;
     const rawPost = await ctx.prisma.post.findUnique({
       where: { id: input.id },
       include: {
@@ -29,14 +30,18 @@ export const getPostTrpcRoute = trpcLoggedProcedure
             avatar: true,
           },
         },
-        postLikes: {
-          select: {
-            id: true,
-          },
-          where: {
-            ...(ctx.me && { userId: ctx.me.id }),
-          },
-        },
+        ...(userId
+          ? {
+              postLikes: {
+                select: {
+                  id: true,
+                },
+                where: {
+                  userId,
+                },
+              },
+            }
+          : {}),
         _count: {
           select: { postLikes: true },
         },
@@ -47,12 +52,47 @@ export const getPostTrpcRoute = trpcLoggedProcedure
       throw new ExpectedError("Пост был удален");
     }
 
-    const isLikedByMe = !!rawPost?.postLikes.length;
+    let canManageCommunityPost = false;
+    if (
+      rawPost &&
+      userId &&
+      rawPost.publisherType === "COMMUNITY" &&
+      rawPost.publisherCommunityId &&
+      !isPostOwner(ctx.me, rawPost)
+    ) {
+      const membership = await ctx.prisma.communityMember.findUnique({
+        where: {
+          communityId_userId: {
+            communityId: rawPost.publisherCommunityId,
+            userId,
+          },
+        },
+        select: {
+          role: true,
+        },
+      });
+
+      canManageCommunityPost =
+        membership?.role === "OWNER" || membership?.role === "MODERATOR";
+    }
+
+    const isLikedByMe = userId ? !!rawPost?.postLikes.length : false;
     const likesCount = rawPost?._count.postLikes || 0;
+    const canEditByMe =
+      !!rawPost && (isPostOwner(ctx.me, rawPost) || canManageCommunityPost);
+    const canDeleteByMe =
+      !!rawPost &&
+      (canDeleteThisPost(ctx.me, rawPost) || canManageCommunityPost);
+    const canSeeCommunityAuthor =
+      !!rawPost &&
+      (rawPost.publisherType !== "COMMUNITY" || canManageCommunityPost);
     const post = rawPost && {
-      ..._.omit(rawPost, ["postLikes", "_count"]),
+      ..._.omit(rawPost, ["postLikes", "_count", "author"]),
+      ...(canSeeCommunityAuthor ? { author: rawPost.author } : {}),
       likesCount,
       isLikedByMe,
+      canEditByMe,
+      canDeleteByMe,
     };
 
     return { post };

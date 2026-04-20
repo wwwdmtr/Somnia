@@ -15,6 +15,8 @@ export const deletePostTrpcRoute = trpcLoggedProcedure
       select: {
         id: true,
         authorId: true,
+        publisherType: true,
+        publisherCommunityId: true,
         deletedAt: true,
         title: true,
         author: {
@@ -29,7 +31,30 @@ export const deletePostTrpcRoute = trpcLoggedProcedure
       throw new ExpectedError("Post not found");
     }
 
-    if (!canDeleteThisPost(ctx.me, post)) {
+    let canManageCommunityPost = false;
+    if (
+      !canDeleteThisPost(ctx.me, post) &&
+      post.publisherType === "COMMUNITY" &&
+      post.publisherCommunityId &&
+      ctx.me?.id
+    ) {
+      const membership = await ctx.prisma.communityMember.findUnique({
+        where: {
+          communityId_userId: {
+            communityId: post.publisherCommunityId,
+            userId: ctx.me.id,
+          },
+        },
+        select: {
+          role: true,
+        },
+      });
+
+      canManageCommunityPost =
+        membership?.role === "OWNER" || membership?.role === "MODERATOR";
+    }
+
+    if (!canDeleteThisPost(ctx.me, post) && !canManageCommunityPost) {
       throw new Error("Unauthorized");
     }
 

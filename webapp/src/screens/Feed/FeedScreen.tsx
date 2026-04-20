@@ -302,7 +302,7 @@ export const AllPostsScreen = () => {
       return (
         <View style={styles.emptyContainer}>
           <Text style={typography.body_white85}>
-            Подпишитесь на сообщества, чтобы видеть их посты
+            Подпишитесь на сообщества и пользователей, чтобы видеть их посты
           </Text>
         </View>
       );
