@@ -1,4 +1,5 @@
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import { isUserAdmin } from "../../utils/can";
 
 import { zGetCommentsByPostTrpcInput } from "./input";
 
@@ -7,10 +8,13 @@ export const getCommentsByPostTrpcRoute = trpcLoggedProcedure
   .query(async ({ ctx, input }) => {
     const post = await ctx.prisma.post.findUnique({
       where: { id: input.postId },
-      select: { id: true },
+      select: { id: true, deletedAt: true },
     });
 
     if (!post) {
+      throw new Error("Post not found");
+    }
+    if (post.deletedAt && !isUserAdmin(ctx.me)) {
       throw new Error("Post not found");
     }
 

@@ -1,14 +1,18 @@
 import _ from "lodash";
 
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import { isUserAdmin } from "../../utils/can";
 
 import { zGetDeletedPostsTrpcInput } from "./input";
 
 export const getDeletedPostsTrpcRoute = trpcLoggedProcedure
   .input(zGetDeletedPostsTrpcInput)
   .query(async ({ ctx, input }) => {
+    if (!isUserAdmin(ctx.me)) {
+      throw new Error("Unauthorized");
+    }
+
     const userId = ctx.me?.id;
-    const managedCommunityIds = new Set<string>();
 
     const rawPosts = await ctx.prisma.post.findMany({
       where: {
@@ -74,48 +78,10 @@ export const getDeletedPostsTrpcRoute = trpcLoggedProcedure
       nextCursor = rawPosts[rawPosts.length - 1]?.seq ?? null;
     }
 
-    if (userId) {
-      const communityIds = Array.from(
-        new Set(
-          rawPosts
-            .map((post) => post.publisherCommunity?.id)
-            .filter((communityId): communityId is string =>
-              Boolean(communityId),
-            ),
-        ),
-      );
-
-      if (communityIds.length > 0) {
-        const memberships = await ctx.prisma.communityMember.findMany({
-          where: {
-            userId,
-            communityId: {
-              in: communityIds,
-            },
-            role: {
-              in: ["OWNER", "MODERATOR"],
-            },
-          },
-          select: {
-            communityId: true,
-          },
-        });
-
-        memberships.forEach((membership) => {
-          managedCommunityIds.add(membership.communityId);
-        });
-      }
-    }
-
     const posts = rawPosts.map((post) => {
-      const canSeeCommunityAuthor =
-        post.publisherType !== "COMMUNITY" ||
-        (!!post.publisherCommunity?.id &&
-          managedCommunityIds.has(post.publisherCommunity.id));
-
       return {
         ..._.omit(post, ["_count", "postLikes", "author"]),
-        ...(canSeeCommunityAuthor ? { author: post.author } : {}),
+        author: post.author,
         likesCount: post._count.postLikes,
         commentsCount: post._count.comments,
         isLikedByMe: post.postLikes.length > 0,

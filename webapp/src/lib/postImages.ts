@@ -1,4 +1,5 @@
 import * as ImagePicker from "expo-image-picker";
+import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
 type CloudinaryUploadResponse = {
@@ -38,6 +39,142 @@ export type PickedPostImageFile =
 
 export const MAX_POST_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 export const MAX_POST_IMAGES_COUNT = 10;
+const PENDING_POST_IMAGE_IDS_KEY = "pending_post_image_ids";
+
+const isWeb = Platform.OS === "web";
+
+const normalizePendingPostImageIds = (imagePublicIds: string[]) =>
+  Array.from(
+    new Set(
+      imagePublicIds
+        .map((imagePublicId) =>
+          typeof imagePublicId === "string" ? imagePublicId.trim() : "",
+        )
+        .filter(Boolean),
+    ),
+  );
+
+const getPendingPostImageIdsFromWebStorage = () => {
+  try {
+    if (typeof window === "undefined") {
+      return [] as string[];
+    }
+
+    const rawValue = window.localStorage.getItem(PENDING_POST_IMAGE_IDS_KEY);
+    if (!rawValue) {
+      return [] as string[];
+    }
+
+    const parsed = JSON.parse(rawValue) as unknown;
+    return Array.isArray(parsed)
+      ? normalizePendingPostImageIds(
+          parsed.filter((item): item is string => typeof item === "string"),
+        )
+      : [];
+  } catch {
+    return [] as string[];
+  }
+};
+
+const setPendingPostImageIdsToWebStorage = (imagePublicIds: string[]) => {
+  try {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const normalized = normalizePendingPostImageIds(imagePublicIds);
+    if (normalized.length === 0) {
+      window.localStorage.removeItem(PENDING_POST_IMAGE_IDS_KEY);
+      return;
+    }
+
+    window.localStorage.setItem(
+      PENDING_POST_IMAGE_IDS_KEY,
+      JSON.stringify(normalized),
+    );
+  } catch {
+    // ignore storage errors
+  }
+};
+
+const getPendingPostImageIdsFromNativeStorage = async () => {
+  try {
+    const rawValue = await SecureStore.getItemAsync(PENDING_POST_IMAGE_IDS_KEY);
+    if (!rawValue) {
+      return [] as string[];
+    }
+
+    const parsed = JSON.parse(rawValue) as unknown;
+    return Array.isArray(parsed)
+      ? normalizePendingPostImageIds(
+          parsed.filter((item): item is string => typeof item === "string"),
+        )
+      : [];
+  } catch {
+    return [] as string[];
+  }
+};
+
+const setPendingPostImageIdsToNativeStorage = async (
+  imagePublicIds: string[],
+) => {
+  const normalized = normalizePendingPostImageIds(imagePublicIds);
+  if (normalized.length === 0) {
+    await SecureStore.deleteItemAsync(PENDING_POST_IMAGE_IDS_KEY);
+    return;
+  }
+
+  await SecureStore.setItemAsync(
+    PENDING_POST_IMAGE_IDS_KEY,
+    JSON.stringify(normalized),
+  );
+};
+
+export const getPendingPostImagePublicIds = async () => {
+  if (isWeb) {
+    return getPendingPostImageIdsFromWebStorage();
+  }
+
+  return getPendingPostImageIdsFromNativeStorage();
+};
+
+export const addPendingPostImagePublicIds = async (
+  imagePublicIds: string[],
+) => {
+  const currentIds = await getPendingPostImagePublicIds();
+  const nextIds = normalizePendingPostImageIds([
+    ...currentIds,
+    ...imagePublicIds,
+  ]);
+
+  if (isWeb) {
+    setPendingPostImageIdsToWebStorage(nextIds);
+    return;
+  }
+
+  await setPendingPostImageIdsToNativeStorage(nextIds);
+};
+
+export const removePendingPostImagePublicIds = async (
+  imagePublicIds: string[],
+) => {
+  const idsToRemove = new Set(normalizePendingPostImageIds(imagePublicIds));
+  if (idsToRemove.size === 0) {
+    return;
+  }
+
+  const currentIds = await getPendingPostImagePublicIds();
+  const nextIds = currentIds.filter(
+    (imagePublicId) => !idsToRemove.has(imagePublicId),
+  );
+
+  if (isWeb) {
+    setPendingPostImageIdsToWebStorage(nextIds);
+    return;
+  }
+
+  await setPendingPostImageIdsToNativeStorage(nextIds);
+};
 
 const pickImageFilesOnWeb = () =>
   new Promise<File[]>((resolve) => {
@@ -119,11 +256,13 @@ export const validatePostImageFiles = (
 export const uploadPostImagesToCloudinary = async ({
   files,
   prepareCloudinaryUpload,
+  onUploadedPublicId,
 }: {
   files: PickedPostImageFile[];
   prepareCloudinaryUpload: () => Promise<{
     preparedData: CloudinaryPreparedData;
   }>;
+  onUploadedPublicId?: (publicId: string) => void | Promise<void>;
 }) => {
   if (files.length === 0) {
     return [] as string[];
@@ -172,6 +311,7 @@ export const uploadPostImagesToCloudinary = async ({
     }
 
     uploadedPublicIds.push(uploadResult.public_id);
+    await onUploadedPublicId?.(uploadResult.public_id);
   }
 
   return uploadedPublicIds;

@@ -1,12 +1,30 @@
+import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import { isPostImageOwnedByUser } from "../../utils/postImages";
 
 import { zCreatePostTrpcInput } from "./input";
 
 export const createPostTrpcRoute = trpcLoggedProcedure
   .input(zCreatePostTrpcInput)
   .mutation(async ({ ctx, input }) => {
-    if (!ctx.me) {
+    const me = ctx.me;
+    if (!me) {
       throw new Error("Unauthorized");
+    }
+
+    const normalizedImages = Array.from(
+      new Set(input.images.map((imagePublicId) => imagePublicId.trim())),
+    );
+    const hasForeignImage = normalizedImages.some(
+      (imagePublicId) =>
+        !isPostImageOwnedByUser({
+          imagePublicId,
+          userId: me.id,
+        }),
+    );
+
+    if (hasForeignImage) {
+      throw new ExpectedError("Некорректный идентификатор изображения");
     }
 
     const communityId = input.communityId?.trim();
@@ -17,7 +35,7 @@ export const createPostTrpcRoute = trpcLoggedProcedure
         where: {
           communityId_userId: {
             communityId,
-            userId: ctx.me.id,
+            userId: me.id,
           },
         },
         select: {
@@ -37,8 +55,8 @@ export const createPostTrpcRoute = trpcLoggedProcedure
         title: input.title,
         description: input.description,
         text: input.text,
-        images: input.images,
-        author: { connect: { id: ctx.me.id } },
+        images: normalizedImages,
+        author: { connect: { id: me.id } },
         publisherType,
         ...(communityId
           ? {

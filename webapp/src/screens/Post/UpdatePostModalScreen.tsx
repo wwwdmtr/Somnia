@@ -134,6 +134,34 @@ export const UpdatePostScreen = () => {
     );
   }
 
+  if (!data.post.canEditByMe) {
+    return (
+      <ImageBackground
+        source={require("../../assets/backgrounds/application-bg.png")}
+        style={styles.BackgroundImage}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.goBackWrapper}
+            >
+              <Image
+                source={require("../../assets/Icons/navIcons/goBack.png")}
+              />
+              <Text style={typography.body_white85}>Назад</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.content}>
+            <Text style={typography.body_white85}>
+              У вас нет прав на редактирование этого поста.
+            </Text>
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
+    );
+  }
+
   return (
     <ImageBackground
       source={require("../../assets/backgrounds/application-bg.png")}

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { useNavigation } from "@react-navigation/native";
+import { isUserAdmin } from "@somnia/shared/src/utils/can";
 import React from "react";
 import {
   StyleSheet,
@@ -13,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ScreenName from "../../constants/ScreenName";
+import { useMe } from "../../lib/ctx";
 import { AdminStackParamList } from "../../navigation/AdminStackParamList";
 import { COLORS, typography } from "../../theme/typography";
 
@@ -25,6 +27,33 @@ type NavigationProp = NativeStackNavigationProp<
 
 export const AdminScreen = () => {
   const navigation = useNavigation<NavigationProp>();
+  const me = useMe();
+
+  if (!isUserAdmin(me)) {
+    return (
+      <ImageBackground
+        source={require("../../assets/backgrounds/application-bg.png")}
+        style={styles.BackgroundImage}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.headerContainer}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.goBackWrapper}
+            >
+              <Image
+                source={require("../../assets/Icons/navIcons/goBack.png")}
+              />
+              <Text style={typography.body_white85}>Назад</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={typography.body_white85}>
+            У вас нет доступа к этому экрану
+          </Text>
+        </SafeAreaView>
+      </ImageBackground>
+    );
+  }
 
   return (
     <ImageBackground

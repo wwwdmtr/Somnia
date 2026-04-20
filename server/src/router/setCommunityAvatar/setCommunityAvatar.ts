@@ -1,6 +1,7 @@
 import { destroyCloudinaryImage } from "../../lib/cloudinary";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import { isAvatarOwnedByUser } from "../../utils/cloudinaryPublicId";
 
 import { zSetCommunityAvatarTrpcInput } from "./input";
 
@@ -30,6 +31,16 @@ export const setCommunityAvatarTrpcRoute = trpcLoggedProcedure
       throw new Error("Unauthorized");
     }
 
+    if (
+      input.avatar &&
+      !isAvatarOwnedByUser({
+        avatarPublicId: input.avatar,
+        userId: ctx.me.id,
+      })
+    ) {
+      throw new ExpectedError("Некорректный идентификатор аватарки");
+    }
+
     const updatedCommunity = await ctx.prisma.community.update({
       where: {
         id: input.communityId,
@@ -45,7 +56,14 @@ export const setCommunityAvatarTrpcRoute = trpcLoggedProcedure
       },
     });
 
-    if (community.avatar && community.avatar !== input.avatar) {
+    if (
+      community.avatar &&
+      community.avatar !== input.avatar &&
+      isAvatarOwnedByUser({
+        avatarPublicId: community.avatar,
+        userId: ctx.me.id,
+      })
+    ) {
       await destroyCloudinaryImage({
         publicId: community.avatar,
         logContext: {

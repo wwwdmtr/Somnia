@@ -1,6 +1,7 @@
 import { destroyCloudinaryImage } from "../../lib/cloudinary";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import { isAvatarOwnedByUser } from "../../utils/cloudinaryPublicId";
 
 import { zDeleteCommunityTrpcInput } from "./input";
 
@@ -48,7 +49,13 @@ export const deleteCommunityTrpcRoute = trpcLoggedProcedure
       }),
     ]);
 
-    if (community.avatar) {
+    if (
+      community.avatar &&
+      isAvatarOwnedByUser({
+        avatarPublicId: community.avatar,
+        userId: ctx.me.id,
+      })
+    ) {
       await destroyCloudinaryImage({
         publicId: community.avatar,
         logContext: {

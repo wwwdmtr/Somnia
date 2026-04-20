@@ -18,10 +18,11 @@ export const setPostLikeTrpcRoute = trpcLoggedProcedure
         id: true,
         authorId: true,
         publisherType: true,
+        deletedAt: true,
       },
     });
 
-    if (!post) {
+    if (!post || post.deletedAt) {
       throw new ExpectedError("Post not found");
     }
 

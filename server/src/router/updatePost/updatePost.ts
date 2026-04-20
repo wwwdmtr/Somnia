@@ -1,5 +1,10 @@
 import { trpcLoggedProcedure } from "../../lib/trpc";
 import { isPostOwner } from "../../utils/can";
+import {
+  destroyPostImages,
+  getUnreferencedPostImagePublicIds,
+  isPostImageOwnedByUser,
+} from "../../utils/postImages";
 
 import { zUpdatePostTrpcInput } from "./input";
 
@@ -7,7 +12,8 @@ export const updatePostTrpcRoute = trpcLoggedProcedure
   .input(zUpdatePostTrpcInput)
   .mutation(async ({ ctx, input }) => {
     const { postId, title, description, text, images } = input;
-    if (!ctx.me) {
+    const me = ctx.me;
+    if (!me) {
       throw new Error("Unauthorized");
     }
 
@@ -18,6 +24,7 @@ export const updatePostTrpcRoute = trpcLoggedProcedure
         authorId: true,
         publisherType: true,
         publisherCommunityId: true,
+        images: true,
       },
     });
 
@@ -25,7 +32,7 @@ export const updatePostTrpcRoute = trpcLoggedProcedure
       throw new Error("Post not found");
     }
 
-    const isAuthor = isPostOwner(ctx.me, post);
+    const isAuthor = isPostOwner(me, post);
     let canManageCommunityPost = false;
 
     if (!isAuthor && post.publisherType === "COMMUNITY") {
@@ -37,7 +44,7 @@ export const updatePostTrpcRoute = trpcLoggedProcedure
         where: {
           communityId_userId: {
             communityId: post.publisherCommunityId,
-            userId: ctx.me.id,
+            userId: me.id,
           },
         },
         select: {
@@ -53,14 +60,56 @@ export const updatePostTrpcRoute = trpcLoggedProcedure
       throw new Error("Unauthorized");
     }
 
+    const previousImagesSet = new Set(post.images);
+    const normalizedImages = Array.from(
+      new Set(images.map((imagePublicId) => imagePublicId.trim())),
+    );
+
+    const newlyAddedImages = normalizedImages.filter(
+      (imagePublicId) => !previousImagesSet.has(imagePublicId),
+    );
+
+    const hasForeignNewImage = newlyAddedImages.some(
+      (imagePublicId) =>
+        !isPostImageOwnedByUser({
+          imagePublicId,
+          userId: me.id,
+        }),
+    );
+
+    if (hasForeignNewImage) {
+      throw new Error("Некорректный идентификатор изображения");
+    }
+
+    const nextImagesSet = new Set(normalizedImages);
+    const removedImagePublicIds = post.images.filter(
+      (imagePublicId) => !nextImagesSet.has(imagePublicId),
+    );
+
     await ctx.prisma.post.update({
       where: { id: postId },
       data: {
         title,
         description,
         text,
-        images,
+        images: normalizedImages,
       },
     });
+
+    const orphanedImagePublicIds = await getUnreferencedPostImagePublicIds({
+      prisma: ctx.prisma,
+      imagePublicIds: removedImagePublicIds,
+      excludePostId: postId,
+    });
+
+    await destroyPostImages({
+      imagePublicIds: orphanedImagePublicIds,
+      logContext: {
+        postId,
+        actorUserId: me.id,
+        action: "updatePost",
+      },
+    });
+
     return true;
   });

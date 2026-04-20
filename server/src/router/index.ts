@@ -2,6 +2,7 @@ import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 
 import { createTrpcRouter } from "../lib/trpc";
 
+import { cleanupPostImagesTrpcRoute } from "./cleanupPostImages/cleanupPostImages";
 import { createCommentTrpcRoute } from "./createComment/createComment";
 import { createCommunityTrpcRoute } from "./createCommunity/createCommunity";
 import { createPostTrpcRoute } from "./createPost/createPost";
@@ -53,6 +54,7 @@ export const trpcRouter = createTrpcRouter({
   getUnreadNotificationsCount: getUnreadNotificationsCountTrpcRoute,
   getRatedPosts: getRatedPostsTrpcRoute,
   getMyPublishingIdentities: getMyPublishingIdentitiesTrpcRoute,
+  cleanupPostImages: cleanupPostImagesTrpcRoute,
   createComment: createCommentTrpcRoute,
   createCommunity: createCommunityTrpcRoute,
   createPost: createPostTrpcRoute,

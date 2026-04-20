@@ -1,6 +1,8 @@
 import { destroyCloudinaryImage } from "../../lib/cloudinary";
+import { ExpectedError } from "../../lib/error";
 import { toClientMe } from "../../lib/models";
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import { isAvatarOwnedByUser } from "../../utils/cloudinaryPublicId";
 
 import { zSetMyAvatarTrpcInput } from "./input";
 
@@ -14,6 +16,16 @@ export const setMyAvatarTrpcRoute = trpcLoggedProcedure
     const previousAvatar = ctx.me.avatar;
     const nextAvatar = input.avatar;
 
+    if (
+      nextAvatar &&
+      !isAvatarOwnedByUser({
+        avatarPublicId: nextAvatar,
+        userId: ctx.me.id,
+      })
+    ) {
+      throw new ExpectedError("Некорректный идентификатор аватарки");
+    }
+
     const updatedMe = await ctx.prisma.user.update({
       where: {
         id: ctx.me.id,
@@ -25,7 +37,14 @@ export const setMyAvatarTrpcRoute = trpcLoggedProcedure
 
     ctx.me = updatedMe;
 
-    if (previousAvatar && previousAvatar !== nextAvatar) {
+    if (
+      previousAvatar &&
+      previousAvatar !== nextAvatar &&
+      isAvatarOwnedByUser({
+        avatarPublicId: previousAvatar,
+        userId: ctx.me.id,
+      })
+    ) {
       await destroyCloudinaryImage({
         publicId: previousAvatar,
         logContext: {

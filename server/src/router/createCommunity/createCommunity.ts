@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import { isAvatarOwnedByUser } from "../../utils/cloudinaryPublicId";
 
 import { zCreateCommunityTrpcInput } from "./input";
 
@@ -10,6 +11,16 @@ export const createCommunityTrpcRoute = trpcLoggedProcedure
   .mutation(async ({ ctx, input }) => {
     if (!ctx.me) {
       throw new Error("Unauthorized");
+    }
+
+    if (
+      input.avatar &&
+      !isAvatarOwnedByUser({
+        avatarPublicId: input.avatar,
+        userId: ctx.me.id,
+      })
+    ) {
+      throw new ExpectedError("Некорректный идентификатор аватарки");
     }
 
     try {

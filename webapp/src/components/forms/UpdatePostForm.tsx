@@ -6,6 +6,9 @@ import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
 import {
+  addPendingPostImagePublicIds,
+  getPendingPostImagePublicIds,
+  removePendingPostImagePublicIds,
   uploadPostImagesToCloudinary,
   type PickedPostImageFile,
 } from "../../lib/postImages";
@@ -41,6 +44,7 @@ const TEXT_AREA_LINE_HEIGHT = 24;
 export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
   const utils = trpc.useUtils();
   const prepareCloudinaryUpload = trpc.prepareCloudinaryUpload.useMutation();
+  const cleanupPostImages = trpc.cleanupPostImages.useMutation();
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [measuredTextHeight, setMeasuredTextHeight] = useState(0);
   const [pendingImages, setPendingImages] = useState<PickedPostImageFile[]>([]);
@@ -71,13 +75,34 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
 
     onSubmit: async (values, { resetForm }) => {
       setIsUploadingImages(true);
+      const newlyUploadedImagePublicIds: string[] = [];
+
       try {
+        const pendingImageIdsFromPreviousAttempts =
+          await getPendingPostImagePublicIds();
+        if (pendingImageIdsFromPreviousAttempts.length > 0) {
+          try {
+            await cleanupPostImages.mutateAsync({
+              imagePublicIds: pendingImageIdsFromPreviousAttempts,
+            });
+            await removePendingPostImagePublicIds(
+              pendingImageIdsFromPreviousAttempts,
+            );
+          } catch {
+            // ignore cleanup errors: will retry on next submission
+          }
+        }
+
         const uploadedImages = await uploadPostImagesToCloudinary({
           files: pendingImages,
           prepareCloudinaryUpload: () =>
             prepareCloudinaryUpload.mutateAsync({
               type: "image",
             }),
+          onUploadedPublicId: async (publicId) => {
+            newlyUploadedImagePublicIds.push(publicId);
+            await addPendingPostImagePublicIds([publicId]);
+          },
         });
         await updatePost.mutateAsync({
           ...values,
@@ -85,6 +110,18 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
         });
         setPendingImages([]);
         resetForm();
+        await removePendingPostImagePublicIds(uploadedImages);
+      } catch {
+        if (newlyUploadedImagePublicIds.length > 0) {
+          try {
+            await cleanupPostImages.mutateAsync({
+              imagePublicIds: newlyUploadedImagePublicIds,
+            });
+            await removePendingPostImagePublicIds(newlyUploadedImagePublicIds);
+          } catch {
+            // ignore cleanup errors: user can retry and cleanup later
+          }
+        }
       } finally {
         setIsUploadingImages(false);
       }

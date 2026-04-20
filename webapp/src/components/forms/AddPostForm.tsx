@@ -7,6 +7,9 @@ import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
 import {
+  addPendingPostImagePublicIds,
+  getPendingPostImagePublicIds,
+  removePendingPostImagePublicIds,
   uploadPostImagesToCloudinary,
   type PickedPostImageFile,
 } from "../../lib/postImages";
@@ -59,6 +62,7 @@ export const AddPostForm = ({
   const utils = trpc.useUtils();
   const navigation = useNavigation<AddPostNavProp>();
   const prepareCloudinaryUpload = trpc.prepareCloudinaryUpload.useMutation();
+  const cleanupPostImages = trpc.cleanupPostImages.useMutation();
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [measuredTextHeight, setMeasuredTextHeight] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -98,13 +102,34 @@ export const AddPostForm = ({
 
       setSubmitError(null);
       setIsUploadingImages(true);
+      const newlyUploadedImagePublicIds: string[] = [];
+
       try {
+        const pendingImageIdsFromPreviousAttempts =
+          await getPendingPostImagePublicIds();
+        if (pendingImageIdsFromPreviousAttempts.length > 0) {
+          try {
+            await cleanupPostImages.mutateAsync({
+              imagePublicIds: pendingImageIdsFromPreviousAttempts,
+            });
+            await removePendingPostImagePublicIds(
+              pendingImageIdsFromPreviousAttempts,
+            );
+          } catch {
+            // ignore cleanup errors: will retry on next submission
+          }
+        }
+
         const uploadedImages = await uploadPostImagesToCloudinary({
           files: pendingImages,
           prepareCloudinaryUpload: () =>
             prepareCloudinaryUpload.mutateAsync({
               type: "image",
             }),
+          onUploadedPublicId: async (publicId) => {
+            newlyUploadedImagePublicIds.push(publicId);
+            await addPendingPostImagePublicIds([publicId]);
+          },
         });
         await createPost.mutateAsync({
           title: normalizedTitle,
@@ -119,6 +144,25 @@ export const AddPostForm = ({
           onSuccess();
         } else {
           navigation.goBack();
+        }
+
+        await removePendingPostImagePublicIds(uploadedImages);
+      } catch (error) {
+        if (newlyUploadedImagePublicIds.length > 0) {
+          try {
+            await cleanupPostImages.mutateAsync({
+              imagePublicIds: newlyUploadedImagePublicIds,
+            });
+            await removePendingPostImagePublicIds(newlyUploadedImagePublicIds);
+          } catch {
+            // ignore cleanup errors: user can retry and cleanup later
+          }
+        }
+
+        if (error instanceof Error) {
+          setSubmitError(error.message);
+        } else {
+          setSubmitError("Не удалось создать пост");
         }
       } finally {
         setIsUploadingImages(false);

@@ -5,6 +5,7 @@ import {
   RouteProp,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { isUserAdmin } from "@somnia/shared/src/utils/can";
 import { useFonts } from "expo-font";
 import React from "react";
 import { Text, View, Image, ImageSourcePropType } from "react-native";
@@ -436,10 +437,14 @@ export function RootNavigation() {
     return null;
   }
 
-  return me ? <RootStackNav /> : <AuthStackNav />;
+  return me ? (
+    <RootStackNav canOpenAdmin={isUserAdmin(me)} />
+  ) : (
+    <AuthStackNav />
+  );
 }
 
-function RootStackNav() {
+function RootStackNav({ canOpenAdmin }: { canOpenAdmin: boolean }) {
   return (
     <RootStack.Navigator>
       <RootStack.Screen
@@ -447,11 +452,13 @@ function RootStackNav() {
         component={AppNav}
         options={{ headerShown: false }}
       />
-      <RootStack.Screen
-        name={ScreenName.AdminStack}
-        component={AdminStackNav}
-        options={{ headerShown: false }}
-      />
+      {canOpenAdmin ? (
+        <RootStack.Screen
+          name={ScreenName.AdminStack}
+          component={AdminStackNav}
+          options={{ headerShown: false }}
+        />
+      ) : null}
     </RootStack.Navigator>
   );
 }

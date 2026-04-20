@@ -2,6 +2,10 @@ import { sendPostBlockedEmail } from "../../lib/emails";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 import { canDeleteThisPost, isPostOwner } from "../../utils/can";
+import {
+  destroyPostImages,
+  getUnreferencedPostImagePublicIds,
+} from "../../utils/postImages";
 
 import { zDeletePostTrpcInput } from "./input";
 
@@ -19,6 +23,7 @@ export const deletePostTrpcRoute = trpcLoggedProcedure
         publisherCommunityId: true,
         deletedAt: true,
         title: true,
+        images: true,
         author: {
           select: {
             email: true,
@@ -61,6 +66,21 @@ export const deletePostTrpcRoute = trpcLoggedProcedure
     await ctx.prisma.post.update({
       where: { id: postId },
       data: { deletedAt: new Date() },
+    });
+
+    const orphanedImagePublicIds = await getUnreferencedPostImagePublicIds({
+      prisma: ctx.prisma,
+      imagePublicIds: post.images,
+      excludePostId: postId,
+    });
+
+    await destroyPostImages({
+      imagePublicIds: orphanedImagePublicIds,
+      logContext: {
+        postId,
+        actorUserId: ctx.me?.id ?? null,
+        action: "deletePost",
+      },
     });
 
     if (!isPostOwner(ctx.me, post)) {

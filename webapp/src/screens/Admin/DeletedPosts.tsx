@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { isUserAdmin } from "@somnia/shared/src/utils/can";
 import { format } from "date-fns";
 import React, { useMemo, useState } from "react";
 import {
@@ -17,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ScreenName from "../../constants/ScreenName";
+import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
 
@@ -32,6 +34,8 @@ const MAX_INFINITE_PAGES = 10;
 // Если хочешь — можешь принимать пропсы/навигацию и открывать Post
 export const DeletedPostsScreen = () => {
   const navigation = useNavigation<NavigationProp>();
+  const me = useMe();
+  const canAccessDeletedPosts = isUserAdmin(me);
   const [refreshing, setRefreshing] = useState(false);
 
   const LIMIT = 10;
@@ -48,6 +52,7 @@ export const DeletedPostsScreen = () => {
   } = trpc.getDeletedPosts.useInfiniteQuery(
     { limit: LIMIT },
     {
+      enabled: canAccessDeletedPosts,
       // ВАЖНО: твой эндпоинт возвращает nextCursor
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
       maxPages: MAX_INFINITE_PAGES,
@@ -66,6 +71,10 @@ export const DeletedPostsScreen = () => {
   }, [data]);
 
   const onRefresh = async () => {
+    if (!canAccessDeletedPosts) {
+      return;
+    }
+
     setRefreshing(true);
     try {
       await refetch();
@@ -75,6 +84,9 @@ export const DeletedPostsScreen = () => {
   };
 
   const loadMore = () => {
+    if (!canAccessDeletedPosts) {
+      return;
+    }
     if (!hasNextPage) {
       return;
     }
@@ -98,6 +110,14 @@ export const DeletedPostsScreen = () => {
         <Text style={typography.body_white85}>
           Error: {error.message ?? "Unknown error"}
         </Text>
+      </View>
+    );
+  }
+
+  if (!canAccessDeletedPosts) {
+    return (
+      <View style={styles.centered}>
+        <Text style={typography.body_white85}>Недостаточно прав доступа</Text>
       </View>
     );
   }

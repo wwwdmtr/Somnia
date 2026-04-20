@@ -1,6 +1,6 @@
 import { z } from "zod";
 
 export const zGetPostsTrpcInput = z.object({
-  cursor: z.number().optional(),
-  limit: z.number().default(10),
+  cursor: z.number().int().positive().optional(),
+  limit: z.number().int().min(1).max(50).default(10),
 });
