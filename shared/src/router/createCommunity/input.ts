@@ -16,7 +16,8 @@ export const zCreateCommunityTrpcInput = z.object({
     .string()
     .trim()
     .min(2, "Имя сообщества должно быть не короче 2 символов")
-    .max(60, "Имя сообщества должно быть не длиннее 60 символов"),
+    .max(60, "Имя сообщества должно быть не длиннее 60 символов")
+    .prefault(""),
   description: z
     .string()
     .trim()

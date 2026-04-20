@@ -340,15 +340,11 @@ export const ProfileScreen = () => {
     return (
       <PostCard
         post={post}
-        contentOrder="textFirst"
-        imageHeight={180}
         onOpenPost={handleOpenPost}
         onOpenCommunity={handleOpenCommunity}
         onOpenUser={handleOpenProfile}
         onToggleLike={toggleLike}
         onOpenImageViewer={openImageViewer}
-        openPostOnTextPress={false}
-        showAuthor={false}
       />
     );
   };

@@ -12,6 +12,7 @@ import {
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
 import { trpc } from "../../lib/trpc";
+import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS, typography } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
 
@@ -141,6 +142,7 @@ const styles = {
     maxHeight: 140,
     color: COLORS.white100,
     ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
+    ...webInputFocusReset,
     textAlignVertical: "top" as const,
   },
   inputError: {

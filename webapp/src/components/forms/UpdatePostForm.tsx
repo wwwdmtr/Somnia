@@ -13,6 +13,7 @@ import {
   type PickedPostImageFile,
 } from "../../lib/postImages";
 import { trpc } from "../../lib/trpc";
+import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
 
@@ -40,6 +41,19 @@ const TEXT_AREA_MIN_HEIGHT = 120;
 const TEXT_AREA_PADDING_VERTICAL = 20;
 const TEXT_AREA_PADDING_HORIZONTAL = 20;
 const TEXT_AREA_LINE_HEIGHT = 24;
+const EMPTY_POST_ERROR =
+  "Добавьте заголовок, текст или хотя бы одно изображение";
+
+const normalizeTextField = (value: unknown): string =>
+  typeof value === "string" ? value.trim() : "";
+
+const normalizeImageIds = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter(
+        (imageId): imageId is string =>
+          typeof imageId === "string" && imageId.trim().length > 0,
+      )
+    : [];
 
 export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
   const utils = trpc.useUtils();
@@ -47,6 +61,7 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
   const cleanupPostImages = trpc.cleanupPostImages.useMutation();
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [measuredTextHeight, setMeasuredTextHeight] = useState(0);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [pendingImages, setPendingImages] = useState<PickedPostImageFile[]>([]);
   const updatePost = trpc.updatePost.useMutation({
     onSuccess: async () => {
@@ -74,6 +89,22 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
     enableReinitialize: true,
 
     onSubmit: async (values, { resetForm }) => {
+      const normalizedTitle = normalizeTextField(values.title);
+      const normalizedText = normalizeTextField(values.text);
+      const normalizedDescription = normalizeTextField(values.description);
+      const currentImages = normalizeImageIds(values.images);
+      const hasAnyContent =
+        normalizedTitle.length > 0 ||
+        normalizedText.length > 0 ||
+        currentImages.length > 0 ||
+        pendingImages.length > 0;
+
+      if (!hasAnyContent) {
+        setSubmitError(EMPTY_POST_ERROR);
+        return;
+      }
+
+      setSubmitError(null);
       setIsUploadingImages(true);
       const newlyUploadedImagePublicIds: string[] = [];
 
@@ -105,13 +136,16 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
           },
         });
         await updatePost.mutateAsync({
-          ...values,
-          images: [...values.images, ...uploadedImages],
+          postId: values.postId,
+          title: normalizedTitle,
+          description: normalizedDescription,
+          text: normalizedText,
+          images: [...currentImages, ...uploadedImages],
         });
         setPendingImages([]);
         resetForm();
         await removePendingPostImagePublicIds(uploadedImages);
-      } catch {
+      } catch (error) {
         if (newlyUploadedImagePublicIds.length > 0) {
           try {
             await cleanupPostImages.mutateAsync({
@@ -122,6 +156,12 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
             // ignore cleanup errors: user can retry and cleanup later
           }
         }
+
+        if (error instanceof Error) {
+          setSubmitError(error.message);
+        } else {
+          setSubmitError("Не удалось обновить пост");
+        }
       } finally {
         setIsUploadingImages(false);
       }
@@ -131,6 +171,11 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
     formik.touched.images && typeof formik.errors.images === "string"
       ? formik.errors.images
       : null;
+  const hasAnyContent =
+    normalizeTextField(formik.values.title).length > 0 ||
+    normalizeTextField(formik.values.text).length > 0 ||
+    normalizeImageIds(formik.values.images).length > 0 ||
+    pendingImages.length > 0;
   const textAreaHeight = Math.max(
     TEXT_AREA_MIN_HEIGHT,
     measuredTextHeight + TEXT_AREA_PADDING_VERTICAL * 2,
@@ -142,7 +187,10 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
         placeholder="Придумайте заголовок"
         placeholderTextColor={COLORS.white25}
         value={formik.values.title}
-        onChangeText={(text) => formik.setFieldValue("title", text)}
+        onChangeText={(text) => {
+          setSubmitError(null);
+          formik.setFieldValue("title", text);
+        }}
         onBlur={() => formik.setFieldTouched("title")}
         style={[
           styles.input,
@@ -172,7 +220,10 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
           placeholder="Напишите текст ..."
           placeholderTextColor={COLORS.white25}
           value={formik.values.text}
-          onChangeText={(text) => formik.setFieldValue("text", text)}
+          onChangeText={(text) => {
+            setSubmitError(null);
+            formik.setFieldValue("text", text);
+          }}
           onBlur={() => formik.setFieldTouched("text")}
           multiline
           scrollEnabled={false}
@@ -194,15 +245,20 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
         pendingImages={pendingImages}
         disabled={formik.isSubmitting || isUploadingImages}
         onUploadedImagesChange={(images) => {
+          setSubmitError(null);
           formik.setFieldTouched("images", true, false);
           void formik.setFieldValue("images", images);
         }}
-        onPendingImagesChange={setPendingImages}
+        onPendingImagesChange={(images) => {
+          setSubmitError(null);
+          setPendingImages(images);
+        }}
       />
 
       {imageErrorText ? (
         <Text style={styles.errorText}>{imageErrorText}</Text>
       ) : null}
+      {submitError ? <Text style={styles.errorText}>{submitError}</Text> : null}
 
       <AppButton
         title={
@@ -214,7 +270,12 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
         }
         onPress={() => formik.handleSubmit()}
         style={styles.startButton}
-        disabled={formik.isSubmitting || isUploadingImages || !formik.isValid}
+        disabled={
+          formik.isSubmitting ||
+          isUploadingImages ||
+          !formik.isValid ||
+          !hasAnyContent
+        }
       />
     </View>
   );
@@ -231,6 +292,7 @@ const styles = {
     height: 60,
     color: COLORS.white100,
     ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
+    ...webInputFocusReset,
   },
   textArea: {
     backgroundColor: COLORS.postsCardBackground,
@@ -241,6 +303,7 @@ const styles = {
     borderRadius: 32,
     textAlignVertical: "top" as const,
     color: COLORS.white100,
+    ...webInputFocusReset,
   },
   textAreaMeasure: {
     fontSize: 16,

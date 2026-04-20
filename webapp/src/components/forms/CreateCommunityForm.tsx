@@ -1,17 +1,11 @@
 import { zCreateCommunityTrpcInput } from "@somnia/shared/src/router/createCommunity/input";
 import { useFormik } from "formik";
 import React, { useState } from "react";
-import {
-  Image,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Platform,
-} from "react-native";
+import { Image, Text, TextInput, View, Platform } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { getAvatarSource } from "../../lib/avatar";
 import {
   pickPostImageFiles,
   uploadPostImagesToCloudinary,
@@ -19,6 +13,7 @@ import {
   type PickedPostImageFile,
 } from "../../lib/postImages";
 import { trpc } from "../../lib/trpc";
+import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
 
@@ -183,28 +178,32 @@ export const CreateCommunityForm = ({
 
       <View style={styles.avatarBlock}>
         <Text style={styles.avatarTitle}>Аватарка сообщества</Text>
-        <AppButton
-          title="Добавить аватарку"
-          onPress={() => void handlePickAvatar()}
-          style={styles.addAvatarButton}
-          disabled={isBusy}
-        />
-
-        {pendingAvatar ? (
-          <View style={styles.previewWrap}>
-            <Image
-              source={{ uri: pendingAvatar.previewUri }}
-              style={styles.preview}
-            />
-            <TouchableOpacity
-              onPress={() => setPendingAvatar(null)}
+        <View style={styles.avatarControls}>
+          <Image
+            source={
+              pendingAvatar
+                ? { uri: pendingAvatar.previewUri }
+                : getAvatarSource(null, "big")
+            }
+            style={styles.preview}
+          />
+          <View style={styles.avatarButtonsColumn}>
+            <AppButton
+              title={pendingAvatar ? "Изменить аватарку" : "Загрузить аватарку"}
+              onPress={() => void handlePickAvatar()}
+              style={styles.avatarActionButton}
+              TextStyle={styles.avatarActionButtonText}
               disabled={isBusy}
-              style={styles.removeAvatarButton}
-            >
-              <Text style={styles.removeAvatarText}>Удалить</Text>
-            </TouchableOpacity>
+            />
+            <AppButton
+              title="Удалить аватарку"
+              onPress={() => setPendingAvatar(null)}
+              disabled={isBusy || !pendingAvatar}
+              style={styles.avatarActionButton}
+              TextStyle={styles.avatarActionButtonText}
+            />
           </View>
-        ) : null}
+        </View>
       </View>
 
       {submitError ? <Text style={styles.errorText}>{submitError}</Text> : null}
@@ -222,7 +221,6 @@ export const CreateCommunityForm = ({
           onPress={onCancel}
           style={styles.actionButton}
           disabled={isBusy}
-          TextStyle={styles.secondaryButtonText}
         />
       ) : null}
     </View>
@@ -234,16 +232,32 @@ const styles = {
     height: 40,
     marginTop: 6,
   },
-  addAvatarButton: {
-    height: 40,
-  },
   avatarBlock: {
+    backgroundColor: COLORS.postsCardBackground,
+    borderRadius: 32,
+    gap: 10,
+    padding: 16,
+  },
+  avatarButtonsColumn: {
+    flex: 1,
     gap: 8,
+  },
+  avatarControls: {
+    alignItems: "center" as const,
+    flexDirection: "row" as const,
+    gap: 12,
+  },
+  avatarActionButton: {
+    height: 36,
+  },
+  avatarActionButtonText: {
+    fontSize: 14,
+    lineHeight: 20,
   },
   avatarTitle: {
     color: COLORS.white85,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 20,
+    lineHeight: 28,
   },
   container: {
     gap: 12,
@@ -255,6 +269,7 @@ const styles = {
     borderRadius: 20,
     color: COLORS.white100,
     ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
+    ...webInputFocusReset,
     minHeight: 110,
     padding: 16,
     textAlignVertical: "top" as const,
@@ -268,6 +283,7 @@ const styles = {
     borderRadius: 32,
     color: COLORS.white100,
     ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
+    ...webInputFocusReset,
     height: 60,
     padding: 20,
   },
@@ -276,25 +292,10 @@ const styles = {
     borderWidth: 1,
   },
   preview: {
-    borderRadius: 16,
-    height: 80,
-    width: 80,
-  },
-  previewWrap: {
-    alignItems: "center" as const,
-    flexDirection: "row" as const,
-    gap: 12,
-  },
-  removeAvatarButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  removeAvatarText: {
-    color: COLORS.white85,
-    fontSize: 12,
-  },
-  secondaryButtonText: {
-    color: COLORS.white25,
-    fontSize: 16,
+    borderColor: COLORS.white25,
+    borderRadius: 48,
+    borderWidth: 1,
+    height: 96,
+    width: 96,
   },
 };

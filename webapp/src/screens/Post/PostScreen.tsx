@@ -10,7 +10,7 @@ import { getCloudinaryUploadUrl } from "@somnia/shared/src/cloudinary/cloudinary
 import { isUserAdmin } from "@somnia/shared/src/utils/can";
 import { format } from "date-fns/format";
 import { StatusBar } from "expo-status-bar";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -22,8 +22,9 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
-  ScrollView,
   Platform,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -53,6 +54,42 @@ type PostScreenNavProp = NativeStackNavigationProp<
   ScreenName.Post
 >;
 const MAX_INFINITE_PAGES = 10;
+const MAX_POST_IMAGE_HEIGHT = 650;
+const DEFAULT_POST_IMAGE_WIDTH = 280;
+const FALLBACK_IMAGE_ASPECT_RATIO = 4 / 3;
+const imageAspectRatioCache = new Map<string, number>();
+const MEDIA_COUNTER_BACKGROUND = "rgba(0,0,0,0.45)";
+const MEDIA_ARROW_BACKGROUND = "rgba(0,0,0,0.4)";
+
+const getContainedImageSize = ({
+  containerWidth,
+  aspectRatio,
+  maxHeight,
+}: {
+  containerWidth: number;
+  aspectRatio: number;
+  maxHeight: number;
+}) => {
+  if (containerWidth <= 0 || aspectRatio <= 0 || maxHeight <= 0) {
+    return {
+      width: 0,
+      height: 0,
+    };
+  }
+
+  let width = containerWidth;
+  let height = width / aspectRatio;
+
+  if (height > maxHeight) {
+    height = maxHeight;
+    width = height * aspectRatio;
+  }
+
+  return {
+    width,
+    height,
+  };
+};
 
 type Comment = {
   id: string;
@@ -102,6 +139,19 @@ export const PostScreen = () => {
     index: 0,
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [postImageContainerWidth, setPostImageContainerWidth] = useState(0);
+  const [postImageCursor, setPostImageCursor] = useState<{
+    index: number;
+    postId: string;
+  }>({
+    index: 0,
+    postId: route.params.id,
+  });
+  const postImageCarouselRef = useRef<FlatList<string>>(null);
+  const [postImageAspectRatioState, setPostImageAspectRatioState] = useState<{
+    ratio: number;
+    url: string;
+  } | null>(null);
   const undoDeletePost = trpc.undoDeletePost.useMutation();
 
   type PostData = NonNullable<ReturnType<typeof utils.getPost.getData>>;
@@ -135,6 +185,126 @@ export const PostScreen = () => {
 
   const comments = commentsData?.pages.flatMap((page) => page.comments) ?? [];
   const totalCommentsCount = comments.length;
+  const primaryPostImagePublicId = data?.post?.images[0];
+  const primaryPostImageUrl = primaryPostImagePublicId
+    ? getCloudinaryUploadUrl(primaryPostImagePublicId, "image", "large")
+    : null;
+  const cachedPostImageAspectRatio = primaryPostImageUrl
+    ? imageAspectRatioCache.get(primaryPostImageUrl)
+    : undefined;
+  const currentPostImageAspectRatio =
+    cachedPostImageAspectRatio ??
+    (primaryPostImageUrl &&
+    postImageAspectRatioState?.url === primaryPostImageUrl
+      ? postImageAspectRatioState.ratio
+      : FALLBACK_IMAGE_ASPECT_RATIO);
+  const currentPostId = data?.post?.id ?? route.params.id;
+  const currentPostImageIndex =
+    postImageCursor.postId === currentPostId ? postImageCursor.index : 0;
+  const hasMultiplePostImages = (data?.post?.images.length ?? 0) > 1;
+  const postImageWidthBase =
+    postImageContainerWidth || DEFAULT_POST_IMAGE_WIDTH;
+  const usablePostImageContainerWidth = Math.max(1, postImageWidthBase);
+  const postImageSize = useMemo(
+    () =>
+      getContainedImageSize({
+        containerWidth: usablePostImageContainerWidth,
+        aspectRatio: currentPostImageAspectRatio,
+        maxHeight: MAX_POST_IMAGE_HEIGHT,
+      }),
+    [usablePostImageContainerWidth, currentPostImageAspectRatio],
+  );
+
+  useEffect(() => {
+    if (!primaryPostImageUrl) {
+      return;
+    }
+
+    const cachedAspectRatio = imageAspectRatioCache.get(primaryPostImageUrl);
+    if (cachedAspectRatio) {
+      return;
+    }
+
+    let isMounted = true;
+    Image.getSize(
+      primaryPostImageUrl,
+      (width, height) => {
+        if (!isMounted || !width || !height) {
+          return;
+        }
+
+        const nextAspectRatio = width / height;
+        if (!Number.isFinite(nextAspectRatio) || nextAspectRatio <= 0) {
+          return;
+        }
+
+        imageAspectRatioCache.set(primaryPostImageUrl, nextAspectRatio);
+        setPostImageAspectRatioState({
+          ratio: nextAspectRatio,
+          url: primaryPostImageUrl,
+        });
+      },
+      () => {
+        // keep fallback ratio
+      },
+    );
+
+    return () => {
+      isMounted = false;
+    };
+  }, [primaryPostImageUrl]);
+
+  const handlePostImageScrollEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!hasMultiplePostImages || postImageSize.width <= 0) {
+        return;
+      }
+
+      const totalImages = data?.post?.images.length ?? 0;
+      if (totalImages === 0) {
+        return;
+      }
+
+      const nextIndex = Math.round(
+        event.nativeEvent.contentOffset.x / postImageSize.width,
+      );
+      const clampedIndex = Math.max(0, Math.min(nextIndex, totalImages - 1));
+      setPostImageCursor({
+        index: clampedIndex,
+        postId: currentPostId,
+      });
+    },
+    [
+      currentPostId,
+      data?.post?.images.length,
+      hasMultiplePostImages,
+      postImageSize.width,
+    ],
+  );
+
+  const scrollToPostImage = useCallback(
+    (targetIndex: number) => {
+      if (!hasMultiplePostImages || !postImageCarouselRef.current) {
+        return;
+      }
+
+      const totalImages = data?.post?.images.length ?? 0;
+      if (totalImages === 0) {
+        return;
+      }
+
+      const clampedIndex = Math.max(0, Math.min(targetIndex, totalImages - 1));
+      postImageCarouselRef.current.scrollToIndex({
+        index: clampedIndex,
+        animated: true,
+      });
+      setPostImageCursor({
+        index: clampedIndex,
+        postId: currentPostId,
+      });
+    },
+    [currentPostId, data?.post?.images.length, hasMultiplePostImages],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -431,7 +601,7 @@ export const PostScreen = () => {
     );
   }, [isFetchingNextPage]);
 
-  const ListHeaderComponent = useCallback(() => {
+  const listHeaderComponent = useMemo(() => {
     if (!data?.post) {
       return null;
     }
@@ -483,32 +653,98 @@ export const PostScreen = () => {
           </TouchableOpacity>
 
           {post.images.length > 0 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.postImagesScroller}
-              contentContainerStyle={styles.postImagesContainer}
+            <View
+              style={styles.postImagesWrapper}
+              onLayout={(event) => {
+                const nextWidth = Math.ceil(event.nativeEvent.layout.width);
+                setPostImageContainerWidth((prev) =>
+                  prev === nextWidth ? prev : nextWidth,
+                );
+              }}
             >
-              {post.images.map((imagePublicId, index) => (
-                <TouchableOpacity
-                  key={`${imagePublicId}-${index}`}
-                  activeOpacity={0.9}
-                  onPress={() => openImageViewer(post.images, index)}
-                >
-                  <Image
-                    source={{
-                      uri: getCloudinaryUploadUrl(
-                        imagePublicId,
-                        "image",
-                        "large",
-                      ),
-                    }}
-                    style={styles.postImage}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+              <View
+                style={[
+                  styles.postImageFrame,
+                  {
+                    height: postImageSize.height,
+                    width: postImageSize.width,
+                  },
+                ]}
+              >
+                <FlatList
+                  ref={postImageCarouselRef}
+                  key={post.id}
+                  horizontal
+                  pagingEnabled
+                  bounces={false}
+                  scrollEnabled={hasMultiplePostImages}
+                  data={post.images}
+                  keyExtractor={(item, index) => `${item}-${index}`}
+                  showsHorizontalScrollIndicator={false}
+                  getItemLayout={(_, index) => ({
+                    index,
+                    length: postImageSize.width,
+                    offset: postImageSize.width * index,
+                  })}
+                  onMomentumScrollEnd={handlePostImageScrollEnd}
+                  onScrollToIndexFailed={() => {
+                    // no-op
+                  }}
+                  renderItem={({ item, index }) => (
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      onPress={() => openImageViewer(post.images, index)}
+                    >
+                      <Image
+                        source={{
+                          uri: getCloudinaryUploadUrl(item, "image", "large"),
+                        }}
+                        style={[
+                          styles.postImageMain,
+                          {
+                            height: postImageSize.height,
+                            width: postImageSize.width,
+                          },
+                        ]}
+                        resizeMode="contain"
+                      />
+                    </TouchableOpacity>
+                  )}
+                />
+                {hasMultiplePostImages ? (
+                  <View style={styles.mediaCounter}>
+                    <Text style={styles.mediaCounterText}>
+                      {currentPostImageIndex + 1}/{post.images.length}
+                    </Text>
+                  </View>
+                ) : null}
+                {hasMultiplePostImages && currentPostImageIndex > 0 ? (
+                  <TouchableOpacity
+                    style={[styles.mediaArrow, styles.mediaArrowLeft]}
+                    onPress={() => scrollToPostImage(currentPostImageIndex - 1)}
+                  >
+                    <Ionicons
+                      name="chevron-back"
+                      size={18}
+                      color={COLORS.white100}
+                    />
+                  </TouchableOpacity>
+                ) : null}
+                {hasMultiplePostImages &&
+                currentPostImageIndex < post.images.length - 1 ? (
+                  <TouchableOpacity
+                    style={[styles.mediaArrow, styles.mediaArrowRight]}
+                    onPress={() => scrollToPostImage(currentPostImageIndex + 1)}
+                  >
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color={COLORS.white100}
+                    />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            </View>
           ) : null}
 
           <View style={styles.dream_info}>
@@ -551,7 +787,13 @@ export const PostScreen = () => {
     data,
     handleOpenCommunity,
     handleOpenProfile,
+    handlePostImageScrollEnd,
+    hasMultiplePostImages,
+    currentPostImageIndex,
     openImageViewer,
+    postImageSize.height,
+    postImageSize.width,
+    scrollToPostImage,
     toggleLike,
     totalCommentsCount,
   ]);
@@ -689,7 +931,7 @@ export const PostScreen = () => {
           data={comments}
           renderItem={renderComment}
           keyExtractor={(item) => item.id}
-          ListHeaderComponent={ListHeaderComponent}
+          ListHeaderComponent={listHeaderComponent}
           ListFooterComponent={renderFooter}
           onEndReached={loadMoreComments}
           onEndReachedThreshold={0.5}
@@ -855,6 +1097,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 20,
   },
+  mediaArrow: {
+    alignItems: "center",
+    backgroundColor: MEDIA_ARROW_BACKGROUND,
+    borderRadius: 14,
+    height: 28,
+    justifyContent: "center",
+    position: "absolute",
+    top: "50%",
+    transform: [{ translateY: -14 }],
+    width: 28,
+  },
+  mediaArrowLeft: {
+    left: 8,
+  },
+  mediaArrowRight: {
+    right: 8,
+  },
+  mediaCounter: {
+    alignItems: "center",
+    backgroundColor: MEDIA_COUNTER_BACKGROUND,
+    borderRadius: 12,
+    justifyContent: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    position: "absolute",
+    right: 8,
+    top: 8,
+  },
+  mediaCounterText: {
+    color: COLORS.white100,
+    fontSize: 12,
+    fontWeight: "600",
+  },
   postHeader: {
     alignItems: "center",
     flexDirection: "row",
@@ -868,18 +1143,20 @@ const styles = StyleSheet.create({
     gap: 4,
     justifyContent: "space-between",
   },
-  postImage: {
+  postImageFrame: {
+    borderRadius: 16,
+    overflow: "hidden",
+    position: "relative",
+  },
+  postImageMain: {
     backgroundColor: COLORS.imageEmptyFieldsBackground,
     borderRadius: 16,
-    height: 220,
-    width: 280,
   },
-  postImagesContainer: {
-    gap: 10,
-    paddingRight: 8,
-  },
-  postImagesScroller: {
+  postImagesWrapper: {
+    alignItems: "center",
+    marginBottom: 16,
     marginTop: 16,
+    width: "100%",
   },
   repliesToggle: {
     flexDirection: "row",

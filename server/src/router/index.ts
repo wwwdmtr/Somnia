@@ -27,6 +27,8 @@ import { getUserFollowsTrpcRoute } from "./getUserFollows/getUserFollows";
 import { getUserPostsTrpcRoute } from "./getUserPosts/getUserPosts";
 import { getUserProfileTrpcRoute } from "./getUserProfile/getUserProfile";
 import { markAllNotificationsReadTrpcRoute } from "./markAllNotificationsRead/markAllNotificationsRead";
+import { searchCommunitiesTrpcRoute } from "./searchCommunities/searchCommunities";
+import { searchUsersTrpcRoute } from "./searchUsers/searchUsers";
 import { setCommunityAvatarTrpcRoute } from "./setCommunityAvatar/setCommunityAvatar";
 import { setCommunityModeratorTrpcRoute } from "./setCommunityModerator/setCommunityModerator";
 import { setCommunitySubscriptionTrpcRoute } from "./setCommunitySubscription/setCommunitySubscription";
@@ -77,6 +79,8 @@ export const trpcRouter = createTrpcRouter({
   setPostLike: setPostLikeTrpcRoute,
   setCommunitySubscription: setCommunitySubscriptionTrpcRoute,
   setUserFollow: setUserFollowTrpcRoute,
+  searchUsers: searchUsersTrpcRoute,
+  searchCommunities: searchCommunitiesTrpcRoute,
   deleteComment: deleteCommentTrpcRoute,
   deletePost: deletePostTrpcRoute,
   markAllNotificationsRead: markAllNotificationsReadTrpcRoute,

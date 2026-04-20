@@ -8,6 +8,7 @@ import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
 import { trpc } from "../../lib/trpc";
+import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
 
@@ -192,6 +193,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     color: COLORS.white100,
     ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
+    ...webInputFocusReset,
 
     padding: 11,
   },

@@ -8,6 +8,7 @@ import { toFormikValidationSchema } from "zod-formik-adapter";
 
 import { sentryCaptureException } from "../../lib/sentrySDK";
 import { trpc } from "../../lib/trpc";
+import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
 
@@ -126,6 +127,7 @@ const styles = {
     borderRadius: 20,
     color: COLORS.white100,
     ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
+    ...webInputFocusReset,
     minHeight: 110,
     padding: 16,
     textAlignVertical: "top" as const,
@@ -139,6 +141,7 @@ const styles = {
     borderRadius: 32,
     color: COLORS.white100,
     ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
+    ...webInputFocusReset,
     height: 60,
     padding: 20,
   },

@@ -301,6 +301,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: 20,
     paddingHorizontal: 14,
+    paddingTop: 20,
   },
   sectionTitle: {
     color: COLORS.white85,

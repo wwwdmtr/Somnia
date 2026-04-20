@@ -22,8 +22,10 @@ import { CommunityAvatarUploader } from "../../components/forms/CommunityAvatarU
 import { UpdateCommunityForm } from "../../components/forms/UpdateCommunityForm";
 import { AppButton } from "../../components/ui/AppButton";
 import ScreenName from "../../constants/ScreenName";
+import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
 import { getAvatarSource } from "../../lib/avatar";
 import { trpc } from "../../lib/trpc";
+import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS, typography } from "../../theme/typography";
 
 import type { AdminStackParamList } from "../../navigation/AdminStackParamList";
@@ -842,8 +844,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.navBarBackground,
     borderRadius: 24,
     maxHeight: "84%",
+    maxWidth: SHELL_CONTENT_WIDTH,
     padding: 16,
-    width: "92%",
+    width: "100%",
   },
   modalHeader: {
     alignItems: "center",
@@ -884,6 +887,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     color: COLORS.white85,
     ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
+    ...webInputFocusReset,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },

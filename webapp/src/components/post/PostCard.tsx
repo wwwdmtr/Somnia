@@ -2,11 +2,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { getCloudinaryUploadUrl } from "@somnia/shared/src/cloudinary/cloudinary";
 import { format } from "date-fns";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  FlatList,
   Image,
   type LayoutChangeEvent,
-  ScrollView,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -64,16 +66,50 @@ type PostCardProps = {
   textNumberOfLines?: number;
 };
 
-const DEFAULT_IMAGE_HEIGHT = 220;
+const DEFAULT_MAX_IMAGE_HEIGHT = 650;
 const DEFAULT_IMAGE_WIDTH = 260;
 const PREVIEW_TEXT_LINE_HEIGHT = 24;
+const FALLBACK_IMAGE_ASPECT_RATIO = 4 / 3;
+const imageAspectRatioCache = new Map<string, number>();
+const MEDIA_COUNTER_BACKGROUND = "rgba(0,0,0,0.45)";
+const MEDIA_ARROW_BACKGROUND = "rgba(0,0,0,0.4)";
+
+const getContainedImageSize = ({
+  containerWidth,
+  aspectRatio,
+  maxHeight,
+}: {
+  containerWidth: number;
+  aspectRatio: number;
+  maxHeight: number;
+}) => {
+  if (containerWidth <= 0 || aspectRatio <= 0 || maxHeight <= 0) {
+    return {
+      width: 0,
+      height: 0,
+    };
+  }
+
+  let width = containerWidth;
+  let height = width / aspectRatio;
+
+  if (height > maxHeight) {
+    height = maxHeight;
+    width = height * aspectRatio;
+  }
+
+  return {
+    width,
+    height,
+  };
+};
 
 export const PostCard = ({
   badgeColor = "rgba(255,255,255,0.2)",
   badgeLabel,
   commentsFallbackLabel = "комментариев",
   contentOrder = "mediaFirst",
-  imageHeight = DEFAULT_IMAGE_HEIGHT,
+  imageHeight = DEFAULT_MAX_IMAGE_HEIGHT,
   imageWidth = DEFAULT_IMAGE_WIDTH,
   onOpenCommunity,
   onOpenImageViewer,
@@ -92,21 +128,147 @@ export const PostCard = ({
   const createdAt = format(new Date(post.createdAt), "dd.MM.yyyy");
   const [previewTextHeight, setPreviewTextHeight] = useState(0);
   const [fullTextHeight, setFullTextHeight] = useState(0);
+  const [mediaContainerWidth, setMediaContainerWidth] = useState(0);
+  const [mediaCursor, setMediaCursor] = useState<{
+    index: number;
+    postId: string;
+  }>({
+    index: 0,
+    postId: post.id,
+  });
+  const mediaCarouselRef = useRef<FlatList<string>>(null);
+  const [mainImageAspectRatioState, setMainImageAspectRatioState] = useState<{
+    ratio: number;
+    url: string;
+  } | null>(null);
   const shouldMeasureTruncation = showReadMore && showReadMoreOnlyWhenTruncated;
+  const primaryImagePublicId = post.images[0];
+  const primaryImageUrl = primaryImagePublicId
+    ? getCloudinaryUploadUrl(primaryImagePublicId, "image", "large")
+    : null;
+  const cachedMainImageAspectRatio = primaryImageUrl
+    ? imageAspectRatioCache.get(primaryImageUrl)
+    : undefined;
+  const currentMainImageAspectRatio =
+    cachedMainImageAspectRatio ??
+    (primaryImageUrl && mainImageAspectRatioState?.url === primaryImageUrl
+      ? mainImageAspectRatioState.ratio
+      : FALLBACK_IMAGE_ASPECT_RATIO);
+  const currentMediaIndex =
+    mediaCursor.postId === post.id ? mediaCursor.index : 0;
+  const hasMultipleImages = post.images.length > 1;
+  const maxImageHeight = Math.max(
+    1,
+    Math.min(imageHeight, DEFAULT_MAX_IMAGE_HEIGHT),
+  );
+  const usableContainerWidth = Math.max(1, mediaContainerWidth || imageWidth);
+  const mediaSize = useMemo(
+    () =>
+      getContainedImageSize({
+        containerWidth: usableContainerWidth,
+        aspectRatio: currentMainImageAspectRatio,
+        maxHeight: maxImageHeight,
+      }),
+    [usableContainerWidth, currentMainImageAspectRatio, maxImageHeight],
+  );
   const isCommunityPost =
     post.publisherType === "COMMUNITY" && Boolean(post.publisherCommunity);
   const publisherName =
     isCommunityPost && post.publisherCommunity
-      ? post.author
-        ? `${post.publisherCommunity.name} • @${post.author.nickname}`
-        : post.publisherCommunity.name
+      ? post.publisherCommunity.name
       : post.author
         ? `@${post.author.nickname}`
         : null;
+  const publisherMetaText =
+    isCommunityPost && post.author
+      ? `${createdAt} • @${post.author.nickname}`
+      : createdAt;
   const publisherAvatar =
     isCommunityPost && post.publisherCommunity
       ? post.publisherCommunity.avatar
       : post.author?.avatar;
+
+  useEffect(() => {
+    if (!primaryImageUrl) {
+      return;
+    }
+
+    const cachedAspectRatio = imageAspectRatioCache.get(primaryImageUrl);
+    if (cachedAspectRatio) {
+      return;
+    }
+
+    let isMounted = true;
+    Image.getSize(
+      primaryImageUrl,
+      (width, height) => {
+        if (!isMounted || !width || !height) {
+          return;
+        }
+
+        const nextAspectRatio = width / height;
+        if (!Number.isFinite(nextAspectRatio) || nextAspectRatio <= 0) {
+          return;
+        }
+
+        imageAspectRatioCache.set(primaryImageUrl, nextAspectRatio);
+        setMainImageAspectRatioState({
+          ratio: nextAspectRatio,
+          url: primaryImageUrl,
+        });
+      },
+      () => {
+        // keep fallback ratio
+      },
+    );
+
+    return () => {
+      isMounted = false;
+    };
+  }, [primaryImageUrl]);
+
+  const handleMediaScrollEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!hasMultipleImages || mediaSize.width <= 0) {
+        return;
+      }
+
+      const nextIndex = Math.round(
+        event.nativeEvent.contentOffset.x / mediaSize.width,
+      );
+      const clampedIndex = Math.max(
+        0,
+        Math.min(nextIndex, post.images.length - 1),
+      );
+      setMediaCursor({
+        index: clampedIndex,
+        postId: post.id,
+      });
+    },
+    [hasMultipleImages, mediaSize.width, post.id, post.images.length],
+  );
+
+  const scrollToMediaIndex = useCallback(
+    (targetIndex: number) => {
+      if (!hasMultipleImages || !mediaCarouselRef.current) {
+        return;
+      }
+
+      const clampedIndex = Math.max(
+        0,
+        Math.min(targetIndex, post.images.length - 1),
+      );
+      mediaCarouselRef.current.scrollToIndex({
+        index: clampedIndex,
+        animated: true,
+      });
+      setMediaCursor({
+        index: clampedIndex,
+        postId: post.id,
+      });
+    },
+    [hasMultipleImages, post.id, post.images.length],
+  );
 
   const handlePreviewTextLayout = useCallback((event: LayoutChangeEvent) => {
     const nextHeight = event.nativeEvent.layout.height;
@@ -167,57 +329,94 @@ export const PostCard = ({
       return null;
     }
 
-    if (post.images.length === 1) {
-      return (
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() => onOpenImageViewer(post.images, 0)}
-        >
-          <Image
-            source={{
-              uri: getCloudinaryUploadUrl(post.images[0], "image", "large"),
-            }}
-            style={[
-              styles.singlePostPreviewImage,
-              {
-                height: imageHeight,
-              },
-            ]}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      );
-    }
-
     return (
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.postImagesScroller}
-        contentContainerStyle={styles.postImagesContainer}
+      <View
+        style={styles.postMediaWrapper}
+        onLayout={(event) => {
+          const nextWidth = Math.ceil(event.nativeEvent.layout.width);
+          setMediaContainerWidth((prev) =>
+            prev === nextWidth ? prev : nextWidth,
+          );
+        }}
       >
-        {post.images.map((imagePublicId, imageIndex) => (
-          <TouchableOpacity
-            key={`${imagePublicId}-${imageIndex}`}
-            activeOpacity={0.9}
-            onPress={() => onOpenImageViewer(post.images, imageIndex)}
-          >
-            <Image
-              source={{
-                uri: getCloudinaryUploadUrl(imagePublicId, "image", "large"),
-              }}
-              style={[
-                styles.postPreviewImage,
-                {
-                  height: imageHeight,
-                  width: imageWidth,
-                },
-              ]}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+        <View
+          style={[
+            styles.postMediaFrame,
+            {
+              height: mediaSize.height,
+              width: mediaSize.width,
+            },
+          ]}
+        >
+          <FlatList
+            ref={mediaCarouselRef}
+            key={post.id}
+            horizontal
+            pagingEnabled
+            bounces={false}
+            scrollEnabled={hasMultipleImages}
+            data={post.images}
+            keyExtractor={(item, index) => `${item}-${index}`}
+            showsHorizontalScrollIndicator={false}
+            getItemLayout={(_, index) => ({
+              index,
+              length: mediaSize.width,
+              offset: mediaSize.width * index,
+            })}
+            onMomentumScrollEnd={handleMediaScrollEnd}
+            onScrollToIndexFailed={() => {
+              // no-op
+            }}
+            renderItem={({ item, index }) => (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => onOpenImageViewer(post.images, index)}
+              >
+                <Image
+                  source={{
+                    uri: getCloudinaryUploadUrl(item, "image", "large"),
+                  }}
+                  style={[
+                    styles.postPreviewImageMain,
+                    {
+                      height: mediaSize.height,
+                      width: mediaSize.width,
+                    },
+                  ]}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            )}
+          />
+          {hasMultipleImages ? (
+            <View style={styles.mediaCounter}>
+              <Text style={styles.mediaCounterText}>
+                {currentMediaIndex + 1}/{post.images.length}
+              </Text>
+            </View>
+          ) : null}
+          {hasMultipleImages && currentMediaIndex > 0 ? (
+            <TouchableOpacity
+              style={[styles.mediaArrow, styles.mediaArrowLeft]}
+              onPress={() => scrollToMediaIndex(currentMediaIndex - 1)}
+            >
+              <Ionicons name="chevron-back" size={18} color={COLORS.white100} />
+            </TouchableOpacity>
+          ) : null}
+          {hasMultipleImages && currentMediaIndex < post.images.length - 1 ? (
+            <TouchableOpacity
+              style={[styles.mediaArrow, styles.mediaArrowRight]}
+              onPress={() => scrollToMediaIndex(currentMediaIndex + 1)}
+            >
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={COLORS.white100}
+              />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </View>
     );
   };
 
@@ -277,7 +476,9 @@ export const PostCard = ({
           />
           <View style={styles.postHeaderInfo}>
             <Text style={typography.body_white85}>{publisherName}</Text>
-            <Text style={typography.additionalInfo_white25}>{createdAt}</Text>
+            <Text style={typography.additionalInfo_white25}>
+              {publisherMetaText}
+            </Text>
           </View>
         </TouchableOpacity>
       ) : (
@@ -388,6 +589,39 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 0,
   },
+  mediaArrow: {
+    alignItems: "center",
+    backgroundColor: MEDIA_ARROW_BACKGROUND,
+    borderRadius: 14,
+    height: 28,
+    justifyContent: "center",
+    position: "absolute",
+    top: "50%",
+    transform: [{ translateY: -14 }],
+    width: 28,
+  },
+  mediaArrowLeft: {
+    left: 8,
+  },
+  mediaArrowRight: {
+    right: 8,
+  },
+  mediaCounter: {
+    alignItems: "center",
+    backgroundColor: MEDIA_COUNTER_BACKGROUND,
+    borderRadius: 12,
+    justifyContent: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    position: "absolute",
+    right: 8,
+    top: 8,
+  },
+  mediaCounterText: {
+    color: COLORS.white100,
+    fontSize: 12,
+    fontWeight: "600",
+  },
   postHeader: {
     alignItems: "center",
     flexDirection: "row",
@@ -400,14 +634,17 @@ const styles = StyleSheet.create({
     gap: 4,
     justifyContent: "space-between",
   },
-  postImagesContainer: {
-    gap: 10,
-    paddingRight: 8,
+  postMediaFrame: {
+    borderRadius: 14,
+    overflow: "hidden",
+    position: "relative",
   },
-  postImagesScroller: {
+  postMediaWrapper: {
+    alignItems: "center",
     marginBottom: 16,
+    width: "100%",
   },
-  postPreviewImage: {
+  postPreviewImageMain: {
     backgroundColor: COLORS.imageEmptyFieldsBackground,
     borderRadius: 14,
   },
@@ -419,12 +656,6 @@ const styles = StyleSheet.create({
   },
   readMore: {
     marginTop: 8,
-  },
-  singlePostPreviewImage: {
-    backgroundColor: COLORS.imageEmptyFieldsBackground,
-    borderRadius: 14,
-    marginBottom: 16,
-    width: "100%",
   },
   textContainer: {
     gap: 12,

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
   getFocusedRouteNameFromRoute,
@@ -8,7 +9,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { isUserAdmin } from "@somnia/shared/src/utils/can";
 import { useFonts } from "expo-font";
 import React from "react";
-import { Text, View, Image, ImageSourcePropType } from "react-native";
+import { Text } from "react-native";
 
 import ScreenName from "../constants/ScreenName";
 import TabName from "../constants/TabName";
@@ -259,34 +260,12 @@ const Tab = createBottomTabNavigator<RootTabParamList>();
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AdminStack = createNativeStackNavigator<AdminStackParamList>();
 
-type IconPairs = {
-  active: ImageSourcePropType;
-  inactive: ImageSourcePropType;
-};
-
-const iconMap: Record<string, IconPairs> = {
-  [TabName.FeedTab]: {
-    active: require("../assets/Icons/tabIcons/feed-active.png"),
-    inactive: require("../assets/Icons/tabIcons/feed-inactive.png"),
-  },
-  [TabName.AddPostTab]: {
-    active: require("../assets/Icons/tabIcons/add-dream-button.png"),
-    inactive: require("../assets/Icons/tabIcons/add-dream-button.png"),
-  },
-  [TabName.ProfileTab]: {
-    active: require("../assets/Icons/tabIcons/profile-active.png"),
-    inactive: require("../assets/Icons/tabIcons/profile-inactive.png"),
-  },
-  [TabName.SearchTab]: {
-    active: require("../assets/Icons/tabIcons/feed-active.png"),
-    inactive: require("../assets/Icons/tabIcons/feed-inactive.png"),
-  },
-};
+const TAB_ICON_SIZE = 24;
 
 export const BASE_TAB_BAR_STYLE = {
   position: "absolute",
   marginHorizontal: 13,
-  bottom: 28,
+  bottom: 20,
   height: 60,
 
   borderRadius: 999,
@@ -348,39 +327,34 @@ export function AppNav() {
           tabBarIconStyle: {
             margin: 0,
             padding: 0,
+            width: TAB_ICON_SIZE,
+            height: TAB_ICON_SIZE,
           },
-          tabBarIcon: ({ focused, size }) => {
-            const pair = iconMap[route.name];
-            const source = focused ? pair.active : pair.inactive;
-            const isCenter = route.name === TabName.AddPostTab;
-
-            if (isCenter) {
-              return (
-                <View
-                  // eslint-disable-next-line react-native/no-inline-styles
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 32,
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Image
-                    source={source}
-                    // eslint-disable-next-line react-native/no-inline-styles
-                    style={{ width: 44, height: 44 }}
-                    resizeMode="contain"
-                  />
-                </View>
-              );
-            }
+          tabBarIcon: ({ focused }) => {
+            const iconName =
+              route.name === TabName.FeedTab
+                ? focused
+                  ? "newspaper"
+                  : "newspaper-outline"
+                : route.name === TabName.SearchTab
+                  ? focused
+                    ? "search"
+                    : "search-outline"
+                  : route.name === TabName.AddPostTab
+                    ? focused
+                      ? "add-circle"
+                      : "add-circle-outline"
+                    : focused
+                      ? "person"
+                      : "person-outline";
 
             return (
-              <Image
-                source={source}
-                style={{ width: size, height: size }}
-                resizeMode="contain"
+              <Ionicons
+                name={iconName}
+                size={TAB_ICON_SIZE}
+                color={
+                  focused ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.55)"
+                }
               />
             );
           },

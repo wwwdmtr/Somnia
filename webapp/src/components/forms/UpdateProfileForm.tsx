@@ -9,6 +9,7 @@ import { toFormikValidationSchema } from "zod-formik-adapter";
 import { useMe } from "../../lib/ctx";
 import { sentryCaptureException } from "../../lib/sentrySDK";
 import { trpc } from "../../lib/trpc";
+import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
 
@@ -29,6 +30,9 @@ export const UpdateProfileForm = () => {
       try {
         const updatedMe = await updateProfile.mutateAsync(values);
         trpcUtils.getMe.setData(undefined, { me: updatedMe });
+        await trpcUtils.getUserProfile.invalidate({
+          userId: updatedMe.id,
+        });
       } catch (err) {
         if (!(err instanceof TRPCClientError)) {
           sentryCaptureException(err);
@@ -73,7 +77,8 @@ export const UpdateProfileForm = () => {
       )}
 
       <TextInput
-        placeholder="Ваше имя"
+        placeholder="Ваше Имя"
+        placeholderTextColor={COLORS.white25}
         value={formik.values.name}
         onChangeText={(text) => formik.setFieldValue("name", text)}
         onBlur={() => formik.setFieldTouched("name")}
@@ -107,6 +112,7 @@ const styles = {
     borderWidth: 1,
     color: COLORS.white100,
     ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
+    ...webInputFocusReset,
 
     padding: 11,
   },

@@ -11,6 +11,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   ImageBackground,
   Modal,
   RefreshControl,
@@ -25,6 +26,7 @@ import { toFormikValidationSchema } from "zod-formik-adapter";
 
 import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
+import { getAvatarSource } from "../../lib/avatar";
 import {
   applyOptimisticLikeToPosts,
   applyServerLikeToPosts,
@@ -38,6 +40,8 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type NavigationProp = NativeStackNavigationProp<SearchStackParamList, "Search">;
 type Period = "day" | "week" | "month" | "all";
+type SearchTarget = "posts" | "users" | "communities";
+
 const MAX_INFINITE_PAGES = 10;
 
 const PERIOD_LABELS: Record<Period, string> = {
@@ -45,6 +49,19 @@ const PERIOD_LABELS: Record<Period, string> = {
   week: "За неделю",
   month: "За месяц",
   all: "За всё время",
+};
+
+const SEARCH_TARGET_LABELS: Record<SearchTarget, string> = {
+  posts: "Посты",
+  users: "Пользователи",
+  communities: "Сообщества",
+};
+const SEARCH_TARGETS: SearchTarget[] = ["posts", "users", "communities"];
+
+const SEARCH_PLACEHOLDERS: Record<SearchTarget, string> = {
+  posts: "Поиск ...",
+  users: "Поиск ...",
+  communities: "Поиск ...",
 };
 
 function useDebouncedValue<T>(value: T, delayMs = 1000) {
@@ -76,6 +93,8 @@ export const SearchScreen = () => {
 
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>("all");
+  const [selectedSearchTarget, setSelectedSearchTarget] =
+    useState<SearchTarget>("posts");
   const [showPeriodModal, setShowPeriodModal] = useState(false);
   const [imageViewerState, setImageViewerState] = useState<{
     isOpen: boolean;
@@ -99,6 +118,10 @@ export const SearchScreen = () => {
   const search = debouncedSearch.trim();
   const isSearchMode = search.length > 0;
 
+  const isPostsTarget = selectedSearchTarget === "posts";
+  const isUsersTarget = selectedSearchTarget === "users";
+  const isCommunitiesTarget = selectedSearchTarget === "communities";
+
   const queryKey = useMemo(
     () => ({
       limit: 15,
@@ -108,21 +131,57 @@ export const SearchScreen = () => {
     [selectedPeriod, isSearchMode, search],
   );
 
-  const query = trpc.getRatedPosts.useInfiniteQuery(queryKey, {
+  const postsQuery = trpc.getRatedPosts.useInfiniteQuery(queryKey, {
+    enabled: isPostsTarget,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     maxPages: MAX_INFINITE_PAGES,
-
     placeholderData: (prev) => prev,
   });
 
-  const posts = useMemo(
-    () => query.data?.pages.flatMap((page) => page.posts) ?? [],
-    [query.data],
+  const usersQuery = trpc.searchUsers.useQuery(
+    {
+      search,
+      limit: 30,
+    },
+    {
+      enabled: isUsersTarget && isSearchMode,
+    },
   );
 
-  const isInitialLoading = query.isLoading && !query.data;
-  const isUpdating =
-    query.isFetching && !query.isFetchingNextPage && !!query.data;
+  const communitiesQuery = trpc.searchCommunities.useQuery(
+    {
+      search,
+      limit: 30,
+    },
+    {
+      enabled: isCommunitiesTarget && isSearchMode,
+    },
+  );
+
+  const posts = useMemo(
+    () => postsQuery.data?.pages.flatMap((page) => page.posts) ?? [],
+    [postsQuery.data],
+  );
+  const users = usersQuery.data?.users ?? [];
+  const communities = communitiesQuery.data?.communities ?? [];
+
+  const isInitialLoading = isPostsTarget
+    ? postsQuery.isLoading && !postsQuery.data
+    : false;
+
+  const isUpdating = isPostsTarget
+    ? postsQuery.isFetching &&
+      !postsQuery.isFetchingNextPage &&
+      !!postsQuery.data
+    : isUsersTarget
+      ? usersQuery.isFetching && !!usersQuery.data
+      : communitiesQuery.isFetching && !!communitiesQuery.data;
+
+  const activeError = isPostsTarget
+    ? postsQuery.error
+    : isUsersTarget
+      ? usersQuery.error
+      : communitiesQuery.error;
 
   const setPostLike = usePostLikeMutation<PostsInfiniteData>({
     applyOptimistic: (old, variables) => {
@@ -159,16 +218,32 @@ export const SearchScreen = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await query.refetch();
-    setRefreshing(false);
+
+    try {
+      if (isPostsTarget) {
+        await postsQuery.refetch();
+        return;
+      }
+
+      if (isUsersTarget) {
+        await usersQuery.refetch();
+        return;
+      }
+
+      await communitiesQuery.refetch();
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleOpenPost = (id: string) => {
     navigation.navigate("Post", { id });
   };
+
   const handleOpenCommunity = (id: string) => {
     navigation.navigate("Community", { id });
   };
+
   const handleOpenUser = (userId: string) => {
     navigation.navigate("Profile", { userId });
   };
@@ -193,73 +268,9 @@ export const SearchScreen = () => {
     setShowPeriodModal(false);
   };
 
-  const headerEl = (
-    <View style={styles.headerContainer}>
-      {/* Search input */}
-      <View style={styles.searchBox}>
-        <Ionicons name="search" size={18} color="rgba(255,255,255,0.6)" />
-        <TextInput
-          value={formik.values.search}
-          onChangeText={(t) => formik.setFieldValue("search", t)}
-          placeholder="Поиск по постам..."
-          placeholderTextColor="rgba(255,255,255,0.4)"
-          style={styles.searchInput}
-          autoCorrect={false}
-          autoCapitalize="none"
-          returnKeyType="search"
-        />
-        {!!formik.values.search && (
-          <TouchableOpacity
-            onPress={() => formik.setFieldValue("search", "")}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons
-              name="close-circle"
-              size={18}
-              color="rgba(255,255,255,0.6)"
-            />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {formik.errors.search ? (
-        <Text style={styles.searchError}>{String(formik.errors.search)}</Text>
-      ) : null}
-
-      {isSearchMode ? (
-        <View style={styles.header}>
-          <Text style={typography.h3_white85}>Результаты поиска</Text>
-        </View>
-      ) : (
-        <View style={styles.header}>
-          <Ionicons name="flame" size={24} color="#FF6B6B" />
-          <Text style={typography.h3_white85}>Популярные посты</Text>
-        </View>
-      )}
-
-      {!isSearchMode && (
-        <TouchableOpacity
-          style={styles.periodSelector}
-          onPress={() => setShowPeriodModal(true)}
-        >
-          <Text style={typography.body_white85}>
-            {PERIOD_LABELS[selectedPeriod]}
-          </Text>
-          <Ionicons
-            name="chevron-down"
-            size={20}
-            color="rgba(255,255,255,0.85)"
-          />
-        </TouchableOpacity>
-      )}
-
-      {isUpdating ? (
-        <View style={styles.updatingRow}>
-          <ActivityIndicator size="small" color="rgba(255,255,255,0.65)" />
-        </View>
-      ) : null}
-    </View>
-  );
+  const handleSearchTargetSelect = (target: SearchTarget) => {
+    setSelectedSearchTarget(target);
+  };
 
   const renderPeriodModal = () => (
     <Modal
@@ -278,23 +289,23 @@ export const SearchScreen = () => {
             <TouchableOpacity
               key={period}
               style={[
-                styles.periodOption,
-                selectedPeriod === period && styles.periodOptionActive,
+                styles.modalOption,
+                selectedPeriod === period && styles.modalOptionActive,
               ]}
               onPress={() => handlePeriodSelect(period)}
             >
               <Text
                 style={
                   selectedPeriod === period
-                    ? styles.periodOptionTextActive
+                    ? styles.modalOptionTextActive
                     : typography.body_white85
                 }
               >
                 {PERIOD_LABELS[period]}
               </Text>
-              {selectedPeriod === period && (
+              {selectedPeriod === period ? (
                 <Ionicons name="checkmark" size={20} color="#FF6B6B" />
-              )}
+              ) : null}
             </TouchableOpacity>
           ))}
         </View>
@@ -302,7 +313,7 @@ export const SearchScreen = () => {
     </Modal>
   );
 
-  const renderItem = ({
+  const renderPostItem = ({
     item: post,
     index,
   }: {
@@ -326,20 +337,69 @@ export const SearchScreen = () => {
     );
   };
 
+  const renderUserItem = ({ item }: { item: (typeof users)[number] }) => {
+    return (
+      <TouchableOpacity
+        style={styles.entityRow}
+        onPress={() => handleOpenUser(item.id)}
+      >
+        <Image
+          source={getAvatarSource(item.avatar, "small")}
+          style={styles.entityAvatar}
+        />
+        <View style={styles.entityTextWrap}>
+          <Text style={typography.body_white85}>
+            {item.name || item.nickname}
+          </Text>
+          <Text style={typography.caption_white85}>@{item.nickname}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderCommunityItem = ({
+    item,
+  }: {
+    item: (typeof communities)[number];
+  }) => {
+    return (
+      <TouchableOpacity
+        style={styles.entityRow}
+        onPress={() => handleOpenCommunity(item.id)}
+      >
+        <Image
+          source={getAvatarSource(item.avatar, "small")}
+          style={styles.entityAvatar}
+        />
+        <View style={styles.entityTextWrap}>
+          <Text style={typography.body_white85}>{item.name}</Text>
+          <Text style={typography.caption_white85} numberOfLines={1}>
+            {item.description || "Сообщество"}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
       <Text style={typography.body_white85}>
         {isSearchMode
           ? "Ничего не найдено"
-          : "Нет популярных постов за выбранный период"}
+          : isPostsTarget
+            ? "Нет популярных постов за выбранный период"
+            : isUsersTarget
+              ? "Введите имя или @ник пользователя"
+              : "Введите название сообщества"}
       </Text>
     </View>
   );
 
   const renderFooter = () => {
-    if (!query.isFetchingNextPage) {
+    if (!isPostsTarget || !postsQuery.isFetchingNextPage) {
       return null;
     }
+
     return (
       <View style={styles.footerLoader}>
         <Text style={typography.caption_white85}>Загрузка...</Text>
@@ -347,21 +407,140 @@ export const SearchScreen = () => {
     );
   };
 
-  if (query.error) {
+  const headerEl = (
+    <View style={styles.headerContainer}>
+      <View style={styles.searchBox}>
+        <Ionicons name="search" size={18} color="rgba(255,255,255,0.9)" />
+        <TextInput
+          value={formik.values.search}
+          onChangeText={(t) => formik.setFieldValue("search", t)}
+          placeholder={SEARCH_PLACEHOLDERS[selectedSearchTarget]}
+          placeholderTextColor="rgba(255,255,255,0.4)"
+          style={styles.searchInput}
+          autoCorrect={false}
+          autoCapitalize="none"
+          returnKeyType="search"
+        />
+        {formik.values.search.length > 0 ? (
+          <TouchableOpacity
+            onPress={() => formik.setFieldValue("search", "")}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name="close-circle"
+              size={18}
+              color="rgba(255,255,255,0.6)"
+            />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      {formik.errors.search ? (
+        <Text style={styles.searchError}>{String(formik.errors.search)}</Text>
+      ) : null}
+
+      <View style={styles.searchTabsRow}>
+        {SEARCH_TARGETS.map((target) => {
+          const isActive = selectedSearchTarget === target;
+
+          return (
+            <TouchableOpacity
+              key={target}
+              style={styles.searchTab}
+              onPress={() => handleSearchTargetSelect(target)}
+            >
+              <Text
+                style={
+                  isActive ? styles.searchTabTextActive : styles.searchTabText
+                }
+              >
+                {SEARCH_TARGET_LABELS[target]}
+              </Text>
+              <View
+                style={[
+                  styles.searchTabIndicator,
+                  isActive && styles.searchTabIndicatorActive,
+                ]}
+              />
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {isSearchMode ? (
+        <View style={styles.header}>
+          <Text style={typography.h3_white85}>
+            Результаты: {SEARCH_TARGET_LABELS[selectedSearchTarget]}
+          </Text>
+        </View>
+      ) : isPostsTarget ? (
+        <View style={styles.header}>
+          <Ionicons name="flame" size={24} color="#FF6B6B" />
+          <Text style={typography.h3_white85}>Популярные посты</Text>
+        </View>
+      ) : (
+        <View style={styles.header}>
+          <Text style={typography.h3_white85}>
+            {isUsersTarget ? "Ищите пользователей" : "Ищите сообщества"}
+          </Text>
+        </View>
+      )}
+
+      {isPostsTarget && !isSearchMode ? (
+        <TouchableOpacity
+          style={styles.periodSelector}
+          onPress={() => setShowPeriodModal(true)}
+        >
+          <Text style={typography.body_white85}>
+            {PERIOD_LABELS[selectedPeriod]}
+          </Text>
+          <Ionicons
+            name="chevron-down"
+            size={20}
+            color="rgba(255,255,255,0.85)"
+          />
+        </TouchableOpacity>
+      ) : null}
+
+      {isUpdating ? (
+        <View style={styles.updatingRow}>
+          <ActivityIndicator size="small" color="rgba(255,255,255,0.65)" />
+        </View>
+      ) : null}
+    </View>
+  );
+
+  if (activeError) {
     return (
       <View style={styles.centered}>
         <Text style={typography.body_white85}>
-          Ошибка: {query.error.message ?? "Неизвестная ошибка"}
+          Ошибка: {activeError.message ?? "Неизвестная ошибка"}
         </Text>
         <StatusBar style="auto" />
       </View>
     );
   }
 
+  const commonProps = {
+    ListEmptyComponent: renderEmpty,
+    ListFooterComponent: renderFooter,
+    ListHeaderComponent: headerEl,
+    contentContainerStyle: styles.listContent,
+    keyboardShouldPersistTaps: "handled" as const,
+    refreshControl: (
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        tintColor="#ffffff"
+      />
+    ),
+    showsVerticalScrollIndicator: false,
+  };
+
   return (
     <ImageBackground
       source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.BackgroundImage}
+      style={styles.backgroundImage}
     >
       <SafeAreaView style={styles.safeArea}>
         {isInitialLoading ? (
@@ -369,33 +548,40 @@ export const SearchScreen = () => {
             <Text style={typography.body_white85}>Загрузка...</Text>
             <StatusBar style="auto" />
           </View>
-        ) : (
+        ) : isPostsTarget ? (
           <FlatList
+            {...commonProps}
             data={posts}
+            key="posts"
             keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            ListHeaderComponent={headerEl}
-            ListEmptyComponent={renderEmpty}
-            ListFooterComponent={renderFooter}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor="#ffffff"
-              />
-            }
+            renderItem={renderPostItem}
             onEndReached={() => {
-              if (!query.hasNextPage || query.isFetchingNextPage) {
+              if (!postsQuery.hasNextPage || postsQuery.isFetchingNextPage) {
                 return;
               }
-              query.fetchNextPage();
+
+              postsQuery.fetchNextPage();
             }}
             onEndReachedThreshold={0.15}
           />
+        ) : isUsersTarget ? (
+          <FlatList
+            {...commonProps}
+            data={users}
+            key="users"
+            keyExtractor={(item) => item.id}
+            renderItem={renderUserItem}
+          />
+        ) : (
+          <FlatList
+            {...commonProps}
+            data={communities}
+            key="communities"
+            keyExtractor={(item) => item.id}
+            renderItem={renderCommunityItem}
+          />
         )}
+
         <PostImageViewerModal
           visible={imageViewerState.isOpen}
           imagePublicIds={imageViewerState.images}
@@ -406,17 +592,38 @@ export const SearchScreen = () => {
         />
       </SafeAreaView>
 
-      {!isSearchMode && renderPeriodModal()}
+      {isPostsTarget && !isSearchMode ? renderPeriodModal() : null}
     </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  BackgroundImage: { flex: 1 },
+  backgroundImage: { flex: 1 },
 
   centered: { alignItems: "center", flex: 1, justifyContent: "center" },
 
   emptyContainer: { alignItems: "center", marginTop: 32 },
+
+  entityAvatar: {
+    borderRadius: 20,
+    height: 40,
+    width: 40,
+  },
+
+  entityRow: {
+    alignItems: "center",
+    backgroundColor: COLORS.postsCardBackground,
+    borderRadius: 18,
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 8,
+    padding: 12,
+  },
+
+  entityTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
 
   footerLoader: { alignItems: "center", paddingVertical: 20 },
 
@@ -440,13 +647,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
 
-  modalOverlay: {
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    flex: 1,
-    justifyContent: "center",
-  },
-
-  periodOption: {
+  modalOption: {
     alignItems: "center",
     borderRadius: 12,
     flexDirection: "row",
@@ -454,12 +655,18 @@ const styles = StyleSheet.create({
     padding: 16,
   },
 
-  periodOptionActive: { backgroundColor: "rgba(255, 107, 107, 0.1)" },
+  modalOptionActive: { backgroundColor: "rgba(255, 107, 107, 0.1)" },
 
-  periodOptionTextActive: {
+  modalOptionTextActive: {
     color: "#FF6B6B",
     fontSize: 16,
     fontWeight: "400",
+  },
+
+  modalOverlay: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    flex: 1,
+    justifyContent: "center",
   },
 
   periodSelector: {
@@ -481,17 +688,70 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     flexDirection: "row",
     gap: 10,
+    minHeight: 48,
     paddingHorizontal: 14,
     paddingVertical: 12,
+    width: "100%",
   },
 
   searchError: { color: "#FF6B6B", fontSize: 13, marginTop: 8 },
 
   searchInput: {
+    backgroundColor: "transparent",
+    borderColor: "transparent",
+    borderWidth: 0,
     color: "rgba(255,255,255,0.85)",
     flex: 1,
     fontSize: 16,
+    margin: 0,
+    minWidth: 0,
+    outlineColor: "transparent",
+    outlineWidth: 0,
+    padding: 0,
+    width: 0,
   },
+
+  searchTab: {
+    alignItems: "center",
+    gap: 6,
+    paddingBottom: 8,
+    paddingHorizontal: 8,
+    paddingTop: 2,
+  },
+
+  searchTabIndicator: {
+    backgroundColor: "transparent",
+    borderRadius: 99,
+    height: 2,
+    width: "100%",
+  },
+
+  searchTabIndicatorActive: {
+    backgroundColor: "#ffffff",
+  },
+
+  searchTabText: {
+    color: "rgba(255,255,255,0.55)",
+    fontSize: 16,
+    fontWeight: "400",
+  },
+
+  searchTabTextActive: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 16,
+    fontWeight: "400",
+  },
+
+  searchTabsRow: {
+    alignItems: "flex-end",
+    borderBottomColor: "rgba(255,255,255,0.18)",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 2,
+    width: "100%",
+  },
+
   updatingRow: {
     alignItems: "center",
     alignSelf: "center",
@@ -499,6 +759,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: -6,
   },
+
   updatingText: {
     alignSelf: "center",
     color: "rgba(255,255,255,0.55)",

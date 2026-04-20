@@ -19,6 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AddCommunityPostForm } from "../../components/forms/AddCommunityPostForm";
 import { AddPostForm } from "../../components/forms/AddPostForm";
 import { CreateCommunityForm } from "../../components/forms/CreateCommunityForm";
+import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
 import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
@@ -95,6 +96,17 @@ export const AddPostScreen = () => {
     selectedPublisher.type === "community" && selectedCommunity
       ? selectedCommunity.avatar
       : (data?.me.avatar ?? me?.avatar);
+  const screenTitle = useMemo(() => {
+    if (composerMode === "createCommunity") {
+      return "Создание сообщества";
+    }
+
+    if (selectedPublisher.type === "community" && selectedCommunity) {
+      return "Пост в сообщество";
+    }
+
+    return "Новый пост";
+  }, [composerMode, selectedPublisher.type, selectedCommunity]);
 
   return (
     <ImageBackground
@@ -113,7 +125,7 @@ export const AddPostScreen = () => {
         </View>
 
         <View style={styles.addDreamHeader}>
-          <Text style={typography.h2_white85}>Новый пост</Text>
+          <Text style={typography.h2_white85}>{screenTitle}</Text>
 
           <TouchableOpacity
             style={styles.publisherSwitch}
@@ -341,15 +353,16 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.navBarBackground,
     borderRadius: 24,
     gap: 8,
+    maxWidth: SHELL_CONTENT_WIDTH,
     padding: 16,
-    width: "88%",
+    width: "100%",
   },
   modalOverlay: {
     alignItems: "center",
     backgroundColor: MODAL_OVERLAY_BACKGROUND,
     flex: 1,
     justifyContent: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
   },
   modalTitle: {
     color: COLORS.white85,

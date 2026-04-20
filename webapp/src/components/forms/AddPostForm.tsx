@@ -14,6 +14,7 @@ import {
   type PickedPostImageFile,
 } from "../../lib/postImages";
 import { trpc } from "../../lib/trpc";
+import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
 
@@ -308,6 +309,7 @@ const styles = {
     height: 60,
     color: COLORS.white100,
     ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
+    ...webInputFocusReset,
     flexShrink: 0,
   },
   textArea: {
@@ -319,6 +321,7 @@ const styles = {
     borderRadius: 32,
     textAlignVertical: "top" as const,
     color: COLORS.white100,
+    ...webInputFocusReset,
     flexShrink: 0,
   },
   textAreaMeasure: {

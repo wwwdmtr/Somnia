@@ -7,7 +7,7 @@ import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
 import { sentryCaptureException } from "../../lib/sentrySDK";
 import { trpc } from "../../lib/trpc";
-import { COLORS, typography } from "../../theme/typography";
+import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
 
 type CloudinaryUploadResponse = {
@@ -234,7 +234,6 @@ export const AvatarUploader = () => {
         onPress={() => void handleRemoveAvatar()}
         disabled={isBusy || !me.avatar}
         style={styles.actionButton}
-        TextStyle={typography.body_white25}
       />
     </View>
   );

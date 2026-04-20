@@ -1,3 +1,4 @@
+import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 import { isPostOwner } from "../../utils/can";
 import {
@@ -15,6 +16,23 @@ export const updatePostTrpcRoute = trpcLoggedProcedure
     const me = ctx.me;
     if (!me) {
       throw new Error("Unauthorized");
+    }
+
+    const normalizedTitle = title.trim();
+    const normalizedDescription = description.trim();
+    const normalizedText = text.trim();
+    const normalizedImages = Array.from(
+      new Set(images.map((imagePublicId) => imagePublicId.trim())),
+    );
+    const hasAnyContent =
+      normalizedTitle.length > 0 ||
+      normalizedText.length > 0 ||
+      normalizedImages.length > 0;
+
+    if (!hasAnyContent) {
+      throw new ExpectedError(
+        "Добавьте заголовок, текст или хотя бы одно изображение",
+      );
     }
 
     const post = await ctx.prisma.post.findUnique({
@@ -61,9 +79,6 @@ export const updatePostTrpcRoute = trpcLoggedProcedure
     }
 
     const previousImagesSet = new Set(post.images);
-    const normalizedImages = Array.from(
-      new Set(images.map((imagePublicId) => imagePublicId.trim())),
-    );
 
     const newlyAddedImages = normalizedImages.filter(
       (imagePublicId) => !previousImagesSet.has(imagePublicId),
@@ -89,9 +104,9 @@ export const updatePostTrpcRoute = trpcLoggedProcedure
     await ctx.prisma.post.update({
       where: { id: postId },
       data: {
-        title,
-        description,
-        text,
+        title: normalizedTitle,
+        description: normalizedDescription,
+        text: normalizedText,
         images: normalizedImages,
       },
     });

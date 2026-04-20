@@ -10,6 +10,7 @@ import { toFormikValidationSchema } from "zod-formik-adapter";
 import { mixpanelTrackSignIn } from "../../lib/mixpanel";
 import { setToken } from "../../lib/tokenStorage";
 import { trpc } from "../../lib/trpc";
+import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS, typography } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
 
@@ -135,6 +136,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     color: COLORS.white100,
     ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
+    ...webInputFocusReset,
     marginBottom: 28,
     marginTop: 12,
     padding: 11,
