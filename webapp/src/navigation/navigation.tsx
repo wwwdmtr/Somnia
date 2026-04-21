@@ -17,6 +17,7 @@ import { useAppContext } from "../lib/ctx";
 import { AddPostScreen } from "../screens/AddPost/AddYourPost";
 import { AdminScreen } from "../screens/Admin/AdminScreen";
 import { DeletedPostsScreen } from "../screens/Admin/DeletedPosts";
+import { ReportsScreen } from "../screens/Admin/ReportsScreen";
 import { CommunityScreen } from "../screens/Community/CommunityScreen";
 import { UpdateCommunityScreen } from "../screens/Community/UpdateCommunityScreen";
 import { AllPostsScreen } from "../screens/Feed/FeedScreen";
@@ -216,6 +217,11 @@ function AdminStackNav() {
       <AdminStack.Screen
         name={ScreenName.DeletedPosts}
         component={DeletedPostsScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStack.Screen
+        name={ScreenName.AdminReports}
+        component={ReportsScreen}
         options={{ headerShown: false }}
       />
       <AdminStack.Screen

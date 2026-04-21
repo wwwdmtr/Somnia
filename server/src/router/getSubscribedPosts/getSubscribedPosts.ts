@@ -5,6 +5,10 @@ import {
   notifyExpiredCommunityBlacklistEntriesForUser,
 } from "../../lib/communityModeration";
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import {
+  getUserBlockedCommunityIds,
+  getUserBlockedUserIds,
+} from "../../lib/userContentBlock";
 
 import { zGetSubscribedPostsTrpcInput } from "./input";
 
@@ -20,7 +24,9 @@ export const getSubscribedPostsTrpcRoute = trpcLoggedProcedure
     });
 
     const managedCommunityIds = new Set<string>();
-    let blockedCommunityIds = new Set<string>();
+    let blockedCommunityIdsByCommunity = new Set<string>();
+    let blockedCommunityIdsByMe = new Set<string>();
+    let blockedUserIdsByMe = new Set<string>();
 
     const rawPosts = await ctx.prisma.post.findMany({
       where: {
@@ -126,38 +132,63 @@ export const getSubscribedPostsTrpcRoute = trpcLoggedProcedure
       ),
     );
 
-    if (communityIds.length > 0) {
-      const [memberships, blockedIds] = await Promise.all([
-        ctx.prisma.communityMember.findMany({
-          where: {
-            userId: ctx.me.id,
-            communityId: {
-              in: communityIds,
-            },
-            role: {
-              in: ["OWNER", "MODERATOR"],
-            },
-          },
-          select: {
-            communityId: true,
-          },
-        }),
+    const authorIds = Array.from(
+      new Set(
+        rawPosts
+          .map((post) => post.author.id)
+          .filter((authorId): authorId is string => Boolean(authorId)),
+      ),
+    );
+
+    const [memberships, blockedByCommunity, blockedByMe, blockedUsersByMe] =
+      await Promise.all([
+        communityIds.length > 0
+          ? ctx.prisma.communityMember.findMany({
+              where: {
+                userId: ctx.me.id,
+                communityId: {
+                  in: communityIds,
+                },
+                role: {
+                  in: ["OWNER", "MODERATOR"],
+                },
+              },
+              select: {
+                communityId: true,
+              },
+            })
+          : [],
         getBlockedCommunityIds({
           prisma: ctx.prisma,
           userId: ctx.me.id,
           communityIds,
         }),
+        getUserBlockedCommunityIds({
+          prisma: ctx.prisma,
+          userId: ctx.me.id,
+          communityIds,
+        }),
+        getUserBlockedUserIds({
+          prisma: ctx.prisma,
+          userId: ctx.me.id,
+          targetUserIds: authorIds,
+        }),
       ]);
 
-      memberships.forEach((membership) => {
-        managedCommunityIds.add(membership.communityId);
-      });
+    memberships.forEach((membership) => {
+      managedCommunityIds.add(membership.communityId);
+    });
 
-      blockedCommunityIds = blockedIds;
-    }
+    blockedCommunityIdsByCommunity = blockedByCommunity;
+    blockedCommunityIdsByMe = blockedByMe;
+    blockedUserIdsByMe = blockedUsersByMe;
 
     const posts = rawPosts
       .filter((post) => {
+        if (blockedUserIdsByMe.has(post.author.id)) {
+          return false;
+        }
+
         if (
           post.publisherType !== "COMMUNITY" ||
           !post.publisherCommunity?.id
@@ -169,7 +200,10 @@ export const getSubscribedPostsTrpcRoute = trpcLoggedProcedure
           return true;
         }
 
-        return !blockedCommunityIds.has(post.publisherCommunity.id);
+        return (
+          !blockedCommunityIdsByCommunity.has(post.publisherCommunity.id) &&
+          !blockedCommunityIdsByMe.has(post.publisherCommunity.id)
+        );
       })
       .map((post) => {
         const canSeeCommunityAuthor =

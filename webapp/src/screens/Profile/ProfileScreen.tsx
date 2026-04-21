@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+import { Ionicons } from "@expo/vector-icons";
 import {
   CompositeNavigationProp,
   RouteProp,
@@ -10,10 +11,12 @@ import { isUserAdmin } from "@somnia/shared/src/utils/can";
 import { StatusBar } from "expo-status-bar";
 import { useMemo, useState } from "react";
 import {
+  Alert,
   ActivityIndicator,
   FlatList,
   Image,
   ImageBackground,
+  Modal,
   RefreshControl,
   StyleSheet,
   Text,
@@ -24,7 +27,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
+import { ReportModal } from "../../components/ui/ReportModal";
 import ScreenName from "../../constants/ScreenName";
+import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
 import { getAvatarSource } from "../../lib/avatar";
 import { useAppContext } from "../../lib/ctx";
 import {
@@ -64,6 +69,10 @@ type ProfileScreenNavigationProp = CompositeNavigationProp<
 
 const PROFILE_POSTS_LIMIT = 15;
 const MAX_INFINITE_PAGES = 10;
+const SIDE_MENU_OVERLAY_BACKGROUND = "rgba(0,0,0,0.45)";
+const FLAG_ACTION_ICON_COLOR = "rgba(255,255,255,0.62)";
+const ACTION_MENU_TOP_OFFSET = 24;
+const ACTION_MENU_CARD_WIDTH = 236;
 
 export const ProfileScreen = () => {
   const route = useRoute<ProfileRouteProp>();
@@ -81,6 +90,8 @@ export const ProfileScreen = () => {
     images: [],
     index: 0,
   });
+  const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const targetUserId = route.params?.userId ?? me?.id ?? "";
   const shouldShowBackButton = Boolean(route.params?.userId);
@@ -116,6 +127,23 @@ export const ProfileScreen = () => {
           : Promise.resolve(),
         utils.getUserFollows.invalidate(),
       ]);
+    },
+  });
+  const setUserContentBlock = trpc.setUserContentBlock.useMutation({
+    onSuccess: async () => {
+      await Promise.all([
+        utils.getUserProfile.invalidate({ userId: targetUserId }),
+        utils.getPosts.invalidate(),
+        utils.getSubscribedPosts.invalidate(),
+        utils.getRatedPosts.invalidate(),
+      ]);
+    },
+  });
+  const createReport = trpc.createReport.useMutation({
+    onSuccess: () => {
+      setIsReportModalOpen(false);
+      setIsActionsMenuOpen(false);
+      Alert.alert("Готово", "Жалоба отправлена");
     },
   });
 
@@ -180,6 +208,64 @@ export const ProfileScreen = () => {
     }
   };
 
+  const handleToggleUserBlock = async () => {
+    if (
+      !me?.id ||
+      !profileQuery.data?.profile ||
+      profileQuery.data.profile.isMe
+    ) {
+      return;
+    }
+
+    const isBlocked = !profileQuery.data.profile.isBlockedByMe;
+
+    try {
+      await setUserContentBlock.mutateAsync({
+        targetType: "USER",
+        targetUserId: profileQuery.data.profile.id,
+        isBlocked,
+      });
+
+      setIsActionsMenuOpen(false);
+      Alert.alert(
+        "Готово",
+        isBlocked ? "Пользователь скрыт" : "Пользователь снова доступен",
+      );
+    } catch (error) {
+      Alert.alert(
+        "Ошибка",
+        error instanceof Error
+          ? error.message
+          : "Не удалось изменить блокировку",
+      );
+    }
+  };
+
+  const handleSubmitUserReport = async (description: string) => {
+    if (!profileQuery.data?.profile || profileQuery.data.profile.isMe) {
+      return;
+    }
+
+    const trimmedDescription = description.trim();
+    if (trimmedDescription.length < 10 || trimmedDescription.length > 500) {
+      Alert.alert("Ошибка", "Текст жалобы должен быть от 10 до 500 символов");
+      return;
+    }
+
+    try {
+      await createReport.mutateAsync({
+        targetType: "USER",
+        targetUserId: profileQuery.data.profile.id,
+        description: trimmedDescription,
+      });
+    } catch (error) {
+      Alert.alert(
+        "Ошибка",
+        error instanceof Error ? error.message : "Не удалось отправить жалобу",
+      );
+    }
+  };
+
   const handleOpenPost = (id: string) => {
     navigation.navigate(ScreenName.Post, { id });
   };
@@ -228,6 +314,7 @@ export const ProfileScreen = () => {
   }
 
   const profile = profileQuery.data.profile;
+  const canOpenActionsMenu = Boolean(me?.id && !profile.isMe);
   const renderHeader = () => (
     <View style={styles.header}>
       {shouldShowBackButton ? (
@@ -239,6 +326,15 @@ export const ProfileScreen = () => {
             <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
             <Text style={typography.body_white85}>Назад</Text>
           </TouchableOpacity>
+          {canOpenActionsMenu ? (
+            <TouchableOpacity onPress={() => setIsActionsMenuOpen(true)}>
+              <Ionicons
+                name="flag-outline"
+                size={20}
+                color={FLAG_ACTION_ICON_COLOR}
+              />
+            </TouchableOpacity>
+          ) : null}
         </View>
       ) : null}
 
@@ -324,13 +420,14 @@ export const ProfileScreen = () => {
 
       {profile.isMe && isUserAdmin(me) ? (
         <TouchableOpacity
+          style={styles.adminPanelBlock}
           onPress={() =>
             navigation.navigate(ScreenName.AdminStack, {
               screen: ScreenName.AdminHome,
             })
           }
         >
-          <Text style={typography.body_white85}>Админка</Text>
+          <Text style={typography.body_white85}>Перейти в админ панель</Text>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -393,6 +490,60 @@ export const ProfileScreen = () => {
           onEndReachedThreshold={0.2}
         />
 
+        <Modal
+          visible={isActionsMenuOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsActionsMenuOpen(false)}
+        >
+          <View style={styles.sideMenuOverlay}>
+            <TouchableOpacity
+              style={styles.sideMenuBackdrop}
+              onPress={() => setIsActionsMenuOpen(false)}
+            />
+            <View style={styles.sideMenuShell}>
+              <View style={styles.sideMenuContent}>
+                {!profile.isMe ? (
+                  <TouchableOpacity
+                    style={styles.sideMenuButton}
+                    disabled={setUserContentBlock.isPending}
+                    onPress={() => {
+                      void handleToggleUserBlock();
+                    }}
+                  >
+                    <Text style={typography.body_white85}>
+                      {profile.isBlockedByMe
+                        ? "Показывать пользователя"
+                        : "Скрыть публикации пользователя"}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+                {!profile.isMe && profile.canReportByMe ? (
+                  <TouchableOpacity
+                    style={styles.sideMenuButton}
+                    onPress={() => {
+                      setIsActionsMenuOpen(false);
+                      setIsReportModalOpen(true);
+                    }}
+                  >
+                    <Text style={typography.body_white85}>Пожаловаться</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        <ReportModal
+          visible={isReportModalOpen}
+          title="Жалоба на пользователя"
+          isSubmitting={createReport.isPending}
+          onClose={() => setIsReportModalOpen(false)}
+          onSubmit={(description) => {
+            void handleSubmitUserReport(description);
+          }}
+        />
+
         <PostImageViewerModal
           visible={imageViewerState.isOpen}
           imagePublicIds={imageViewerState.images}
@@ -410,6 +561,14 @@ export const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  adminPanelBlock: {
+    alignItems: "center",
+    backgroundColor: COLORS.postsCardBackground,
+    borderRadius: 32,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    width: "100%",
+  },
   avatar: {
     borderRadius: 50,
     height: 100,
@@ -468,7 +627,7 @@ const styles = StyleSheet.create({
     borderRadius: 99,
     flexDirection: "row",
     height: 44,
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
     marginBottom: 8,
     paddingHorizontal: 16,
   },
@@ -484,6 +643,35 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: 20,
     marginHorizontal: 14,
+  },
+  sideMenuBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  sideMenuButton: {
+    backgroundColor: COLORS.navBarBackground,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  sideMenuContent: {
+    backgroundColor: COLORS.postsCardBackground,
+    borderRadius: 24,
+    gap: 8,
+    padding: 14,
+    width: ACTION_MENU_CARD_WIDTH,
+  },
+  sideMenuOverlay: {
+    alignItems: "center",
+    backgroundColor: SIDE_MENU_OVERLAY_BACKGROUND,
+    flex: 1,
+    justifyContent: "flex-start",
+    paddingHorizontal: 14,
+  },
+  sideMenuShell: {
+    alignItems: "flex-end",
+    marginTop: ACTION_MENU_TOP_OFFSET,
+    maxWidth: SHELL_CONTENT_WIDTH,
+    width: "100%",
   },
   statItem: {
     alignItems: "center",

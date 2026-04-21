@@ -18,6 +18,7 @@ export enum ScreenName {
   Notifications = "Notifications",
   AdminHome = "AdminHome",
   DeletedPosts = "DeletedPosts",
+  AdminReports = "AdminReports",
 }
 
 export default ScreenName;

@@ -29,6 +29,12 @@ model User {
     createdCommunityBlacklistEntries CommunityBlacklist[] @relation("CommunityBlacklistCreator")
     communityActionLogsAsActor   CommunityActionLog[] @relation("CommunityActionActor")
     communityActionLogsAsTarget  CommunityActionLog[] @relation("CommunityActionTarget")
+    blockedUsers                 UserBlockedUser[]     @relation("UserBlockedUsers")
+    blockedByUsers               UserBlockedUser[]     @relation("BlockedByUsers")
+    blockedCommunities           UserBlockedCommunity[]
+    createdReports               Report[]              @relation("ReportReporter")
+    reportsAboutUser             Report[]              @relation("ReportTargetUser")
+    handledReports               Report[]              @relation("ReportHandler")
     followers              UserFollow[]            @relation("UserFollowers")
     following              UserFollow[]            @relation("UserFollowing")
 }
@@ -55,6 +61,7 @@ model Post {
     postLikes            PostLike[]
     notifications        Notification[]
     communityActionLogs  CommunityActionLog[]
+    reports              Report[]
     deletedAt            DateTime?
 
     @@index([publisherType, seq])
@@ -80,6 +87,7 @@ model Community {
     blacklistEntries CommunityBlacklist[]
     actionLogs      CommunityActionLog[]
     notifications   Notification[]
+    blockedByUsers  UserBlockedCommunity[]
 }
 
 enum CommunityMemberRole {
@@ -164,6 +172,71 @@ model CommunityActionLog {
 
     @@index([communityId, createdAt])
     @@index([actorUserId, createdAt])
+    @@index([targetUserId, createdAt])
+}
+
+model UserBlockedUser {
+    id            String   @id @default(uuid())
+    createdAt     DateTime @default(now())
+    userId        String
+    blockedUserId String
+    user          User     @relation("UserBlockedUsers", fields: [userId], references: [id], onDelete: Cascade)
+    blockedUser   User     @relation("BlockedByUsers", fields: [blockedUserId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, blockedUserId])
+    @@index([userId, createdAt])
+    @@index([blockedUserId, createdAt])
+}
+
+model UserBlockedCommunity {
+    id          String    @id @default(uuid())
+    createdAt   DateTime  @default(now())
+    userId      String
+    communityId String
+    user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, communityId])
+    @@index([userId, createdAt])
+    @@index([communityId, createdAt])
+}
+
+enum ReportTargetType {
+    POST
+    USER
+}
+
+enum ReportStatus {
+    OPEN
+    IN_REVIEW
+    RESOLVED
+    REJECTED
+}
+
+model Report {
+    id            String           @id @default(uuid())
+    createdAt     DateTime         @default(now())
+    updatedAt     DateTime         @updatedAt
+    description   String
+    targetType    ReportTargetType
+    status        ReportStatus     @default(OPEN)
+    reporterUserId String
+    postId        String?
+    targetUserId  String?
+    handledByUserId String?
+    handledAt     DateTime?
+    resolutionNote String?
+    reporter      User             @relation("ReportReporter", fields: [reporterUserId], references: [id], onDelete: Cascade)
+    post          Post?            @relation(fields: [postId], references: [id], onDelete: SetNull)
+    targetUser    User?            @relation("ReportTargetUser", fields: [targetUserId], references: [id], onDelete: SetNull)
+    handledBy     User?            @relation("ReportHandler", fields: [handledByUserId], references: [id], onDelete: SetNull)
+
+    @@index([status, createdAt])
+    @@index([reporterUserId, createdAt])
+    @@index([reporterUserId, targetType, status, createdAt])
+    @@index([reporterUserId, postId, status, createdAt])
+    @@index([reporterUserId, targetUserId, status, createdAt])
+    @@index([postId, createdAt])
     @@index([targetUserId, createdAt])
 }
 

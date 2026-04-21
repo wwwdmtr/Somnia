@@ -3,6 +3,7 @@ import ScreenName from "../constants/ScreenName";
 export type AdminStackParamList = {
   [ScreenName.AdminHome]: undefined;
   [ScreenName.DeletedPosts]: undefined;
+  [ScreenName.AdminReports]: undefined;
   [ScreenName.Profile]:
     | {
         userId?: string;

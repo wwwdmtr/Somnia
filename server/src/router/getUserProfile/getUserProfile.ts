@@ -36,10 +36,10 @@ export const getUserProfileTrpcRoute = trpcLoggedProcedure
 
     const isMe = ctx.me?.id === user.id;
 
-    const isFollowedByMe =
+    const [isFollowedByMe, isBlockedByMe] =
       !isMe && ctx.me
-        ? Boolean(
-            await ctx.prisma.userFollow.findUnique({
+        ? await Promise.all([
+            ctx.prisma.userFollow.findUnique({
               where: {
                 followerId_followingId: {
                   followerId: ctx.me.id,
@@ -50,8 +50,19 @@ export const getUserProfileTrpcRoute = trpcLoggedProcedure
                 id: true,
               },
             }),
-          )
-        : false;
+            ctx.prisma.userBlockedUser.findUnique({
+              where: {
+                userId_blockedUserId: {
+                  userId: ctx.me.id,
+                  blockedUserId: user.id,
+                },
+              },
+              select: {
+                id: true,
+              },
+            }),
+          ])
+        : [null, null];
 
     return {
       profile: {
@@ -63,7 +74,9 @@ export const getUserProfileTrpcRoute = trpcLoggedProcedure
         followersCount: user._count.followers,
         followingCount: user._count.following,
         isMe,
-        isFollowedByMe,
+        isFollowedByMe: Boolean(isFollowedByMe),
+        isBlockedByMe: Boolean(isBlockedByMe),
+        canReportByMe: Boolean(ctx.me) && !isMe,
       },
     };
   });

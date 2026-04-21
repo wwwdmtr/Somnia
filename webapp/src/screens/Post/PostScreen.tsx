@@ -21,6 +21,7 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  Modal,
   RefreshControl,
   Platform,
   type NativeScrollEvent,
@@ -30,7 +31,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AddCommentForm } from "../../components/forms/AddCommentForm";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
+import { ReportModal } from "../../components/ui/ReportModal";
 import ScreenName from "../../constants/ScreenName";
+import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
 import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
 import { usePostLikeMutation } from "../../lib/postLikeMutation";
@@ -60,6 +63,10 @@ const FALLBACK_IMAGE_ASPECT_RATIO = 4 / 3;
 const imageAspectRatioCache = new Map<string, number>();
 const MEDIA_COUNTER_BACKGROUND = "rgba(0,0,0,0.45)";
 const MEDIA_ARROW_BACKGROUND = "rgba(0,0,0,0.4)";
+const SIDE_MENU_OVERLAY_BACKGROUND = "rgba(0,0,0,0.45)";
+const FLAG_ACTION_ICON_COLOR = "rgba(255,255,255,0.62)";
+const ACTION_MENU_TOP_OFFSET = 14;
+const ACTION_MENU_CARD_WIDTH = 236;
 
 const getContainedImageSize = ({
   containerWidth,
@@ -152,6 +159,8 @@ export const PostScreen = () => {
     ratio: number;
     url: string;
   } | null>(null);
+  const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const undoDeletePost = trpc.undoDeletePost.useMutation();
 
   type PostData = NonNullable<ReturnType<typeof utils.getPost.getData>>;
@@ -396,6 +405,23 @@ export const PostScreen = () => {
       utils.getCommentsByPost.invalidate({ postId: route.params.id });
     },
   });
+  const setUserContentBlock = trpc.setUserContentBlock.useMutation({
+    onSuccess: async () => {
+      await Promise.all([
+        utils.getPosts.invalidate(),
+        utils.getSubscribedPosts.invalidate(),
+        utils.getRatedPosts.invalidate(),
+        utils.getPost.invalidate({ id: route.params.id }),
+      ]);
+    },
+  });
+  const createReport = trpc.createReport.useMutation({
+    onSuccess: () => {
+      setIsReportModalOpen(false);
+      setIsActionsMenuOpen(false);
+      Alert.alert("Готово", "Жалоба отправлена");
+    },
+  });
 
   const toggleLike = useCallback(() => {
     if (!data?.post) {
@@ -447,6 +473,101 @@ export const PostScreen = () => {
       setIsRefreshing(false);
     }
   }, [refetchPost, refetchComments]);
+
+  const handleToggleUserBlock = useCallback(async () => {
+    if (!me?.id || !data?.post?.author?.id) {
+      return;
+    }
+
+    const isBlocked = !data.post.isAuthorBlockedByMe;
+
+    try {
+      await setUserContentBlock.mutateAsync({
+        targetType: "USER",
+        targetUserId: data.post.author.id,
+        isBlocked,
+      });
+      setIsActionsMenuOpen(false);
+      Alert.alert(
+        "Готово",
+        isBlocked ? "Пользователь скрыт" : "Пользователь снова доступен",
+      );
+    } catch (error) {
+      Alert.alert(
+        "Ошибка",
+        error instanceof Error
+          ? error.message
+          : "Не удалось изменить блокировку",
+      );
+    }
+  }, [data?.post, me?.id, setUserContentBlock]);
+
+  const handleToggleCommunityBlock = useCallback(async () => {
+    if (
+      !me?.id ||
+      !data?.post?.publisherCommunity?.id ||
+      !data.post.canBlockCommunityByMe
+    ) {
+      return;
+    }
+
+    const isBlocked = !data.post.isPublisherCommunityBlockedByMe;
+
+    try {
+      await setUserContentBlock.mutateAsync({
+        targetType: "COMMUNITY",
+        targetCommunityId: data.post.publisherCommunity.id,
+        isBlocked,
+      });
+      setIsActionsMenuOpen(false);
+      Alert.alert(
+        "Готово",
+        isBlocked ? "Сообщество скрыто из ленты" : "Сообщество снова доступно",
+      );
+    } catch (error) {
+      Alert.alert(
+        "Ошибка",
+        error instanceof Error
+          ? error.message
+          : "Не удалось изменить блокировку",
+      );
+    }
+  }, [data?.post, me?.id, setUserContentBlock]);
+
+  const handleOpenReportModal = useCallback(() => {
+    setIsActionsMenuOpen(false);
+    setIsReportModalOpen(true);
+  }, []);
+
+  const handleSubmitPostReport = useCallback(
+    async (description: string) => {
+      if (!data?.post?.id) {
+        return;
+      }
+
+      const trimmedDescription = description.trim();
+      if (trimmedDescription.length < 10 || trimmedDescription.length > 500) {
+        Alert.alert("Ошибка", "Текст жалобы должен быть от 10 до 500 символов");
+        return;
+      }
+
+      try {
+        await createReport.mutateAsync({
+          targetType: "POST",
+          postId: data.post.id,
+          description: trimmedDescription,
+        });
+      } catch (error) {
+        Alert.alert(
+          "Ошибка",
+          error instanceof Error
+            ? error.message
+            : "Не удалось отправить жалобу",
+        );
+      }
+    },
+    [createReport, data?.post?.id],
+  );
 
   const renderComment = useCallback(
     ({ item: comment }: { item: Comment }) => {
@@ -837,6 +958,18 @@ export const PostScreen = () => {
     );
   }
   const post = data.post;
+  const hasUserBlockAction = Boolean(
+    me?.id && post.author?.id && me.id !== post.author.id,
+  );
+  const hasCommunityBlockAction = Boolean(
+    me?.id &&
+      post.publisherType === "COMMUNITY" &&
+      post.publisherCommunity?.id &&
+      post.canBlockCommunityByMe,
+  );
+  const hasReportAction = Boolean(me?.id && post.canReportByMe);
+  const canOpenActionsMenu =
+    hasUserBlockAction || hasCommunityBlockAction || hasReportAction;
 
   const onUndoDeletePress = () => {
     const postId = String(post.id);
@@ -905,26 +1038,38 @@ export const PostScreen = () => {
             <Text style={typography.body_white85}>Назад</Text>
           </TouchableOpacity>
 
-          {post.canEditByMe && (
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate(ScreenName.EditPost, {
-                  id: String(post.id),
-                })
-              }
-            >
-              <Ionicons name="create-outline" size={24} color="white" />
-            </TouchableOpacity>
-          )}
+          <View style={styles.headerActions}>
+            {canOpenActionsMenu ? (
+              <TouchableOpacity onPress={() => setIsActionsMenuOpen(true)}>
+                <Ionicons
+                  name="flag-outline"
+                  size={20}
+                  color={FLAG_ACTION_ICON_COLOR}
+                />
+              </TouchableOpacity>
+            ) : null}
 
-          {isUserAdmin(me) && post.deletedAt && (
-            <TouchableOpacity
-              onPress={onUndoDeletePress}
-              disabled={undoDeletePost.isPending}
-            >
-              <Ionicons name="refresh-outline" size={24} color="white" />
-            </TouchableOpacity>
-          )}
+            {post.canEditByMe ? (
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate(ScreenName.EditPost, {
+                    id: String(post.id),
+                  })
+                }
+              >
+                <Ionicons name="create-outline" size={24} color="white" />
+              </TouchableOpacity>
+            ) : null}
+
+            {isUserAdmin(me) && post.deletedAt ? (
+              <TouchableOpacity
+                onPress={onUndoDeletePress}
+                disabled={undoDeletePost.isPending}
+              >
+                <Ionicons name="refresh-outline" size={24} color="white" />
+              </TouchableOpacity>
+            ) : null}
+          </View>
         </View>
 
         <FlatList
@@ -968,6 +1113,75 @@ export const PostScreen = () => {
             onCancelReply={cancelReply}
           />
         </View>
+
+        <Modal
+          visible={isActionsMenuOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsActionsMenuOpen(false)}
+        >
+          <View style={styles.sideMenuOverlay}>
+            <TouchableOpacity
+              style={styles.sideMenuBackdrop}
+              onPress={() => setIsActionsMenuOpen(false)}
+            />
+            <View style={styles.sideMenuShell}>
+              <View style={styles.sideMenuContent}>
+                {hasUserBlockAction ? (
+                  <TouchableOpacity
+                    style={styles.sideMenuButton}
+                    disabled={setUserContentBlock.isPending}
+                    onPress={() => {
+                      void handleToggleUserBlock();
+                    }}
+                  >
+                    <Text style={typography.body_white85}>
+                      {post.isAuthorBlockedByMe
+                        ? "Показывать пользователя"
+                        : "Скрыть публикации пользователя"}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+
+                {hasCommunityBlockAction ? (
+                  <TouchableOpacity
+                    style={styles.sideMenuButton}
+                    disabled={setUserContentBlock.isPending}
+                    onPress={() => {
+                      void handleToggleCommunityBlock();
+                    }}
+                  >
+                    <Text style={typography.body_white85}>
+                      {post.isPublisherCommunityBlockedByMe
+                        ? "Показать сообщество"
+                        : "Скрыть публикации сообщество"}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+
+                {hasReportAction ? (
+                  <TouchableOpacity
+                    style={styles.sideMenuButton}
+                    onPress={handleOpenReportModal}
+                  >
+                    <Text style={typography.body_white85}>Пожаловаться</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        <ReportModal
+          visible={isReportModalOpen}
+          title="Жалоба на пост"
+          isSubmitting={createReport.isPending}
+          onClose={() => setIsReportModalOpen(false)}
+          onSubmit={(description) => {
+            void handleSubmitPostReport(description);
+          }}
+        />
+
         <PostImageViewerModal
           visible={imageViewerState.isOpen}
           imagePublicIds={imageViewerState.images}
@@ -1093,6 +1307,11 @@ const styles = StyleSheet.create({
     marginTop: 14,
     paddingHorizontal: 16,
   },
+  headerActions: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 14,
+  },
   loadingFooter: {
     alignItems: "center",
     paddingVertical: 20,
@@ -1184,5 +1403,34 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     paddingBottom: 120,
+  },
+  sideMenuBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  sideMenuButton: {
+    backgroundColor: COLORS.navBarBackground,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  sideMenuContent: {
+    backgroundColor: COLORS.postsCardBackground,
+    borderRadius: 24,
+    gap: 8,
+    padding: 14,
+    width: ACTION_MENU_CARD_WIDTH,
+  },
+  sideMenuOverlay: {
+    alignItems: "center",
+    backgroundColor: SIDE_MENU_OVERLAY_BACKGROUND,
+    flex: 1,
+    justifyContent: "flex-start",
+    paddingHorizontal: 14,
+  },
+  sideMenuShell: {
+    alignItems: "flex-end",
+    marginTop: ACTION_MENU_TOP_OFFSET,
+    maxWidth: SHELL_CONTENT_WIDTH,
+    width: "100%",
   },
 });

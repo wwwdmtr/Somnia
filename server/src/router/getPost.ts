@@ -85,6 +85,52 @@ export const getPostTrpcRoute = trpcLoggedProcedure
       }
     }
 
+    let isAuthorBlockedByMe = false;
+    let isPublisherCommunityBlockedByMe = false;
+    let canBlockCommunityByMe = false;
+    let canReportByMe = false;
+
+    if (rawPost && userId) {
+      const [authorBlocked, communityBlocked] = await Promise.all([
+        rawPost.authorId !== userId
+          ? ctx.prisma.userBlockedUser.findUnique({
+              where: {
+                userId_blockedUserId: {
+                  userId,
+                  blockedUserId: rawPost.authorId,
+                },
+              },
+              select: {
+                id: true,
+              },
+            })
+          : null,
+        rawPost.publisherType === "COMMUNITY" && rawPost.publisherCommunityId
+          ? ctx.prisma.userBlockedCommunity.findUnique({
+              where: {
+                userId_communityId: {
+                  userId,
+                  communityId: rawPost.publisherCommunityId,
+                },
+              },
+              select: {
+                id: true,
+              },
+            })
+          : null,
+      ]);
+
+      isAuthorBlockedByMe = Boolean(authorBlocked);
+      isPublisherCommunityBlockedByMe = Boolean(communityBlocked);
+      canBlockCommunityByMe =
+        rawPost.publisherType === "COMMUNITY" &&
+        Boolean(rawPost.publisherCommunityId) &&
+        !canManageCommunityPost;
+      canReportByMe =
+        rawPost.authorId !== userId &&
+        !(rawPost.publisherType === "COMMUNITY" && canManageCommunityPost);
+    }
+
     const isLikedByMe = userId ? !!rawPost?.postLikes.length : false;
     const likesCount = rawPost?._count.postLikes || 0;
     const canEditByMe =
@@ -102,6 +148,10 @@ export const getPostTrpcRoute = trpcLoggedProcedure
       isLikedByMe,
       canEditByMe,
       canDeleteByMe,
+      canReportByMe,
+      canBlockCommunityByMe,
+      isAuthorBlockedByMe,
+      isPublisherCommunityBlockedByMe,
     };
 
     return { post };

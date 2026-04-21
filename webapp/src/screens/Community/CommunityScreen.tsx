@@ -4,10 +4,12 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { useMemo, useState } from "react";
 import {
+  Alert,
   ActivityIndicator,
   FlatList,
   Image,
   ImageBackground,
+  Modal,
   RefreshControl,
   StyleSheet,
   Text,
@@ -18,8 +20,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
+import { ReportModal } from "../../components/ui/ReportModal";
 import ScreenName from "../../constants/ScreenName";
+import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
 import { getAvatarSource } from "../../lib/avatar";
+import { useMe } from "../../lib/ctx";
 import {
   applyOptimisticLikeToPosts,
   applyServerLikeToPosts,
@@ -36,6 +41,10 @@ import type { RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 const MAX_INFINITE_PAGES = 10;
+const SIDE_MENU_OVERLAY_BACKGROUND = "rgba(0,0,0,0.45)";
+const FLAG_ACTION_ICON_COLOR = "rgba(255,255,255,0.62)";
+const ACTION_MENU_TOP_OFFSET = 14;
+const ACTION_MENU_CARD_WIDTH = 236;
 
 type CommunityRouteParams = {
   [ScreenName.Community]: {
@@ -57,7 +66,10 @@ export const CommunityScreen = () => {
   const route = useRoute<CommunityRouteProp>();
   const navigation = useNavigation<CommunityNavProp>();
   const utils = trpc.useUtils();
+  const me = useMe();
   const [refreshing, setRefreshing] = useState(false);
+  const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [imageViewerState, setImageViewerState] = useState<{
     isOpen: boolean;
     images: string[];
@@ -86,6 +98,23 @@ export const CommunityScreen = () => {
         utils.getCommunity.invalidate({ id: communityId }),
         utils.getSubscribedPosts.invalidate(),
       ]);
+    },
+  });
+  const setUserContentBlock = trpc.setUserContentBlock.useMutation({
+    onSuccess: async () => {
+      await Promise.all([
+        utils.getCommunity.invalidate({ id: communityId }),
+        utils.getPosts.invalidate(),
+        utils.getSubscribedPosts.invalidate(),
+        utils.getRatedPosts.invalidate(),
+      ]);
+    },
+  });
+  const createReport = trpc.createReport.useMutation({
+    onSuccess: () => {
+      setIsReportModalOpen(false);
+      setIsActionsMenuOpen(false);
+      Alert.alert("Готово", "Жалоба отправлена");
     },
   });
 
@@ -199,6 +228,67 @@ export const CommunityScreen = () => {
     : community.isSubscribedByMe
       ? "Отписаться"
       : "Подписаться";
+  const canOpenActionsMenu = Boolean(me?.id && !isManagedCommunity);
+  const canReportCommunity = Boolean(
+    me?.id &&
+      community.owner?.id &&
+      community.owner.id !== me.id &&
+      !isManagedCommunity,
+  );
+
+  const handleToggleCommunityBlock = async () => {
+    if (!community.id || !me?.id || isManagedCommunity) {
+      return;
+    }
+
+    const isBlocked = !community.isBlockedByMe;
+
+    try {
+      await setUserContentBlock.mutateAsync({
+        targetType: "COMMUNITY",
+        targetCommunityId: community.id,
+        isBlocked,
+      });
+
+      setIsActionsMenuOpen(false);
+      Alert.alert(
+        "Готово",
+        isBlocked ? "Сообщество скрыто из ленты" : "Сообщество снова доступно",
+      );
+    } catch (error) {
+      Alert.alert(
+        "Ошибка",
+        error instanceof Error
+          ? error.message
+          : "Не удалось изменить блокировку",
+      );
+    }
+  };
+
+  const handleSubmitCommunityReport = async (description: string) => {
+    if (!community.owner?.id || !canReportCommunity) {
+      return;
+    }
+
+    const trimmedDescription = description.trim();
+    if (trimmedDescription.length < 10 || trimmedDescription.length > 500) {
+      Alert.alert("Ошибка", "Текст жалобы должен быть от 10 до 500 символов");
+      return;
+    }
+
+    try {
+      await createReport.mutateAsync({
+        targetType: "USER",
+        targetUserId: community.owner.id,
+        description: trimmedDescription,
+      });
+    } catch (error) {
+      Alert.alert(
+        "Ошибка",
+        error instanceof Error ? error.message : "Не удалось отправить жалобу",
+      );
+    }
+  };
 
   const header = (
     <View style={styles.headerWrap}>
@@ -223,6 +313,17 @@ export const CommunityScreen = () => {
               name="settings-outline"
               size={22}
               color={COLORS.white85}
+            />
+          </TouchableOpacity>
+        ) : canOpenActionsMenu ? (
+          <TouchableOpacity
+            onPress={() => setIsActionsMenuOpen(true)}
+            style={styles.settingsButton}
+          >
+            <Ionicons
+              name="flag-outline"
+              size={19}
+              color={FLAG_ACTION_ICON_COLOR}
             />
           </TouchableOpacity>
         ) : null}
@@ -345,6 +446,56 @@ export const CommunityScreen = () => {
             }))
           }
         />
+        <Modal
+          visible={isActionsMenuOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsActionsMenuOpen(false)}
+        >
+          <View style={styles.sideMenuOverlay}>
+            <TouchableOpacity
+              style={styles.sideMenuBackdrop}
+              onPress={() => setIsActionsMenuOpen(false)}
+            />
+            <View style={styles.sideMenuShell}>
+              <View style={styles.sideMenuContent}>
+                <TouchableOpacity
+                  style={styles.sideMenuButton}
+                  disabled={setUserContentBlock.isPending}
+                  onPress={() => {
+                    void handleToggleCommunityBlock();
+                  }}
+                >
+                  <Text style={typography.body_white85}>
+                    {community.isBlockedByMe
+                      ? "Показать сообщество"
+                      : "Скрыть сообщество"}
+                  </Text>
+                </TouchableOpacity>
+                {canReportCommunity ? (
+                  <TouchableOpacity
+                    style={styles.sideMenuButton}
+                    onPress={() => {
+                      setIsActionsMenuOpen(false);
+                      setIsReportModalOpen(true);
+                    }}
+                  >
+                    <Text style={typography.body_white85}>Пожаловаться</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            </View>
+          </View>
+        </Modal>
+        <ReportModal
+          visible={isReportModalOpen}
+          title="Жалоба на сообщество"
+          isSubmitting={createReport.isPending}
+          onClose={() => setIsReportModalOpen(false)}
+          onSubmit={(description) => {
+            void handleSubmitCommunityReport(description);
+          }}
+        />
         <StatusBar style="auto" />
       </SafeAreaView>
     </ImageBackground>
@@ -425,6 +576,35 @@ const styles = StyleSheet.create({
     height: 32,
     justifyContent: "center",
     width: 32,
+  },
+  sideMenuBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  sideMenuButton: {
+    backgroundColor: COLORS.navBarBackground,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  sideMenuContent: {
+    backgroundColor: COLORS.postsCardBackground,
+    borderRadius: 24,
+    gap: 8,
+    padding: 14,
+    width: ACTION_MENU_CARD_WIDTH,
+  },
+  sideMenuOverlay: {
+    alignItems: "center",
+    backgroundColor: SIDE_MENU_OVERLAY_BACKGROUND,
+    flex: 1,
+    justifyContent: "flex-start",
+    paddingHorizontal: 14,
+  },
+  sideMenuShell: {
+    alignItems: "flex-end",
+    marginTop: ACTION_MENU_TOP_OFFSET,
+    maxWidth: SHELL_CONTENT_WIDTH,
+    width: "100%",
   },
   subscribeButton: {
     alignItems: "center",

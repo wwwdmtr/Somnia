@@ -31,7 +31,6 @@ type NavigationProp = NativeStackNavigationProp<
 >;
 const MAX_INFINITE_PAGES = 10;
 
-// Если хочешь — можешь принимать пропсы/навигацию и открывать Post
 export const DeletedPostsScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const me = useMe();
@@ -53,10 +52,9 @@ export const DeletedPostsScreen = () => {
     { limit: LIMIT },
     {
       enabled: canAccessDeletedPosts,
-      // ВАЖНО: твой эндпоинт возвращает nextCursor
+
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
       maxPages: MAX_INFINITE_PAGES,
-      // по желанию, чтобы не дёргать лишний раз
       staleTime: 10_000,
     },
   );
@@ -317,7 +315,8 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: "space-between",
     marginBottom: 20,
-    paddingHorizontal: 6,
+    marginTop: 14,
+    paddingHorizontal: 16,
   },
 
   listContent: {

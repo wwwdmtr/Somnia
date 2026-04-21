@@ -93,6 +93,21 @@ export const getCommunityTrpcRoute = trpcLoggedProcedure
           },
         })) || isManagedCommunity
       : false;
+    const isBlockedByMe = ctx.me
+      ? Boolean(
+          await ctx.prisma.userBlockedCommunity.findUnique({
+            where: {
+              userId_communityId: {
+                userId: ctx.me.id,
+                communityId: input.id,
+              },
+            },
+            select: {
+              id: true,
+            },
+          }),
+        )
+      : false;
 
     return {
       community: {
@@ -101,6 +116,7 @@ export const getCommunityTrpcRoute = trpcLoggedProcedure
         postsCount: community._count.posts,
         myRole: meMember?.role ?? null,
         isSubscribedByMe,
+        isBlockedByMe,
       },
     };
   });

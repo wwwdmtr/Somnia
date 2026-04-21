@@ -311,7 +311,7 @@ export const AllPostsScreen = () => {
     return (
       <View style={styles.emptyContainer}>
         <Text style={typography.body_white85}>
-          В ленте пока нет снов. Будь первым, кто поделится 💫
+          В ленте пока нет Постов. Будь первым, кто поделится
         </Text>
       </View>
     );

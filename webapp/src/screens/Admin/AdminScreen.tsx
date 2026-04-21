@@ -69,9 +69,7 @@ export const AdminScreen = () => {
             <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
             <Text style={typography.body_white85}>Назад</Text>
           </TouchableOpacity>
-          <Text style={typography.body_white85}>
-            Админ Панель ДОСТИЛИЗОВАТЬ!!
-          </Text>
+          <Text style={typography.body_white85}>Админ Панель</Text>
         </View>
         <ScrollView showsVerticalScrollIndicator={false}>
           <TouchableOpacity
@@ -81,6 +79,12 @@ export const AdminScreen = () => {
             <Text style={typography.h4_white_85}>
               Посмотреть удаленные посты
             </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.AdminOptions}
+            onPress={() => navigation.navigate(ScreenName.AdminReports)}
+          >
+            <Text style={typography.h4_white_85}>Посмотреть жалобы</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
@@ -96,6 +100,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     height: 64,
     justifyContent: "center",
+    marginBottom: 8,
   },
   BackgroundImage: {
     flex: 1,
@@ -114,7 +119,8 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: "space-between",
     marginBottom: 20,
-    paddingHorizontal: 6,
+    marginTop: 14,
+    paddingHorizontal: 16,
   },
 
   safeArea: {

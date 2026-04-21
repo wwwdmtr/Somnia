@@ -60,6 +60,7 @@ export const linking = {
         screens: {
           [ScreenName.AdminHome]: "",
           [ScreenName.DeletedPosts]: "deleted-posts",
+          [ScreenName.AdminReports]: "reports",
           [ScreenName.Profile]: "profile/:userId",
           [ScreenName.Community]: "community/:id",
           [ScreenName.UpdateCommunity]: "community/:id/edit",
