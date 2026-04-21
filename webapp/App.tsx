@@ -21,9 +21,18 @@ function getWebViewportHeight() {
     return 0;
   }
 
-  const nextHeight =
-    maybeWindow.visualViewport?.height ?? maybeWindow.innerHeight;
-  return Number.isFinite(nextHeight) ? Math.round(nextHeight) : 0;
+  const maybeDocument = (globalThis as { document?: Document }).document;
+  const heights = [
+    maybeWindow.innerHeight,
+    maybeWindow.visualViewport?.height,
+    maybeDocument?.documentElement?.clientHeight,
+  ].filter((value): value is number => Number.isFinite(value) && value > 0);
+
+  if (heights.length === 0) {
+    return 0;
+  }
+
+  return Math.round(Math.max(...heights));
 }
 
 export default function App() {
