@@ -1,3 +1,4 @@
+import { createCommunityActionLog } from "../../lib/communityModeration";
 import { sendPostBlockedEmail } from "../../lib/emails";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
@@ -67,6 +68,16 @@ export const deletePostTrpcRoute = trpcLoggedProcedure
       where: { id: postId },
       data: { deletedAt: new Date() },
     });
+
+    if (post.publisherType === "COMMUNITY" && post.publisherCommunityId) {
+      await createCommunityActionLog({
+        prisma: ctx.prisma,
+        communityId: post.publisherCommunityId,
+        actionType: "POST_DELETED",
+        actorUserId: ctx.me?.id ?? null,
+        postId,
+      });
+    }
 
     const orphanedImagePublicIds = await getUnreferencedPostImagePublicIds({
       prisma: ctx.prisma,

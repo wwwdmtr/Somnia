@@ -1,3 +1,9 @@
+import {
+  getActiveCommunityBlacklistEntry,
+  getCommunityMembershipRole,
+  isCommunityManagerRole,
+} from "../../lib/communityModeration";
+import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 import { isUserAdmin } from "../../utils/can";
 
@@ -8,7 +14,12 @@ export const getCommentsByPostTrpcRoute = trpcLoggedProcedure
   .query(async ({ ctx, input }) => {
     const post = await ctx.prisma.post.findUnique({
       where: { id: input.postId },
-      select: { id: true, deletedAt: true },
+      select: {
+        id: true,
+        deletedAt: true,
+        publisherType: true,
+        publisherCommunityId: true,
+      },
     });
 
     if (!post) {
@@ -16,6 +27,30 @@ export const getCommentsByPostTrpcRoute = trpcLoggedProcedure
     }
     if (post.deletedAt && !isUserAdmin(ctx.me)) {
       throw new Error("Post not found");
+    }
+
+    if (
+      ctx.me?.id &&
+      post.publisherType === "COMMUNITY" &&
+      post.publisherCommunityId
+    ) {
+      const role = await getCommunityMembershipRole({
+        prisma: ctx.prisma,
+        communityId: post.publisherCommunityId,
+        userId: ctx.me.id,
+      });
+
+      if (!isCommunityManagerRole(role)) {
+        const blacklistEntry = await getActiveCommunityBlacklistEntry({
+          prisma: ctx.prisma,
+          communityId: post.publisherCommunityId,
+          userId: ctx.me.id,
+        });
+
+        if (blacklistEntry) {
+          throw new ExpectedError("Пост сообщества недоступен");
+        }
+      }
     }
 
     const rawComments = await ctx.prisma.comment.findMany({

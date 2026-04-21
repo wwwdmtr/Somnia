@@ -1,3 +1,8 @@
+import {
+  getActiveCommunityBlacklistEntry,
+  getCommunityMembershipRole,
+  isCommunityManagerRole,
+} from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 
@@ -18,12 +23,37 @@ export const setPostLikeTrpcRoute = trpcLoggedProcedure
         id: true,
         authorId: true,
         publisherType: true,
+        publisherCommunityId: true,
         deletedAt: true,
       },
     });
 
     if (!post || post.deletedAt) {
       throw new ExpectedError("Post not found");
+    }
+
+    if (
+      post.publisherType === "COMMUNITY" &&
+      post.publisherCommunityId &&
+      ctx.me?.id
+    ) {
+      const role = await getCommunityMembershipRole({
+        prisma: ctx.prisma,
+        communityId: post.publisherCommunityId,
+        userId: ctx.me.id,
+      });
+
+      if (!isCommunityManagerRole(role)) {
+        const blacklistEntry = await getActiveCommunityBlacklistEntry({
+          prisma: ctx.prisma,
+          communityId: post.publisherCommunityId,
+          userId: ctx.me.id,
+        });
+
+        if (blacklistEntry) {
+          throw new ExpectedError("Пост сообщества недоступен");
+        }
+      }
     }
 
     const existingLike = await ctx.prisma.postLike.findUnique({

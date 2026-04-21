@@ -11,7 +11,9 @@ import { deleteCommunityTrpcRoute } from "./deleteCommunity/deleteCommunity";
 import { deletePostTrpcRoute } from "./deletePost/deletePost";
 import { getCommentsByPostTrpcRoute } from "./getCommentByPost/getCommentByPost";
 import { getCommunityTrpcRoute } from "./getCommunity/getCommunity";
+import { getCommunityActionLogTrpcRoute } from "./getCommunityActionLog/getCommunityActionLog";
 import { getCommunityModerationTrpcRoute } from "./getCommunityModeration/getCommunityModeration";
+import { getCommunityModerationListTrpcRoute } from "./getCommunityModerationList/getCommunityModerationList";
 import { getCommunityPostsTrpcRoute } from "./getCommunityPosts/getCommunityPosts";
 import { getDeletedPostsTrpcRoute } from "./getDeletedPosts/getDeletedPosts";
 import { getMeTrpcRoute } from "./getMe/getMe";
@@ -30,6 +32,7 @@ import { markAllNotificationsReadTrpcRoute } from "./markAllNotificationsRead/ma
 import { searchCommunitiesTrpcRoute } from "./searchCommunities/searchCommunities";
 import { searchUsersTrpcRoute } from "./searchUsers/searchUsers";
 import { setCommunityAvatarTrpcRoute } from "./setCommunityAvatar/setCommunityAvatar";
+import { setCommunityBlacklistTrpcRoute } from "./setCommunityBlacklist/setCommunityBlacklist";
 import { setCommunityModeratorTrpcRoute } from "./setCommunityModerator/setCommunityModerator";
 import { setCommunitySubscriptionTrpcRoute } from "./setCommunitySubscription/setCommunitySubscription";
 import { setMyAvatarTrpcRoute } from "./setMyAvatar/setMyAvatar";
@@ -66,10 +69,13 @@ export const trpcRouter = createTrpcRouter({
   getMe: getMeTrpcRoute,
   getCommentsByPost: getCommentsByPostTrpcRoute,
   getCommunity: getCommunityTrpcRoute,
+  getCommunityActionLog: getCommunityActionLogTrpcRoute,
   getCommunityModeration: getCommunityModerationTrpcRoute,
+  getCommunityModerationList: getCommunityModerationListTrpcRoute,
   getCommunityPosts: getCommunityPostsTrpcRoute,
   getSubscribedPosts: getSubscribedPostsTrpcRoute,
   setCommunityAvatar: setCommunityAvatarTrpcRoute,
+  setCommunityBlacklist: setCommunityBlacklistTrpcRoute,
   setCommunityModerator: setCommunityModeratorTrpcRoute,
   transferCommunityOwnership: transferCommunityOwnershipTrpcRoute,
   updatePost: updatePostTrpcRoute,

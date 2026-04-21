@@ -1,6 +1,11 @@
 import _ from "lodash";
 import { z } from "zod";
 
+import {
+  getActiveCommunityBlacklistEntry,
+  getCommunityMembershipRole,
+  isCommunityManagerRole,
+} from "../lib/communityModeration";
 import { ExpectedError } from "../lib/error";
 import { trpcLoggedProcedure } from "../lib/trpc";
 import { canDeleteThisPost, isPostOwner, isUserAdmin } from "../utils/can";
@@ -57,23 +62,27 @@ export const getPostTrpcRoute = trpcLoggedProcedure
       rawPost &&
       userId &&
       rawPost.publisherType === "COMMUNITY" &&
-      rawPost.publisherCommunityId &&
-      !isPostOwner(ctx.me, rawPost)
+      rawPost.publisherCommunityId
     ) {
-      const membership = await ctx.prisma.communityMember.findUnique({
-        where: {
-          communityId_userId: {
-            communityId: rawPost.publisherCommunityId,
-            userId,
-          },
-        },
-        select: {
-          role: true,
-        },
+      const role = await getCommunityMembershipRole({
+        prisma: ctx.prisma,
+        communityId: rawPost.publisherCommunityId,
+        userId,
       });
 
-      canManageCommunityPost =
-        membership?.role === "OWNER" || membership?.role === "MODERATOR";
+      canManageCommunityPost = isCommunityManagerRole(role);
+
+      if (!canManageCommunityPost) {
+        const blacklistEntry = await getActiveCommunityBlacklistEntry({
+          prisma: ctx.prisma,
+          communityId: rawPost.publisherCommunityId,
+          userId,
+        });
+
+        if (blacklistEntry) {
+          throw new ExpectedError("Пост сообщества недоступен");
+        }
+      }
     }
 
     const isLikedByMe = userId ? !!rawPost?.postLikes.length : false;

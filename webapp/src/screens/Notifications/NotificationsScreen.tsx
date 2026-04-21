@@ -28,9 +28,16 @@ const MAX_INFINITE_PAGES = 10;
 
 type NotificationItem = {
   id: string;
-  type: "POST_LIKED" | "POST_COMMENTED" | "COMMENT_REPLIED" | "USER_FOLLOWED";
+  type:
+    | "POST_LIKED"
+    | "POST_COMMENTED"
+    | "COMMENT_REPLIED"
+    | "USER_FOLLOWED"
+    | "COMMUNITY_BLACKLISTED"
+    | "COMMUNITY_UNBLACKLISTED";
   createdAt: Date;
   readAt: Date | null;
+  details: unknown;
   postId: string | null;
   actor: {
     id: string;
@@ -41,6 +48,40 @@ type NotificationItem = {
     id: string;
     title: string;
   } | null;
+  community: {
+    id: string;
+    name: string;
+  } | null;
+};
+
+const getNotificationDetails = (details: NotificationItem["details"]) => {
+  if (!details || typeof details !== "object" || Array.isArray(details)) {
+    return {};
+  }
+
+  const raw = details as {
+    duration?: unknown;
+    durationLabel?: unknown;
+    expiresAt?: unknown;
+    reason?: unknown;
+  };
+
+  return {
+    duration:
+      raw.duration === "PERMANENT" ||
+      raw.duration === "DAY" ||
+      raw.duration === "WEEK" ||
+      raw.duration === "MONTH"
+        ? raw.duration
+        : undefined,
+    durationLabel:
+      typeof raw.durationLabel === "string" ? raw.durationLabel : undefined,
+    expiresAt: typeof raw.expiresAt === "string" ? raw.expiresAt : undefined,
+    reason:
+      raw.reason === "MANUAL" || raw.reason === "EXPIRED"
+        ? raw.reason
+        : undefined,
+  };
 };
 
 const getNotificationText = (notification: NotificationItem) => {
@@ -54,6 +95,28 @@ const getNotificationText = (notification: NotificationItem) => {
 
   if (notification.type === "USER_FOLLOWED") {
     return `@${notification.actor.nickname} подписался(ась) на вас`;
+  }
+
+  if (notification.type === "COMMUNITY_BLACKLISTED") {
+    const details = getNotificationDetails(notification.details);
+    const durationLabel = details.durationLabel;
+
+    return notification.community
+      ? `@${notification.actor.nickname} добавил(а) вас в ЧС сообщества ${notification.community.name}${durationLabel ? ` на ${durationLabel}` : ""}`
+      : `@${notification.actor.nickname} добавил(а) вас в черный список сообщества${durationLabel ? ` на ${durationLabel}` : ""}`;
+  }
+
+  if (notification.type === "COMMUNITY_UNBLACKLISTED") {
+    const details = getNotificationDetails(notification.details);
+    const reason = details.reason;
+
+    return notification.community
+      ? reason === "EXPIRED"
+        ? `Блокировка в сообществе ${notification.community.name} завершилась`
+        : `@${notification.actor.nickname} снял(а) блокировку в сообществе ${notification.community.name}`
+      : reason === "EXPIRED"
+        ? "Срок блокировки в сообществе истек"
+        : `@${notification.actor.nickname} снял(а) блокировку в сообществе`;
   }
 
   return `@${notification.actor.nickname} ответил(а) на ваш комментарий`;
@@ -127,6 +190,17 @@ export const NotificationsScreen = () => {
 
     if (notification.type === "USER_FOLLOWED") {
       navigation.navigate("Profile", { userId: notification.actor.id });
+      return;
+    }
+
+    if (notification.type === "COMMUNITY_BLACKLISTED") {
+      return;
+    }
+
+    if (notification.type === "COMMUNITY_UNBLACKLISTED") {
+      if (notification.community?.id) {
+        navigation.navigate("Community", { id: notification.community.id });
+      }
       return;
     }
 
@@ -220,6 +294,14 @@ export const NotificationsScreen = () => {
                 {item.post ? (
                   <Text style={typography.caption_white85} numberOfLines={1}>
                     Пост: {item.post.title}
+                  </Text>
+                ) : item.type === "COMMUNITY_BLACKLISTED" ? (
+                  <Text style={typography.caption_white85} numberOfLines={1}>
+                    Ограничение уже применено
+                  </Text>
+                ) : item.type === "COMMUNITY_UNBLACKLISTED" ? (
+                  <Text style={typography.caption_white85} numberOfLines={1}>
+                    Нажмите, чтобы открыть сообщество
                   </Text>
                 ) : (
                   <Text style={typography.caption_white85} numberOfLines={1}>

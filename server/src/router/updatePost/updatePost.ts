@@ -1,3 +1,4 @@
+import { createCommunityActionLog } from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 import { isPostOwner } from "../../utils/can";
@@ -110,6 +111,16 @@ export const updatePostTrpcRoute = trpcLoggedProcedure
         images: normalizedImages,
       },
     });
+
+    if (post.publisherType === "COMMUNITY" && post.publisherCommunityId) {
+      await createCommunityActionLog({
+        prisma: ctx.prisma,
+        communityId: post.publisherCommunityId,
+        actionType: "POST_UPDATED",
+        actorUserId: me.id,
+        postId,
+      });
+    }
 
     const orphanedImagePublicIds = await getUnreferencedPostImagePublicIds({
       prisma: ctx.prisma,

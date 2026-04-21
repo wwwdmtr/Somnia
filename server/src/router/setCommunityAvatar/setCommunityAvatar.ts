@@ -1,4 +1,5 @@
 import { destroyCloudinaryImage } from "../../lib/cloudinary";
+import { createCommunityActionLog } from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 import { isAvatarOwnedByUser } from "../../utils/cloudinaryPublicId";
@@ -55,6 +56,15 @@ export const setCommunityAvatarTrpcRoute = trpcLoggedProcedure
         avatar: true,
       },
     });
+
+    if (community.avatar !== input.avatar) {
+      await createCommunityActionLog({
+        prisma: ctx.prisma,
+        communityId: input.communityId,
+        actionType: "COMMUNITY_AVATAR_UPDATED",
+        actorUserId: ctx.me.id,
+      });
+    }
 
     if (
       community.avatar &&

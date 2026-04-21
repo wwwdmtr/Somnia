@@ -210,7 +210,7 @@ export const CommunityScreen = () => {
           <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
           <Text style={typography.body_white85}>Назад</Text>
         </TouchableOpacity>
-        {community.myRole === "OWNER" ? (
+        {isManagedCommunity ? (
           <TouchableOpacity
             onPress={() =>
               navigation.navigate(ScreenName.UpdateCommunity, {

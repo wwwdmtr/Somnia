@@ -1,3 +1,4 @@
+import { createCommunityActionLog } from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 import { isPostImageOwnedByUser } from "../../utils/postImages";
@@ -69,6 +70,16 @@ export const createPostTrpcRoute = trpcLoggedProcedure
           : {}),
       },
     });
+
+    if (publisherType === "COMMUNITY" && communityId) {
+      await createCommunityActionLog({
+        prisma: ctx.prisma,
+        communityId,
+        actionType: "POST_PUBLISHED",
+        actorUserId: me.id,
+        postId: post.id,
+      });
+    }
 
     return post;
   });

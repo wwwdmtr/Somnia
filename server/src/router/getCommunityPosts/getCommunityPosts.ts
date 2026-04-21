@@ -1,5 +1,10 @@
 import _ from "lodash";
 
+import {
+  getActiveCommunityBlacklistEntry,
+  getCommunityMembershipRole,
+  isCommunityManagerRole,
+} from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 
@@ -25,20 +30,25 @@ export const getCommunityPostsTrpcRoute = trpcLoggedProcedure
     }
 
     if (userId) {
-      const membership = await ctx.prisma.communityMember.findUnique({
-        where: {
-          communityId_userId: {
-            communityId: input.communityId,
-            userId,
-          },
-        },
-        select: {
-          role: true,
-        },
+      const role = await getCommunityMembershipRole({
+        prisma: ctx.prisma,
+        communityId: input.communityId,
+        userId,
       });
 
-      canSeeCommunityAuthor =
-        membership?.role === "OWNER" || membership?.role === "MODERATOR";
+      canSeeCommunityAuthor = isCommunityManagerRole(role);
+
+      if (!canSeeCommunityAuthor) {
+        const blacklistEntry = await getActiveCommunityBlacklistEntry({
+          prisma: ctx.prisma,
+          communityId: input.communityId,
+          userId,
+        });
+
+        if (blacklistEntry) {
+          throw new ExpectedError("Контент сообщества недоступен");
+        }
+      }
     }
 
     const rawPosts = await ctx.prisma.post.findMany({

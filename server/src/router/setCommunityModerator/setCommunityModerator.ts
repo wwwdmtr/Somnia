@@ -1,3 +1,4 @@
+import { createCommunityActionLog } from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 
@@ -66,6 +67,14 @@ export const setCommunityModeratorTrpcRoute = trpcLoggedProcedure
         },
       });
 
+      await createCommunityActionLog({
+        prisma: ctx.prisma,
+        communityId: input.communityId,
+        actionType: "MODERATOR_ASSIGNED",
+        actorUserId: ctx.me.id,
+        targetUserId: input.userId,
+      });
+
       return {
         communityId: input.communityId,
         userId: input.userId,
@@ -73,13 +82,23 @@ export const setCommunityModeratorTrpcRoute = trpcLoggedProcedure
       };
     }
 
-    await ctx.prisma.communityMember.deleteMany({
+    const deletedModerators = await ctx.prisma.communityMember.deleteMany({
       where: {
         communityId: input.communityId,
         userId: input.userId,
         role: "MODERATOR",
       },
     });
+
+    if (deletedModerators.count > 0) {
+      await createCommunityActionLog({
+        prisma: ctx.prisma,
+        communityId: input.communityId,
+        actionType: "MODERATOR_REVOKED",
+        actorUserId: ctx.me.id,
+        targetUserId: input.userId,
+      });
+    }
 
     return {
       communityId: input.communityId,

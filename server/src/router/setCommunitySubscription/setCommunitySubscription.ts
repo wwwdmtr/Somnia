@@ -1,3 +1,4 @@
+import { getActiveCommunityBlacklistEntry } from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 
@@ -20,6 +21,18 @@ export const setCommunitySubscriptionTrpcRoute = trpcLoggedProcedure
     }
 
     if (input.isSubscribed) {
+      const blacklistEntry = await getActiveCommunityBlacklistEntry({
+        prisma: ctx.prisma,
+        communityId: input.communityId,
+        userId: ctx.me.id,
+      });
+
+      if (blacklistEntry) {
+        throw new ExpectedError(
+          "Вы не можете подписаться, пока находитесь в черном списке",
+        );
+      }
+
       await ctx.prisma.communitySubscription.upsert({
         where: {
           communityId_userId: {

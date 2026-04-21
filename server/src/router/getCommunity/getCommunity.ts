@@ -1,3 +1,8 @@
+import {
+  getActiveCommunityBlacklistEntry,
+  isCommunityManagerRole,
+  notifyExpiredCommunityBlacklistEntriesForUser,
+} from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 
@@ -6,6 +11,13 @@ import { zGetCommunityTrpcInput } from "./input";
 export const getCommunityTrpcRoute = trpcLoggedProcedure
   .input(zGetCommunityTrpcInput)
   .query(async ({ ctx, input }) => {
+    if (ctx.me) {
+      await notifyExpiredCommunityBlacklistEntriesForUser({
+        prisma: ctx.prisma,
+        userId: ctx.me.id,
+      });
+    }
+
     const community = await ctx.prisma.community.findUnique({
       where: { id: input.id },
       select: {
@@ -52,6 +64,22 @@ export const getCommunityTrpcRoute = trpcLoggedProcedure
           },
         })
       : null;
+    const isManagedCommunity = isCommunityManagerRole(meMember?.role ?? null);
+
+    if (ctx.me && !isManagedCommunity) {
+      const blacklistEntry = await getActiveCommunityBlacklistEntry({
+        prisma: ctx.prisma,
+        communityId: input.id,
+        userId: ctx.me.id,
+      });
+
+      if (blacklistEntry) {
+        throw new ExpectedError(
+          "Вы добавлены в черный список этого сообщества",
+        );
+      }
+    }
+
     const isSubscribedByMe = ctx.me
       ? !!(await ctx.prisma.communitySubscription.findUnique({
           where: {
@@ -63,9 +91,7 @@ export const getCommunityTrpcRoute = trpcLoggedProcedure
           select: {
             id: true,
           },
-        })) ||
-        meMember?.role === "OWNER" ||
-        meMember?.role === "MODERATOR"
+        })) || isManagedCommunity
       : false;
 
     return {

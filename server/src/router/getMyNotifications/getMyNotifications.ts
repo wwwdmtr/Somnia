@@ -1,13 +1,19 @@
-import { trpcLoggedProcedure } from '../../lib/trpc';
+import { notifyExpiredCommunityBlacklistEntriesForUser } from "../../lib/communityModeration";
+import { trpcLoggedProcedure } from "../../lib/trpc";
 
-import { zGetMyNotificationsTrpcInput } from './input';
+import { zGetMyNotificationsTrpcInput } from "./input";
 
 export const getMyNotificationsTrpcRoute = trpcLoggedProcedure
   .input(zGetMyNotificationsTrpcInput)
   .query(async ({ ctx, input }) => {
     if (!ctx.me) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
+
+    await notifyExpiredCommunityBlacklistEntriesForUser({
+      prisma: ctx.prisma,
+      userId: ctx.me.id,
+    });
 
     const rawNotifications = await ctx.prisma.notification.findMany({
       where: {
@@ -18,12 +24,13 @@ export const getMyNotificationsTrpcRoute = trpcLoggedProcedure
         cursor: { id: input.cursor },
         skip: 1,
       }),
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       select: {
         id: true,
         type: true,
         createdAt: true,
         readAt: true,
+        details: true,
         postId: true,
         commentId: true,
         actor: {
@@ -44,6 +51,12 @@ export const getMyNotificationsTrpcRoute = trpcLoggedProcedure
             id: true,
             content: true,
             parentId: true,
+          },
+        },
+        community: {
+          select: {
+            id: true,
+            name: true,
           },
         },
       },

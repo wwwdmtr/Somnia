@@ -25,6 +25,10 @@ model User {
     ownedCommunities       Community[]             @relation("CommunityOwner")
     communityMemberships   CommunityMember[]
     communitySubscriptions CommunitySubscription[]
+    communityBlacklistEntries    CommunityBlacklist[] @relation("CommunityBlacklistUser")
+    createdCommunityBlacklistEntries CommunityBlacklist[] @relation("CommunityBlacklistCreator")
+    communityActionLogsAsActor   CommunityActionLog[] @relation("CommunityActionActor")
+    communityActionLogsAsTarget  CommunityActionLog[] @relation("CommunityActionTarget")
     followers              UserFollow[]            @relation("UserFollowers")
     following              UserFollow[]            @relation("UserFollowing")
 }
@@ -50,6 +54,7 @@ model Post {
     comments             Comment[]
     postLikes            PostLike[]
     notifications        Notification[]
+    communityActionLogs  CommunityActionLog[]
     deletedAt            DateTime?
 
     @@index([publisherType, seq])
@@ -72,6 +77,9 @@ model Community {
     members       CommunityMember[]
     subscriptions CommunitySubscription[]
     posts         Post[]                  @relation("CommunityPosts")
+    blacklistEntries CommunityBlacklist[]
+    actionLogs      CommunityActionLog[]
+    notifications   Notification[]
 }
 
 enum CommunityMemberRole {
@@ -106,6 +114,57 @@ model CommunitySubscription {
     @@unique([communityId, userId])
     @@index([userId, createdAt])
     @@index([communityId])
+}
+
+model CommunityBlacklist {
+    id              String    @id @default(uuid())
+    createdAt       DateTime  @default(now())
+    updatedAt       DateTime  @updatedAt
+    expiresAt       DateTime?
+    unblockedNotifiedAt DateTime?
+    restoreSubscriptionOnUnblock Boolean @default(false)
+    communityId     String
+    userId          String
+    createdByUserId String
+    community       Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+    user            User      @relation("CommunityBlacklistUser", fields: [userId], references: [id], onDelete: Cascade)
+    createdBy       User      @relation("CommunityBlacklistCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+    @@unique([communityId, userId])
+    @@index([communityId, createdAt])
+    @@index([userId, expiresAt])
+}
+
+enum CommunityActionType {
+    BLACKLIST_ADDED
+    BLACKLIST_REMOVED
+    MODERATOR_ASSIGNED
+    MODERATOR_REVOKED
+    OWNERSHIP_TRANSFERRED
+    POST_PUBLISHED
+    POST_UPDATED
+    POST_DELETED
+    COMMUNITY_UPDATED
+    COMMUNITY_AVATAR_UPDATED
+}
+
+model CommunityActionLog {
+    id           String              @id @default(uuid())
+    createdAt    DateTime            @default(now())
+    actionType   CommunityActionType
+    details      Json?
+    communityId  String
+    actorUserId  String?
+    targetUserId String?
+    postId       String?
+    community    Community           @relation(fields: [communityId], references: [id], onDelete: Cascade)
+    actor        User?               @relation("CommunityActionActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+    targetUser   User?               @relation("CommunityActionTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+    post         Post?               @relation(fields: [postId], references: [id], onDelete: SetNull)
+
+    @@index([communityId, createdAt])
+    @@index([actorUserId, createdAt])
+    @@index([targetUserId, createdAt])
 }
 
 model UserFollow {
@@ -162,6 +221,8 @@ enum NotificationType {
     POST_COMMENTED
     COMMENT_REPLIED
     USER_FOLLOWED
+    COMMUNITY_BLACKLISTED
+    COMMUNITY_UNBLACKLISTED
 }
 
 model Notification {
@@ -169,6 +230,7 @@ model Notification {
     type      NotificationType
     createdAt DateTime         @default(now())
     readAt    DateTime?
+    details   Json?
 
     recipientId String
     recipient   User   @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
@@ -181,9 +243,12 @@ model Notification {
 
     commentId String?
     comment   Comment? @relation(fields: [commentId], references: [id], onDelete: SetNull)
+    communityId String?
+    community   Community? @relation(fields: [communityId], references: [id], onDelete: SetNull)
 
     @@index([recipientId, createdAt])
     @@index([actorId, createdAt])
     @@index([postId])
     @@index([commentId])
+    @@index([communityId])
 }

@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 
+import { createCommunityActionLog } from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 
@@ -19,6 +20,8 @@ export const updateCommunityTrpcRoute = trpcLoggedProcedure
       select: {
         id: true,
         ownerId: true,
+        name: true,
+        description: true,
       },
     });
 
@@ -46,6 +49,18 @@ export const updateCommunityTrpcRoute = trpcLoggedProcedure
           avatar: true,
         },
       });
+
+      if (
+        community.name !== updatedCommunity.name ||
+        community.description !== updatedCommunity.description
+      ) {
+        await createCommunityActionLog({
+          prisma: ctx.prisma,
+          communityId: input.communityId,
+          actionType: "COMMUNITY_UPDATED",
+          actorUserId: ctx.me.id,
+        });
+      }
 
       return {
         community: updatedCommunity,

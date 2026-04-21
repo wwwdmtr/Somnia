@@ -1,5 +1,9 @@
 import _ from "lodash";
 
+import {
+  getBlockedCommunityIds,
+  notifyExpiredCommunityBlacklistEntriesForUser,
+} from "../../lib/communityModeration";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 
 import { zGetSubscribedPostsTrpcInput } from "./input";
@@ -10,7 +14,13 @@ export const getSubscribedPostsTrpcRoute = trpcLoggedProcedure
     if (!ctx.me) {
       throw new Error("Unauthorized");
     }
+    await notifyExpiredCommunityBlacklistEntriesForUser({
+      prisma: ctx.prisma,
+      userId: ctx.me.id,
+    });
+
     const managedCommunityIds = new Set<string>();
+    let blockedCommunityIds = new Set<string>();
 
     const rawPosts = await ctx.prisma.post.findMany({
       where: {
@@ -117,40 +127,64 @@ export const getSubscribedPostsTrpcRoute = trpcLoggedProcedure
     );
 
     if (communityIds.length > 0) {
-      const memberships = await ctx.prisma.communityMember.findMany({
-        where: {
+      const [memberships, blockedIds] = await Promise.all([
+        ctx.prisma.communityMember.findMany({
+          where: {
+            userId: ctx.me.id,
+            communityId: {
+              in: communityIds,
+            },
+            role: {
+              in: ["OWNER", "MODERATOR"],
+            },
+          },
+          select: {
+            communityId: true,
+          },
+        }),
+        getBlockedCommunityIds({
+          prisma: ctx.prisma,
           userId: ctx.me.id,
-          communityId: {
-            in: communityIds,
-          },
-          role: {
-            in: ["OWNER", "MODERATOR"],
-          },
-        },
-        select: {
-          communityId: true,
-        },
-      });
+          communityIds,
+        }),
+      ]);
 
       memberships.forEach((membership) => {
         managedCommunityIds.add(membership.communityId);
       });
+
+      blockedCommunityIds = blockedIds;
     }
 
-    const posts = rawPosts.map((post) => {
-      const canSeeCommunityAuthor =
-        post.publisherType !== "COMMUNITY" ||
-        (!!post.publisherCommunity?.id &&
-          managedCommunityIds.has(post.publisherCommunity.id));
+    const posts = rawPosts
+      .filter((post) => {
+        if (
+          post.publisherType !== "COMMUNITY" ||
+          !post.publisherCommunity?.id
+        ) {
+          return true;
+        }
 
-      return {
-        ..._.omit(post, ["_count", "postLikes", "author"]),
-        ...(canSeeCommunityAuthor ? { author: post.author } : {}),
-        likesCount: post._count.postLikes,
-        commentsCount: post._count.comments,
-        isLikedByMe: post.postLikes.length > 0,
-      };
-    });
+        if (managedCommunityIds.has(post.publisherCommunity.id)) {
+          return true;
+        }
+
+        return !blockedCommunityIds.has(post.publisherCommunity.id);
+      })
+      .map((post) => {
+        const canSeeCommunityAuthor =
+          post.publisherType !== "COMMUNITY" ||
+          (!!post.publisherCommunity?.id &&
+            managedCommunityIds.has(post.publisherCommunity.id));
+
+        return {
+          ..._.omit(post, ["_count", "postLikes", "author"]),
+          ...(canSeeCommunityAuthor ? { author: post.author } : {}),
+          likesCount: post._count.postLikes,
+          commentsCount: post._count.comments,
+          isLikedByMe: post.postLikes.length > 0,
+        };
+      });
 
     return { posts, nextCursor };
   });

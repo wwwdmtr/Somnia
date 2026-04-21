@@ -1,3 +1,8 @@
+import {
+  getActiveCommunityBlacklistEntry,
+  getCommunityMembershipRole,
+  isCommunityManagerRole,
+} from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 
@@ -16,11 +21,37 @@ export const createCommentTrpcRoute = trpcLoggedProcedure
         id: true,
         authorId: true,
         deletedAt: true,
+        publisherType: true,
+        publisherCommunityId: true,
       },
     });
 
     if (!post || post.deletedAt) {
       throw new ExpectedError("Post not found");
+    }
+
+    if (
+      post.publisherType === "COMMUNITY" &&
+      post.publisherCommunityId &&
+      ctx.me?.id
+    ) {
+      const role = await getCommunityMembershipRole({
+        prisma: ctx.prisma,
+        communityId: post.publisherCommunityId,
+        userId: ctx.me.id,
+      });
+
+      if (!isCommunityManagerRole(role)) {
+        const blacklistEntry = await getActiveCommunityBlacklistEntry({
+          prisma: ctx.prisma,
+          communityId: post.publisherCommunityId,
+          userId: ctx.me.id,
+        });
+
+        if (blacklistEntry) {
+          throw new ExpectedError("Пост сообщества недоступен");
+        }
+      }
     }
 
     let parentComment: { id: string; postId: string; authorId: string } | null =

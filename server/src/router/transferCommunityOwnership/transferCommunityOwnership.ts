@@ -1,3 +1,4 @@
+import { createCommunityActionLog } from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 
@@ -51,16 +52,17 @@ export const transferCommunityOwnershipTrpcRoute = trpcLoggedProcedure
       );
     }
 
-    await ctx.prisma.$transaction([
-      ctx.prisma.community.update({
+    await ctx.prisma.$transaction(async (tx) => {
+      await tx.community.update({
         where: {
           id: input.communityId,
         },
         data: {
           ownerId: input.newOwnerUserId,
         },
-      }),
-      ctx.prisma.communityMember.updateMany({
+      });
+
+      await tx.communityMember.updateMany({
         where: {
           communityId: input.communityId,
           userId: community.ownerId,
@@ -69,8 +71,9 @@ export const transferCommunityOwnershipTrpcRoute = trpcLoggedProcedure
         data: {
           role: "MODERATOR",
         },
-      }),
-      ctx.prisma.communityMember.upsert({
+      });
+
+      await tx.communityMember.upsert({
         where: {
           communityId_userId: {
             communityId: input.communityId,
@@ -85,8 +88,19 @@ export const transferCommunityOwnershipTrpcRoute = trpcLoggedProcedure
         update: {
           role: "OWNER",
         },
-      }),
-    ]);
+      });
+
+      await createCommunityActionLog({
+        prisma: tx,
+        communityId: input.communityId,
+        actionType: "OWNERSHIP_TRANSFERRED",
+        actorUserId: ctx.me!.id,
+        targetUserId: input.newOwnerUserId,
+        details: {
+          previousOwnerUserId: community.ownerId,
+        },
+      });
+    });
 
     return {
       communityId: input.communityId,
