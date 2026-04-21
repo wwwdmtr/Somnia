@@ -27,6 +27,7 @@ type PostAuthor = {
 type PostPublisherCommunity = {
   avatar: string | null;
   id: string;
+  isVerified?: boolean;
   name: string;
 };
 
@@ -475,7 +476,16 @@ export const PostCard = ({
             style={styles.cardImage}
           />
           <View style={styles.postHeaderInfo}>
-            <Text style={typography.body_white85}>{publisherName}</Text>
+            <View style={styles.publisherNameRow}>
+              <Text style={typography.body_white85}>{publisherName}</Text>
+              {isCommunityPost && post.publisherCommunity?.isVerified ? (
+                <Ionicons
+                  name="checkmark-circle"
+                  size={16}
+                  color={COLORS.white85}
+                />
+              ) : null}
+            </View>
             <Text style={typography.additionalInfo_white25}>
               {publisherMetaText}
             </Text>
@@ -653,6 +663,11 @@ const styles = StyleSheet.create({
   },
   previewTextContainer: {
     overflow: "hidden",
+  },
+  publisherNameRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 6,
   },
   readMore: {
     marginTop: 8,

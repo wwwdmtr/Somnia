@@ -26,6 +26,7 @@ import { AppButton } from "../../components/ui/AppButton";
 import ScreenName from "../../constants/ScreenName";
 import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
 import { trpc } from "../../lib/trpc";
+import { useDebouncedValue } from "../../lib/useDebouncedValue";
 import { ProfileStackParamList } from "../../navigation/ProfileStackParamList";
 import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS, typography } from "../../theme/typography";
@@ -50,27 +51,31 @@ export const UpdateProfileScreen = () => {
   const [pendingBlockedCommunityId, setPendingBlockedCommunityId] = useState<
     string | null
   >(null);
+  const debouncedBlockedSearch = useDebouncedValue(blockedSearch, 350);
+  const blockedSearchTerm = (blockedSearch ? debouncedBlockedSearch : "").trim();
 
   const blockedUsersQuery = trpc.getMyBlockedUsers.useInfiniteQuery(
     {
       limit: BLOCKED_LIST_PAGE_LIMIT,
-      search: blockedSearch.trim() || undefined,
+      search: blockedSearchTerm || undefined,
     },
     {
       enabled: isBlockedModalOpen,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       maxPages: MAX_INFINITE_PAGES,
+      placeholderData: (prev) => prev,
     },
   );
   const blockedCommunitiesQuery = trpc.getMyBlockedCommunities.useInfiniteQuery(
     {
       limit: BLOCKED_LIST_PAGE_LIMIT,
-      search: blockedSearch.trim() || undefined,
+      search: blockedSearchTerm || undefined,
     },
     {
       enabled: isBlockedModalOpen,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       maxPages: MAX_INFINITE_PAGES,
+      placeholderData: (prev) => prev,
     },
   );
   const setUserContentBlock = trpc.setUserContentBlock.useMutation({
@@ -130,7 +135,7 @@ export const UpdateProfileScreen = () => {
       style={styles.BackgroundImage}
     >
       <SafeAreaView style={styles.container}>
-        <ScrollView>
+        <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <TouchableOpacity
               onPress={() => navigation.goBack()}
@@ -225,6 +230,7 @@ export const UpdateProfileScreen = () => {
                 <FlatList
                   data={blockedCommunities}
                   keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
                   style={styles.virtualList}
                   onEndReachedThreshold={0.25}
                   onEndReached={() => {
@@ -295,6 +301,7 @@ export const UpdateProfileScreen = () => {
                 <FlatList
                   data={blockedUsers}
                   keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
                   style={styles.virtualList}
                   onEndReachedThreshold={0.25}
                   onEndReached={() => {

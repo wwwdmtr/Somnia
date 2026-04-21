@@ -6,6 +6,7 @@ const { getDefaultConfig } = require("expo/metro-config");
 
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, "..");
+const disableWatchman = process.env.SOMNIA_DISABLE_WATCHMAN === "1";
 
 /** @type {import('metro-config').ConfigT} */
 const config = getDefaultConfig(projectRoot);
@@ -18,6 +19,7 @@ config.resolver.nodeModulesPaths = [
 ];
 
 config.resolver.disableHierarchicalLookup = true;
+config.resolver.useWatchman = !disableWatchman;
 
 config.resolver.extraNodeModules = {
   react: path.resolve(workspaceRoot, "node_modules/react"),

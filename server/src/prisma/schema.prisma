@@ -35,6 +35,8 @@ model User {
     createdReports               Report[]              @relation("ReportReporter")
     reportsAboutUser             Report[]              @relation("ReportTargetUser")
     handledReports               Report[]              @relation("ReportHandler")
+    createdCommunityVerificationRequests CommunityVerificationRequest[] @relation("CommunityVerificationRequestCreator")
+    handledCommunityVerificationRequests CommunityVerificationRequest[] @relation("CommunityVerificationRequestHandler")
     followers              UserFollow[]            @relation("UserFollowers")
     following              UserFollow[]            @relation("UserFollowing")
 }
@@ -79,6 +81,7 @@ model Community {
     name          String                  @unique
     description   String                  @default("")
     avatar        String?
+    isVerified    Boolean                 @default(false)
     createdAt     DateTime                @default(now())
     ownerId       String
     owner         User                    @relation("CommunityOwner", fields: [ownerId], references: [id], onDelete: Cascade)
@@ -89,6 +92,7 @@ model Community {
     actionLogs      CommunityActionLog[]
     notifications   Notification[]
     blockedByUsers  UserBlockedCommunity[]
+    verificationRequests CommunityVerificationRequest[]
 }
 
 enum CommunityMemberRole {
@@ -214,6 +218,13 @@ enum ReportStatus {
     REJECTED
 }
 
+enum CommunityVerificationRequestStatus {
+    OPEN
+    IN_REVIEW
+    RESOLVED
+    REJECTED
+}
+
 model Report {
     id            String           @id @default(uuid())
     createdAt     DateTime         @default(now())
@@ -239,6 +250,26 @@ model Report {
     @@index([reporterUserId, targetUserId, status, createdAt])
     @@index([postId, createdAt])
     @@index([targetUserId, createdAt])
+}
+
+model CommunityVerificationRequest {
+    id              String                           @id @default(uuid())
+    createdAt       DateTime                         @default(now())
+    updatedAt       DateTime                         @updatedAt
+    contact         String
+    status          CommunityVerificationRequestStatus @default(OPEN)
+    communityId     String
+    requesterUserId String
+    handledByUserId String?
+    handledAt       DateTime?
+    community       Community                        @relation(fields: [communityId], references: [id], onDelete: Cascade)
+    requester       User                             @relation("CommunityVerificationRequestCreator", fields: [requesterUserId], references: [id], onDelete: Cascade)
+    handledBy       User?                            @relation("CommunityVerificationRequestHandler", fields: [handledByUserId], references: [id], onDelete: SetNull)
+
+    @@index([status, createdAt])
+    @@index([communityId, createdAt])
+    @@index([requesterUserId, createdAt])
+    @@index([handledByUserId, createdAt])
 }
 
 model UserFollow {
@@ -297,6 +328,8 @@ enum NotificationType {
     USER_FOLLOWED
     COMMUNITY_BLACKLISTED
     COMMUNITY_UNBLACKLISTED
+    ADMIN_NEW_REPORT
+    ADMIN_NEW_COMMUNITY_VERIFICATION_REQUEST
 }
 
 model Notification {

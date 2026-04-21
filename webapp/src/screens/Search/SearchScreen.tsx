@@ -7,7 +7,7 @@ import { useNavigation } from "@react-navigation/native";
 import { zGetRatedPostsTrpcInput } from "@somnia/shared/src/router/getRatedPosts/input";
 import { StatusBar } from "expo-status-bar";
 import { useFormik } from "formik";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -33,6 +33,8 @@ import {
   usePostLikeMutation,
 } from "../../lib/postLikeMutation";
 import { trpc } from "../../lib/trpc";
+import { useDebouncedValue } from "../../lib/useDebouncedValue";
+import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS, typography } from "../../theme/typography";
 
 import type { SearchStackParamList } from "../../navigation/SearchStackParamList";
@@ -63,17 +65,6 @@ const SEARCH_PLACEHOLDERS: Record<SearchTarget, string> = {
   users: "Поиск ...",
   communities: "Поиск ...",
 };
-
-function useDebouncedValue<T>(value: T, delayMs = 1000) {
-  const [debounced, setDebounced] = useState(value);
-
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delayMs);
-    return () => clearTimeout(t);
-  }, [value, delayMs]);
-
-  return debounced;
-}
 
 const zSearchForm = zGetRatedPostsTrpcInput.pick({ search: true }).extend({
   search: zGetRatedPostsTrpcInput.shape.search.optional().default(""),
@@ -705,8 +696,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     margin: 0,
     minWidth: 0,
-    outlineColor: "transparent",
-    outlineWidth: 0,
+    ...webInputFocusReset,
     padding: 0,
     width: 0,
   },

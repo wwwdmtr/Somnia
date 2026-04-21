@@ -1,20 +1,20 @@
-import { Ionicons } from "@expo/vector-icons";
-import { zCreateCommentTrpcInput } from "@somnia/shared/src/router/createComment/input";
-import { useFormik } from "formik";
-import React, { useEffect } from "react";
+import { Ionicons } from '@expo/vector-icons';
+import { zCreateCommentTrpcInput } from '@somnia/shared/src/router/createComment/input';
+import { useFormik } from 'formik';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   View,
   TextInput,
   Text,
   TouchableOpacity,
   Platform,
-} from "react-native";
-import { toFormikValidationSchema } from "zod-formik-adapter";
+} from 'react-native';
+import { toFormikValidationSchema } from 'zod-formik-adapter';
 
-import { trpc } from "../../lib/trpc";
-import { webInputFocusReset } from "../../theme/inputFocus";
-import { COLORS, typography } from "../../theme/typography";
-import { AppButton } from "../ui/AppButton";
+import { trpc } from '../../lib/trpc';
+import { webInputFocusReset } from '../../theme/inputFocus';
+import { COLORS, typography } from '../../theme/typography';
 
 type CommentFormValues = {
   content: string;
@@ -28,6 +28,13 @@ type AddCommentFormProps = {
   onCancelReply?: () => void;
 };
 
+const COMMENT_INPUT_MIN_HEIGHT = 52;
+const COMMENT_INPUT_MAX_HEIGHT = 244;
+const COMMENT_INPUT_LINE_HEIGHT = 20;
+const COMMENT_INPUT_PADDING_VERTICAL = 20;
+const COMMENT_INPUT_PADDING_HORIZONTAL = 14;
+const SEND_BUTTON_SIZE = 42;
+
 export const AddCommentForm = ({
   postId,
   parentId,
@@ -36,6 +43,7 @@ export const AddCommentForm = ({
   onCancelReply,
 }: AddCommentFormProps) => {
   const utils = trpc.useUtils();
+  const [measuredTextHeight, setMeasuredTextHeight] = useState(0);
 
   const createComment = trpc.createComment.useMutation({
     onSuccess: () => {
@@ -46,7 +54,7 @@ export const AddCommentForm = ({
 
   const formik = useFormik<CommentFormValues>({
     initialValues: {
-      content: "",
+      content: '',
     },
     validationSchema: toFormikValidationSchema(
       zCreateCommentTrpcInput.pick({ content: true }),
@@ -55,27 +63,36 @@ export const AddCommentForm = ({
       await createComment.mutateAsync({
         postId,
         content: values.content,
-        parentId,
+        parentId: parentId ?? undefined,
       });
       resetForm();
     },
   });
 
-  // Авто-подстановка префикса при ответе на комментарий
-
   useEffect(() => {
     if (parentId && replyToNickname) {
       const prefix = `@${replyToNickname}:  `;
-      // Добавляем префикс только если поле пустое или не начинается с него
       if (!formik.values.content.startsWith(prefix)) {
-        formik.setFieldValue("content", prefix);
+        formik.setFieldValue('content', prefix);
       }
     }
   }, [parentId, replyToNickname, formik]);
 
+  const inputHeight = Math.min(
+    COMMENT_INPUT_MAX_HEIGHT,
+    Math.max(
+      COMMENT_INPUT_MIN_HEIGHT,
+      measuredTextHeight + COMMENT_INPUT_PADDING_VERTICAL * 2,
+    ),
+  );
+  const isInputScrollable = inputHeight >= COMMENT_INPUT_MAX_HEIGHT;
+  const canSubmit =
+    formik.isValid &&
+    formik.values.content.trim().length > 0 &&
+    !formik.isSubmitting;
+
   return (
     <View style={styles.container}>
-      {/* Reply Indicator */}
       {parentId && replyToNickname && (
         <View style={styles.replyIndicator}>
           <Text style={typography.caption_white85}>
@@ -89,34 +106,61 @@ export const AddCommentForm = ({
         </View>
       )}
 
-      <TextInput
-        placeholder={
-          parentId && replyToNickname
-            ? `Ответить @${replyToNickname}...`
-            : "Написать комментарий..."
-        }
-        placeholderTextColor={COLORS.white25}
-        value={formik.values.content}
-        onChangeText={(text) => formik.setFieldValue("content", text)}
-        onBlur={() => formik.setFieldTouched("content")}
-        multiline
-        style={[
-          styles.input,
-          formik.touched.content && formik.errors.content
-            ? styles.inputError
-            : null,
-        ]}
-      />
+      <View style={styles.composerWrap}>
+        <Text
+          style={styles.inputMeasure}
+          onLayout={(event) => {
+            const nextHeight = Math.ceil(event.nativeEvent.layout.height);
+            setMeasuredTextHeight((prev) =>
+              prev === nextHeight ? prev : nextHeight,
+            );
+          }}
+          accessible={false}
+        >
+          {formik.values.content || ' '}
+        </Text>
+
+        <TextInput
+          placeholder={
+            parentId && replyToNickname
+              ? `Ответить @${replyToNickname}...`
+              : 'Написать комментарий...'
+          }
+          placeholderTextColor={COLORS.white25}
+          value={formik.values.content}
+          onChangeText={(text) => formik.setFieldValue('content', text)}
+          onBlur={() => formik.setFieldTouched('content')}
+          multiline
+          scrollEnabled={isInputScrollable}
+          style={[
+            styles.input,
+            { height: inputHeight },
+            formik.touched.content && formik.errors.content
+              ? styles.inputError
+              : null,
+          ]}
+        />
+
+        <TouchableOpacity
+          style={[
+            styles.sendButton,
+            !canSubmit ? styles.sendButtonDisabled : null,
+          ]}
+          onPress={() => formik.handleSubmit()}
+          disabled={!canSubmit}
+          activeOpacity={0.85}
+        >
+          {formik.isSubmitting ? (
+            <ActivityIndicator color={COLORS.white100} size="small" />
+          ) : (
+            <Ionicons name="send" size={18} color={COLORS.white100} />
+          )}
+        </TouchableOpacity>
+      </View>
 
       {formik.touched.content && formik.errors.content && (
         <Text style={styles.errorText}>{formik.errors.content}</Text>
       )}
-
-      <AppButton
-        title={formik.isSubmitting ? "Отправляем..." : "Отправить"}
-        onPress={() => formik.handleSubmit()}
-        disabled={formik.isSubmitting || !formik.isValid}
-      />
     </View>
   );
 };
@@ -125,32 +169,62 @@ const styles = {
   container: {
     gap: 8,
   },
+  composerWrap: {
+    position: 'relative' as const,
+  },
   replyIndicator: {
-    flexDirection: "row" as const,
-    justifyContent: "space-between" as const,
-    alignItems: "center" as const,
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
     paddingVertical: 8,
     paddingHorizontal: 12,
     backgroundColor: COLORS.postsCardBackground,
     borderRadius: 16,
   },
   input: {
-    padding: 16,
-    borderRadius: 24,
     backgroundColor: COLORS.postsCardBackground,
-    minHeight: 48,
-    maxHeight: 140,
+    borderRadius: 22,
     color: COLORS.white100,
-    ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
+    lineHeight: COMMENT_INPUT_LINE_HEIGHT,
+    minHeight: COMMENT_INPUT_MIN_HEIGHT,
+    paddingBottom: COMMENT_INPUT_PADDING_VERTICAL + 2,
+    paddingHorizontal: COMMENT_INPUT_PADDING_HORIZONTAL,
+    paddingRight: COMMENT_INPUT_PADDING_HORIZONTAL + SEND_BUTTON_SIZE + 12,
+    paddingTop: COMMENT_INPUT_PADDING_VERTICAL,
+    textAlignVertical: 'top' as const,
+    ...(Platform.OS === 'web' ? { fontSize: 16 } : {}),
     ...webInputFocusReset,
-    textAlignVertical: "top" as const,
   },
   inputError: {
-    borderColor: "white",
+    borderColor: 'white',
     borderWidth: 1,
   },
+  inputMeasure: {
+    fontSize: 16,
+    left: COMMENT_INPUT_PADDING_HORIZONTAL,
+    lineHeight: COMMENT_INPUT_LINE_HEIGHT,
+    opacity: 0,
+    pointerEvents: 'none' as const,
+    position: 'absolute' as const,
+    right: COMMENT_INPUT_PADDING_HORIZONTAL + SEND_BUTTON_SIZE + 12,
+    top: 0,
+  },
+  sendButton: {
+    alignItems: 'center' as const,
+    backgroundColor: '#2AABEE',
+    borderRadius: 999,
+    bottom: 6,
+    height: SEND_BUTTON_SIZE,
+    justifyContent: 'center' as const,
+    position: 'absolute' as const,
+    right: 6,
+    width: SEND_BUTTON_SIZE,
+  },
+  sendButtonDisabled: {
+    backgroundColor: 'rgba(42, 171, 238, 0.45)',
+  },
   errorText: {
-    color: "white",
+    color: 'white',
     fontSize: 12,
     marginBottom: 4,
   },

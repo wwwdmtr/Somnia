@@ -26,6 +26,7 @@ import ScreenName from "../../constants/ScreenName";
 import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
 import { getAvatarSource } from "../../lib/avatar";
 import { trpc } from "../../lib/trpc";
+import { useDebouncedValue } from "../../lib/useDebouncedValue";
 import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS, typography } from "../../theme/typography";
 
@@ -96,6 +97,16 @@ const BLACKLIST_DURATION_OPTIONS: Array<{
   { label: "Месяц", value: "MONTH" },
 ];
 
+const VERIFICATION_STATUS_LABELS: Record<
+  "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED",
+  string
+> = {
+  OPEN: "Открыта",
+  IN_REVIEW: "В работе",
+  RESOLVED: "Одобрена",
+  REJECTED: "Отклонена",
+};
+
 export const UpdateCommunityScreen = () => {
   const route = useRoute<UpdateCommunityRouteProp>();
   const navigation = useNavigation<UpdateCommunityNavProp>();
@@ -106,9 +117,11 @@ export const UpdateCommunityScreen = () => {
   const [isActionLogModalOpen, setIsActionLogModalOpen] = useState(false);
   const [isTransferOwnershipModalOpen, setIsTransferOwnershipModalOpen] =
     useState(false);
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
   const [moderatorSearch, setModeratorSearch] = useState("");
   const [blacklistSearch, setBlacklistSearch] = useState("");
   const [transferOwnershipSearch, setTransferOwnershipSearch] = useState("");
+  const [verificationContact, setVerificationContact] = useState("");
   const [blacklistDuration, setBlacklistDuration] =
     useState<BlacklistDuration>("PERMANENT");
   const [pendingModeratorUserId, setPendingModeratorUserId] = useState<
@@ -120,6 +133,21 @@ export const UpdateCommunityScreen = () => {
   const [pendingOwnershipUserId, setPendingOwnershipUserId] = useState<
     string | null
   >(null);
+  const debouncedModeratorSearch = useDebouncedValue(moderatorSearch, 350);
+  const moderatorSearchTerm = (
+    moderatorSearch ? debouncedModeratorSearch : ""
+  ).trim();
+  const debouncedBlacklistSearch = useDebouncedValue(blacklistSearch, 350);
+  const blacklistSearchTerm = (
+    blacklistSearch ? debouncedBlacklistSearch : ""
+  ).trim();
+  const debouncedTransferOwnershipSearch = useDebouncedValue(
+    transferOwnershipSearch,
+    350,
+  );
+  const transferOwnershipSearchTerm = (
+    transferOwnershipSearch ? debouncedTransferOwnershipSearch : ""
+  ).trim();
 
   const communityId = route.params.id;
   const communityQuery = trpc.getCommunity.useQuery({
@@ -130,26 +158,28 @@ export const UpdateCommunityScreen = () => {
     {
       communityId,
       list: "MODERATORS",
-      search: moderatorSearch.trim() || undefined,
+      search: moderatorSearchTerm || undefined,
       limit: MODERATION_LIST_PAGE_LIMIT,
     },
     {
       enabled: isModeratorsModalOpen,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       maxPages: MAX_INFINITE_PAGES,
+      placeholderData: (prev) => prev,
     },
   );
   const subscribersListQuery = trpc.getCommunityModerationList.useInfiniteQuery(
     {
       communityId,
       list: "SUBSCRIBERS",
-      search: moderatorSearch.trim() || undefined,
+      search: moderatorSearchTerm || undefined,
       limit: MODERATION_LIST_PAGE_LIMIT,
     },
     {
       enabled: isModeratorsModalOpen,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       maxPages: MAX_INFINITE_PAGES,
+      placeholderData: (prev) => prev,
     },
   );
   const transferModeratorsListQuery =
@@ -157,13 +187,14 @@ export const UpdateCommunityScreen = () => {
       {
         communityId,
         list: "MODERATORS",
-        search: transferOwnershipSearch.trim() || undefined,
+        search: transferOwnershipSearchTerm || undefined,
         limit: MODERATION_LIST_PAGE_LIMIT,
       },
       {
         enabled: isTransferOwnershipModalOpen,
         getNextPageParam: (lastPage) => lastPage.nextCursor,
         maxPages: MAX_INFINITE_PAGES,
+        placeholderData: (prev) => prev,
       },
     );
   const transferSubscribersListQuery =
@@ -171,13 +202,14 @@ export const UpdateCommunityScreen = () => {
       {
         communityId,
         list: "SUBSCRIBERS",
-        search: transferOwnershipSearch.trim() || undefined,
+        search: transferOwnershipSearchTerm || undefined,
         limit: MODERATION_LIST_PAGE_LIMIT,
       },
       {
         enabled: isTransferOwnershipModalOpen,
         getNextPageParam: (lastPage) => lastPage.nextCursor,
         maxPages: MAX_INFINITE_PAGES,
+        placeholderData: (prev) => prev,
       },
     );
   const blacklistSubscribersListQuery =
@@ -185,13 +217,14 @@ export const UpdateCommunityScreen = () => {
       {
         communityId,
         list: "SUBSCRIBERS",
-        search: blacklistSearch.trim() || undefined,
+        search: blacklistSearchTerm || undefined,
         limit: MODERATION_LIST_PAGE_LIMIT,
       },
       {
         enabled: isBlacklistModalOpen,
         getNextPageParam: (lastPage) => lastPage.nextCursor,
         maxPages: MAX_INFINITE_PAGES,
+        placeholderData: (prev) => prev,
       },
     );
   const blacklistUsersListQuery =
@@ -199,13 +232,14 @@ export const UpdateCommunityScreen = () => {
       {
         communityId,
         list: "BLACKLIST",
-        search: blacklistSearch.trim() || undefined,
+        search: blacklistSearchTerm || undefined,
         limit: MODERATION_LIST_PAGE_LIMIT,
       },
       {
         enabled: isBlacklistModalOpen,
         getNextPageParam: (lastPage) => lastPage.nextCursor,
         maxPages: MAX_INFINITE_PAGES,
+        placeholderData: (prev) => prev,
       },
     );
   const actionLogQuery = trpc.getCommunityActionLog.useInfiniteQuery(
@@ -279,6 +313,12 @@ export const UpdateCommunityScreen = () => {
 
         setIsTransferOwnershipModalOpen(false);
         navigation.goBack();
+      },
+    });
+  const createCommunityVerificationRequest =
+    trpc.createCommunityVerificationRequest.useMutation({
+      onSuccess: async () => {
+        await utils.getCommunity.invalidate({ id: communityId });
       },
     });
 
@@ -577,6 +617,11 @@ export const UpdateCommunityScreen = () => {
   const canManageCommunity =
     community.myRole === "OWNER" || community.myRole === "MODERATOR";
   const isOwner = community.myRole === "OWNER";
+  const latestVerificationRequest = community.latestVerificationRequest;
+  const trimmedVerificationContact = verificationContact.trim();
+  const isVerificationContactInvalid =
+    trimmedVerificationContact.length < 3 ||
+    trimmedVerificationContact.length > 200;
 
   if (!canManageCommunity) {
     return (
@@ -606,6 +651,34 @@ export const UpdateCommunityScreen = () => {
       </ImageBackground>
     );
   }
+
+  const handleSubmitVerificationRequest = async () => {
+    if (!isOwner) {
+      return;
+    }
+
+    if (isVerificationContactInvalid) {
+      Alert.alert("Ошибка", "Контакт должен быть от 3 до 200 символов");
+      return;
+    }
+
+    try {
+      await createCommunityVerificationRequest.mutateAsync({
+        communityId,
+        contact: trimmedVerificationContact,
+      });
+      setIsVerificationModalOpen(false);
+      setVerificationContact("");
+      Alert.alert("Готово", "Заявка на верификацию отправлена");
+    } catch (error) {
+      Alert.alert(
+        "Ошибка",
+        error instanceof Error
+          ? error.message
+          : "Не удалось отправить заявку на верификацию",
+      );
+    }
+  };
 
   return (
     <ImageBackground
@@ -676,6 +749,23 @@ export const UpdateCommunityScreen = () => {
                   style={styles.actionButton}
                 />
               </View>
+
+              <View style={styles.settingsCard}>
+                <Text style={typography.h4_white_85}>Верификация сообщества</Text>
+                <Text style={styles.warningText}>
+                  {latestVerificationRequest
+                    ? `Последняя заявка: ${VERIFICATION_STATUS_LABELS[latestVerificationRequest.status]} (${new Date(latestVerificationRequest.createdAt).toLocaleString("ru-RU")})`
+                    : "Заявок на верификацию пока не было"}
+                </Text>
+                <AppButton
+                  title="Пройти верификацию"
+                  onPress={() => {
+                    setVerificationContact("");
+                    setIsVerificationModalOpen(true);
+                  }}
+                  style={styles.actionButton}
+                />
+              </View>
             </>
           ) : null}
 
@@ -740,6 +830,57 @@ export const UpdateCommunityScreen = () => {
         </ScrollView>
 
         <Modal
+          visible={isVerificationModalOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsVerificationModalOpen(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Запрос верификации</Text>
+                <TouchableOpacity
+                  onPress={() => setIsVerificationModalOpen(false)}
+                >
+                  <Text style={styles.closeText}>Закрыть</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.modalScrollContent}>
+                <Text style={styles.warningText}>
+                  Укажите контакт для обратной связи.
+                </Text>
+                <TextInput
+                  placeholder="Email, Telegram или другой контакт"
+                  placeholderTextColor={COLORS.white25}
+                  value={verificationContact}
+                  onChangeText={setVerificationContact}
+                  maxLength={200}
+                  autoCapitalize="none"
+                  style={styles.searchInput}
+                />
+                <Text style={styles.logMeta}>
+                  {trimmedVerificationContact.length}/200
+                </Text>
+                <AppButton
+                  title={
+                    createCommunityVerificationRequest.isPending
+                      ? "Отправляем..."
+                      : "Отправить запрос"
+                  }
+                  onPress={handleSubmitVerificationRequest}
+                  disabled={
+                    createCommunityVerificationRequest.isPending ||
+                    isVerificationContactInvalid
+                  }
+                  style={styles.actionButton}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
           visible={isModeratorsModalOpen}
           transparent
           animationType="fade"
@@ -780,6 +921,7 @@ export const UpdateCommunityScreen = () => {
                   <FlatList
                     data={moderators}
                     keyExtractor={(item) => item.id}
+                    showsVerticalScrollIndicator={false}
                     style={styles.virtualList}
                     onEndReachedThreshold={0.25}
                     onEndReached={() => {
@@ -855,6 +997,7 @@ export const UpdateCommunityScreen = () => {
                   <FlatList
                     data={subscribers}
                     keyExtractor={(item) => item.id}
+                    showsVerticalScrollIndicator={false}
                     style={styles.virtualList}
                     onEndReachedThreshold={0.25}
                     onEndReached={() => {
@@ -989,6 +1132,7 @@ export const UpdateCommunityScreen = () => {
                   <FlatList
                     data={blacklistSubscribers}
                     keyExtractor={(item) => item.id}
+                    showsVerticalScrollIndicator={false}
                     style={styles.virtualList}
                     onEndReachedThreshold={0.25}
                     onEndReached={() => {
@@ -1057,6 +1201,7 @@ export const UpdateCommunityScreen = () => {
                   <FlatList
                     data={blockedUsers}
                     keyExtractor={(item) => item.id}
+                    showsVerticalScrollIndicator={false}
                     style={styles.virtualList}
                     onEndReachedThreshold={0.25}
                     onEndReached={() => {
@@ -1147,6 +1292,7 @@ export const UpdateCommunityScreen = () => {
                 <FlatList
                   data={actionLogs}
                   keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
                   style={styles.modalScroll}
                   contentContainerStyle={styles.modalScrollContent}
                   onEndReachedThreshold={0.25}
@@ -1240,6 +1386,7 @@ export const UpdateCommunityScreen = () => {
                   <FlatList
                     data={transferModerators}
                     keyExtractor={(item) => item.id}
+                    showsVerticalScrollIndicator={false}
                     style={styles.virtualList}
                     onEndReachedThreshold={0.25}
                     onEndReached={() => {
@@ -1309,6 +1456,7 @@ export const UpdateCommunityScreen = () => {
                   <FlatList
                     data={transferSubscribers}
                     keyExtractor={(item) => item.id}
+                    showsVerticalScrollIndicator={false}
                     style={styles.virtualList}
                     onEndReachedThreshold={0.25}
                     onEndReached={() => {

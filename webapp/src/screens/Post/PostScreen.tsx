@@ -735,14 +735,17 @@ export const PostScreen = () => {
     const post = data.post;
     const isCommunityPost =
       post.publisherType === "COMMUNITY" && Boolean(post.publisherCommunity);
+    const formattedPostDate = format(new Date(post.createdAt), "dd.MM.yyyy");
     const headerName =
       isCommunityPost && post.publisherCommunity
-        ? post.author
-          ? `${post.publisherCommunity.name} • @${post.author.nickname}`
-          : post.publisherCommunity.name
+        ? post.publisherCommunity.name
         : post.author
           ? `@${post.author.nickname}`
           : "Пользователь";
+    const headerMetaText =
+      isCommunityPost && post.author
+        ? `@${post.author.nickname} • ${formattedPostDate}`
+        : formattedPostDate;
     const headerAvatar =
       isCommunityPost && post.publisherCommunity
         ? post.publisherCommunity.avatar
@@ -772,10 +775,17 @@ export const PostScreen = () => {
               style={styles.cardImage}
             />
             <View style={styles.postHeaderInfo}>
-              <Text style={typography.body_white85}>{headerName}</Text>
-              <Text style={typography.additionalInfo_white25}>
-                {format(new Date(post.createdAt), "dd.MM.yyyy")}
-              </Text>
+              <View style={styles.postHeaderTitleRow}>
+                <Text style={typography.body_white85}>{headerName}</Text>
+                {isCommunityPost && post.publisherCommunity?.isVerified ? (
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={16}
+                    color={COLORS.white85}
+                  />
+                ) : null}
+              </View>
+              <Text style={typography.additionalInfo_white25}>{headerMetaText}</Text>
             </View>
           </TouchableOpacity>
 
@@ -1367,6 +1377,11 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     gap: 4,
     justifyContent: "space-between",
+  },
+  postHeaderTitleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 6,
   },
   postImageFrame: {
     borderRadius: 16,

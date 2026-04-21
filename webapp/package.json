@@ -14,7 +14,8 @@
     "build:android": "expo export --platform android --output-dir dist-android --clear",
     "build:web:debug": "EXPO_DEBUG=1 expo export --platform web --output-dir dist-debug --clear && WEB_DIST_DIR=dist-debug node ./scripts/postexport-web.cjs",
     "types": "tsc --noEmit --project ./tsconfig.json",
-    "lint": "eslint --cache --cache-location ./node_modules/.cache/.eslintcache \"src/**/*.{ts,tsx}\""
+    "lint": "eslint --cache --cache-location ./node_modules/.cache/.eslintcache \"src/**/*.{ts,tsx}\"",
+    "dev:stable": "SOMNIA_DISABLE_WATCHMAN=1 expo start --clear"
   },
   "dependencies": {
     "@react-native-cookies/cookies": "github:react-native-cookies/cookies",

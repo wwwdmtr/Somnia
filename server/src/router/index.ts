@@ -5,11 +5,13 @@ import { createTrpcRouter } from "../lib/trpc";
 import { cleanupPostImagesTrpcRoute } from "./cleanupPostImages/cleanupPostImages";
 import { createCommentTrpcRoute } from "./createComment/createComment";
 import { createCommunityTrpcRoute } from "./createCommunity/createCommunity";
+import { createCommunityVerificationRequestTrpcRoute } from "./createCommunityVerificationRequest/createCommunityVerificationRequest";
 import { createPostTrpcRoute } from "./createPost/createPost";
 import { createReportTrpcRoute } from "./createReport/createReport";
 import { deleteCommentTrpcRoute } from "./deleteComment/deleteComment";
 import { deleteCommunityTrpcRoute } from "./deleteCommunity/deleteCommunity";
 import { deletePostTrpcRoute } from "./deletePost/deletePost";
+import { getAdminCommunityVerificationRequestsTrpcRoute } from "./getAdminCommunityVerificationRequests/getAdminCommunityVerificationRequests";
 import { getAdminReportsTrpcRoute } from "./getAdminReports/getAdminReports";
 import { getAdminUsersListTrpcRoute } from "./getAdminUsersList/getAdminUsersList";
 import { getCommentsByPostTrpcRoute } from "./getCommentByPost/getCommentByPost";
@@ -36,6 +38,7 @@ import { getUserProfileTrpcRoute } from "./getUserProfile/getUserProfile";
 import { markAllNotificationsReadTrpcRoute } from "./markAllNotificationsRead/markAllNotificationsRead";
 import { searchCommunitiesTrpcRoute } from "./searchCommunities/searchCommunities";
 import { searchUsersTrpcRoute } from "./searchUsers/searchUsers";
+import { setAdminCommunityVerificationRequestStatusTrpcRoute } from "./setAdminCommunityVerificationRequestStatus/setAdminCommunityVerificationRequestStatus";
 import { setAdminReportStatusTrpcRoute } from "./setAdminReportStatus/setAdminReportStatus";
 import { setCommunityAvatarTrpcRoute } from "./setCommunityAvatar/setCommunityAvatar";
 import { setCommunityBlacklistTrpcRoute } from "./setCommunityBlacklist/setCommunityBlacklist";
@@ -73,6 +76,8 @@ export const trpcRouter = createTrpcRouter({
   createComment: createCommentTrpcRoute,
   createCommunity: createCommunityTrpcRoute,
   createPost: createPostTrpcRoute,
+  createCommunityVerificationRequest:
+    createCommunityVerificationRequestTrpcRoute,
   createReport: createReportTrpcRoute,
   deleteCommunity: deleteCommunityTrpcRoute,
   signUp: signUpTrpcRoute,
@@ -84,6 +89,8 @@ export const trpcRouter = createTrpcRouter({
   getCommunityModeration: getCommunityModerationTrpcRoute,
   getCommunityModerationList: getCommunityModerationListTrpcRoute,
   getAdminReports: getAdminReportsTrpcRoute,
+  getAdminCommunityVerificationRequests:
+    getAdminCommunityVerificationRequestsTrpcRoute,
   getAdminUsersList: getAdminUsersListTrpcRoute,
   getCommunityPosts: getCommunityPostsTrpcRoute,
   getSubscribedPosts: getSubscribedPostsTrpcRoute,
@@ -97,6 +104,8 @@ export const trpcRouter = createTrpcRouter({
   updatePassword: updatePasswordTrpcRoute,
   setPostLike: setPostLikeTrpcRoute,
   setAdminReportStatus: setAdminReportStatusTrpcRoute,
+  setAdminCommunityVerificationRequestStatus:
+    setAdminCommunityVerificationRequestStatusTrpcRoute,
   setUserAdmin: setUserAdminTrpcRoute,
   setCommunitySubscription: setCommunitySubscriptionTrpcRoute,
   setUserContentBlock: setUserContentBlockTrpcRoute,

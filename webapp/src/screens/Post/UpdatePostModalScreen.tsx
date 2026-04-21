@@ -112,7 +112,7 @@ export const UpdatePostScreen = () => {
 
   if (isLoading) {
     return (
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <Text>Loading...</Text>
       </ScrollView>
     );
@@ -120,7 +120,7 @@ export const UpdatePostScreen = () => {
 
   if (error) {
     return (
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <Text>Error: {error.message}</Text>
       </ScrollView>
     );
@@ -128,7 +128,7 @@ export const UpdatePostScreen = () => {
 
   if (!data?.post) {
     return (
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <Text>Dream not found</Text>
       </ScrollView>
     );
@@ -196,6 +196,7 @@ export const UpdatePostScreen = () => {
           <ScrollView
             style={styles.container}
             contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
           >
             <Text style={typography.h2_white100}>Изменение поста</Text>
             <View style={styles.form_container}>

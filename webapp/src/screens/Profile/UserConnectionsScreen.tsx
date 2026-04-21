@@ -141,6 +141,7 @@ export const UserConnectionsScreen = () => {
         <FlatList
           data={users}
           keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
             <View style={styles.userRow}>

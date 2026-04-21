@@ -1,34 +1,42 @@
 #!/usr/bin/env node
+/* eslint-disable node/no-process-env */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
-const fs = require("node:fs");
-const path = require("node:path");
-const zlib = require("node:zlib");
+const fs = require('node:fs');
+const path = require('node:path');
+const zlib = require('node:zlib');
 
-const DIST_DIR_NAME = process.env.WEB_DIST_DIR || "dist";
-const DIST_DIR = path.resolve(__dirname, "..", DIST_DIR_NAME);
-const ICONS_DIR = path.join(DIST_DIR, "icons");
-const CUSTOM_ICONS_DIR = path.resolve(__dirname, "..", "src", "assets", "pwa-icons");
+const DIST_DIR_NAME = process.env.WEB_DIST_DIR || 'dist';
+const DIST_DIR = path.resolve(__dirname, '..', DIST_DIR_NAME);
+const ICONS_DIR = path.join(DIST_DIR, 'icons');
+const CUSTOM_ICONS_DIR = path.resolve(
+  __dirname,
+  '..',
+  'src',
+  'assets',
+  'pwa-icons',
+);
 
-const HEAD_MARKER_START = "<!-- SOMNIA_PWA_SEO_HEAD_START -->";
-const HEAD_MARKER_END = "<!-- SOMNIA_PWA_SEO_HEAD_END -->";
-const SW_MARKER_START = "<!-- SOMNIA_PWA_SW_START -->";
-const SW_MARKER_END = "<!-- SOMNIA_PWA_SW_END -->";
+const HEAD_MARKER_START = '<!-- SOMNIA_PWA_SEO_HEAD_START -->';
+const HEAD_MARKER_END = '<!-- SOMNIA_PWA_SEO_HEAD_END -->';
+const SW_MARKER_START = '<!-- SOMNIA_PWA_SW_START -->';
+const SW_MARKER_END = '<!-- SOMNIA_PWA_SW_END -->';
 
-const FALLBACK_SITE_URL = "http://localhost:8081";
-const FALLBACK_NAME = "Универ - социальная сеть для студента";
-const FALLBACK_SHORT_NAME = "Универ";
+const FALLBACK_SITE_URL = 'http://localhost:8081';
+const FALLBACK_NAME = 'Универ - социальная сеть для студента';
+const FALLBACK_SHORT_NAME = 'Универ';
 const FALLBACK_DESCRIPTION =
-  "Универ - социальная сеть для студента и сообществ.";
-const FALLBACK_THEME_COLOR = "#04184F";
+  'Универ - социальная сеть для студента и сообществ.';
+const FALLBACK_THEME_COLOR = '#04184F';
 
 const SITEMAP_PATHS = [
-  "/",
-  "/sign-in",
-  "/sign-up",
-  "/feed",
-  "/search",
-  "/create",
-  "/profile",
+  '/',
+  '/sign-in',
+  '/sign-up',
+  '/feed',
+  '/search',
+  '/create',
+  '/profile',
 ];
 
 const crcTable = (() => {
@@ -52,7 +60,7 @@ function crc32(buffer) {
 }
 
 function pngChunk(type, data) {
-  const typeBuffer = Buffer.from(type, "ascii");
+  const typeBuffer = Buffer.from(type, 'ascii');
   const lengthBuffer = Buffer.alloc(4);
   lengthBuffer.writeUInt32BE(data.length, 0);
   const crcBuffer = Buffer.alloc(4);
@@ -91,9 +99,9 @@ function createPngBuffer(width, height, pixelAt) {
 
   return Buffer.concat([
     signature,
-    pngChunk("IHDR", ihdr),
-    pngChunk("IDAT", zlib.deflateSync(raw, { level: 9 })),
-    pngChunk("IEND", Buffer.alloc(0)),
+    pngChunk('IHDR', ihdr),
+    pngChunk('IDAT', zlib.deflateSync(raw, { level: 9 })),
+    pngChunk('IEND', Buffer.alloc(0)),
   ]);
 }
 
@@ -115,14 +123,7 @@ function getIconPixel(size, x, y, isMaskable) {
   const stroke = Math.max(2, Math.round(size * 0.12));
   const halfStroke = Math.floor(stroke / 2);
 
-  const inTop = isInside(
-    x,
-    y,
-    logoLeft,
-    logoRight,
-    logoTop,
-    logoTop + stroke,
-  );
+  const inTop = isInside(x, y, logoLeft, logoRight, logoTop, logoTop + stroke);
   const inMiddle = isInside(
     x,
     y,
@@ -139,14 +140,7 @@ function getIconPixel(size, x, y, isMaskable) {
     logoBottom - stroke,
     logoBottom,
   );
-  const inLeft = isInside(
-    x,
-    y,
-    logoLeft,
-    logoLeft + stroke,
-    logoTop,
-    logoMid,
-  );
+  const inLeft = isInside(x, y, logoLeft, logoLeft + stroke, logoTop, logoMid);
   const inRight = isInside(
     x,
     y,
@@ -166,9 +160,9 @@ function getIconPixel(size, x, y, isMaskable) {
 function normalizeSiteUrl(rawUrl) {
   try {
     const normalizedUrl = new URL(rawUrl);
-    normalizedUrl.hash = "";
-    normalizedUrl.search = "";
-    return normalizedUrl.toString().replace(/\/$/, "");
+    normalizedUrl.hash = '';
+    normalizedUrl.search = '';
+    return normalizedUrl.toString().replace(/\/$/, '');
   } catch {
     return FALLBACK_SITE_URL;
   }
@@ -176,11 +170,11 @@ function normalizeSiteUrl(rawUrl) {
 
 function escapeHtml(value) {
   return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 function writeFile(filePath, content) {
@@ -208,24 +202,21 @@ function updateViewportMeta(html) {
 
   const content = match[1];
   const parts = content
-    .split(",")
+    .split(',')
     .map((part) => part.trim())
     .filter(Boolean);
 
-  if (!parts.some((part) => part.startsWith("viewport-fit="))) {
-    parts.push("viewport-fit=cover");
+  if (!parts.some((part) => part.startsWith('viewport-fit='))) {
+    parts.push('viewport-fit=cover');
   }
 
-  const nextMeta = `<meta name="viewport" content="${parts.join(", ")}" />`;
+  const nextMeta = `<meta name="viewport" content="${parts.join(', ')}" />`;
   return html.replace(viewportRegex, nextMeta);
 }
 
 function injectBetweenMarkers(html, startMarker, endMarker, section, closeTag) {
   if (html.includes(startMarker) && html.includes(endMarker)) {
-    const markerRegex = new RegExp(
-      `${startMarker}[\\s\\S]*?${endMarker}`,
-      "m",
-    );
+    const markerRegex = new RegExp(`${startMarker}[\\s\\S]*?${endMarker}`, 'm');
     return html.replace(markerRegex, section);
   }
 
@@ -242,10 +233,12 @@ function main() {
     process.env.EXPO_PUBLIC_WEBAPP_URL || FALLBACK_SITE_URL,
   );
   const appName = process.env.EXPO_PUBLIC_PWA_NAME || FALLBACK_NAME;
-  const shortName = process.env.EXPO_PUBLIC_PWA_SHORT_NAME || FALLBACK_SHORT_NAME;
+  const shortName =
+    process.env.EXPO_PUBLIC_PWA_SHORT_NAME || FALLBACK_SHORT_NAME;
   const description =
     process.env.EXPO_PUBLIC_PWA_DESCRIPTION || FALLBACK_DESCRIPTION;
-  const themeColor = process.env.EXPO_PUBLIC_PWA_THEME_COLOR || FALLBACK_THEME_COLOR;
+  const themeColor =
+    process.env.EXPO_PUBLIC_PWA_THEME_COLOR || FALLBACK_THEME_COLOR;
   const today = new Date().toISOString().slice(0, 10);
 
   fs.mkdirSync(ICONS_DIR, { recursive: true });
@@ -268,23 +261,23 @@ function main() {
 
   const iconFiles = [
     {
-      filename: "favicon-32.png",
+      filename: 'favicon-32.png',
       generatedBuffer: favicon32,
     },
     {
-      filename: "apple-touch-icon-180.png",
+      filename: 'apple-touch-icon-180.png',
       generatedBuffer: appleTouch180,
     },
     {
-      filename: "pwa-192.png",
+      filename: 'pwa-192.png',
       generatedBuffer: pwa192,
     },
     {
-      filename: "pwa-512.png",
+      filename: 'pwa-512.png',
       generatedBuffer: pwa512,
     },
     {
-      filename: "pwa-maskable-512.png",
+      filename: 'pwa-maskable-512.png',
       generatedBuffer: pwaMaskable512,
     },
   ];
@@ -300,63 +293,63 @@ function main() {
   });
 
   const manifest = {
-    id: "/",
+    id: '/',
     name: appName,
     short_name: shortName,
     description,
-    start_url: "/",
-    scope: "/",
-    display: "standalone",
+    start_url: '/',
+    scope: '/',
+    display: 'standalone',
     background_color: themeColor,
     theme_color: themeColor,
-    orientation: "portrait",
+    orientation: 'portrait',
     icons: [
       {
-        src: "/icons/pwa-192.png",
-        sizes: "192x192",
-        type: "image/png",
-        purpose: "any",
+        src: '/icons/pwa-192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any',
       },
       {
-        src: "/icons/pwa-512.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "any",
+        src: '/icons/pwa-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
       },
       {
-        src: "/icons/pwa-maskable-512.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "maskable",
+        src: '/icons/pwa-maskable-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
       },
     ],
   };
 
   writeFile(
-    path.join(DIST_DIR, "manifest.webmanifest"),
+    path.join(DIST_DIR, 'manifest.webmanifest'),
     `${JSON.stringify(manifest, null, 2)}\n`,
   );
 
   const robotsTxt = `User-agent: *\nAllow: /\nSitemap: ${siteUrl}/sitemap.xml\n`;
-  writeFile(path.join(DIST_DIR, "robots.txt"), robotsTxt);
+  writeFile(path.join(DIST_DIR, 'robots.txt'), robotsTxt);
 
   const sitemapEntries = SITEMAP_PATHS.map((routePath) => {
     return [
-      "  <url>",
+      '  <url>',
       `    <loc>${siteUrl}${routePath}</loc>`,
       `    <lastmod>${today}</lastmod>`,
-      "  </url>",
-    ].join("\n");
-  }).join("\n");
+      '  </url>',
+    ].join('\n');
+  }).join('\n');
 
   const sitemap = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     sitemapEntries,
-    "</urlset>",
-    "",
-  ].join("\n");
-  writeFile(path.join(DIST_DIR, "sitemap.xml"), sitemap);
+    '</urlset>',
+    '',
+  ].join('\n');
+  writeFile(path.join(DIST_DIR, 'sitemap.xml'), sitemap);
 
   const swCode = `self.addEventListener("install", () => {
   self.skipWaiting();
@@ -366,15 +359,17 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 `;
-  writeFile(path.join(DIST_DIR, "sw.js"), swCode);
+  writeFile(path.join(DIST_DIR, 'sw.js'), swCode);
 
-  const indexPath = path.join(DIST_DIR, "index.html");
+  const indexPath = path.join(DIST_DIR, 'index.html');
   if (!fs.existsSync(indexPath)) {
-    console.log(`[postexport-web] index.html not found at ${indexPath}, skipping.`);
+    console.log(
+      `[postexport-web] index.html not found at ${indexPath}, skipping.`,
+    );
     return;
   }
 
-  let html = fs.readFileSync(indexPath, "utf8");
+  let html = fs.readFileSync(indexPath, 'utf8');
   html = updateViewportMeta(html);
   html = html.replace(
     /<title>[\s\S]*?<\/title>/i,
@@ -410,43 +405,43 @@ self.addEventListener("activate", (event) => {
     `    <meta name="twitter:description" content="${escapedDescription}" />`,
     '    <meta name="twitter:image" content="/icons/pwa-512.png" />',
     HEAD_MARKER_END,
-  ].join("\n");
+  ].join('\n');
 
   html = injectBetweenMarkers(
     html,
     HEAD_MARKER_START,
     HEAD_MARKER_END,
     headSection,
-    "</head>",
+    '</head>',
   );
 
   const swSection = [
     SW_MARKER_START,
-    "  <script>",
+    '  <script>',
     '    if ("serviceWorker" in navigator) {',
-    "      const canRegisterSW =",
+    '      const canRegisterSW =',
     '        window.location.protocol === "https:" ||',
     '        window.location.hostname === "localhost";',
-    "      if (canRegisterSW) {",
-    "        window.addEventListener(\"load\", () => {",
-    "          navigator.serviceWorker.register(\"/sw.js\").catch(() => undefined);",
-    "        });",
-    "      }",
-    "    }",
-    "  </script>",
+    '      if (canRegisterSW) {',
+    '        window.addEventListener("load", () => {',
+    '          navigator.serviceWorker.register("/sw.js").catch(() => undefined);',
+    '        });',
+    '      }',
+    '    }',
+    '  </script>',
     SW_MARKER_END,
-  ].join("\n");
+  ].join('\n');
 
   html = injectBetweenMarkers(
     html,
     SW_MARKER_START,
     SW_MARKER_END,
     swSection,
-    "</body>",
+    '</body>',
   );
 
   fs.writeFileSync(indexPath, html);
-  console.log("[postexport-web] PWA and SEO assets generated successfully.");
+  console.log('[postexport-web] PWA and SEO assets generated successfully.');
 }
 
 main();

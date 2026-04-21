@@ -21,6 +21,7 @@ import ScreenName from "../../constants/ScreenName";
 import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
 import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
+import { useDebouncedValue } from "../../lib/useDebouncedValue";
 import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS, typography } from "../../theme/typography";
 
@@ -50,30 +51,34 @@ export const AdminScreen = () => {
   const [pendingAdminUserId, setPendingAdminUserId] = useState<string | null>(
     null,
   );
+  const debouncedAdminSearch = useDebouncedValue(adminSearch, 350);
+  const adminSearchTerm = (adminSearch ? debouncedAdminSearch : "").trim();
 
   const adminsListQuery = trpc.getAdminUsersList.useInfiniteQuery(
     {
       list: "ADMINS",
-      search: adminSearch.trim() || undefined,
+      search: adminSearchTerm || undefined,
       limit: ADMIN_USERS_PAGE_LIMIT,
     },
     {
       enabled: isAdminsModalOpen,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       maxPages: MAX_INFINITE_PAGES,
+      placeholderData: (prev) => prev,
     },
   );
 
   const usersListQuery = trpc.getAdminUsersList.useInfiniteQuery(
     {
       list: "USERS",
-      search: adminSearch.trim() || undefined,
+      search: adminSearchTerm || undefined,
       limit: ADMIN_USERS_PAGE_LIMIT,
     },
     {
       enabled: isAdminsModalOpen,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       maxPages: MAX_INFINITE_PAGES,
+      placeholderData: (prev) => prev,
     },
   );
 
@@ -179,6 +184,14 @@ export const AdminScreen = () => {
           >
             <Text style={typography.button}>Посмотреть жалобы</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.adminOption}
+            onPress={() =>
+              navigation.navigate(ScreenName.AdminCommunityVerificationRequests)
+            }
+          >
+            <Text style={typography.button}>Заявки на верификацию</Text>
+          </TouchableOpacity>
         </View>
 
         <Modal
@@ -222,6 +235,7 @@ export const AdminScreen = () => {
                   <FlatList
                     data={admins}
                     keyExtractor={(item) => item.id}
+                    showsVerticalScrollIndicator={false}
                     style={styles.virtualList}
                     onEndReachedThreshold={0.25}
                     onEndReached={() => {
@@ -300,6 +314,7 @@ export const AdminScreen = () => {
                   <FlatList
                     data={users}
                     keyExtractor={(item) => item.id}
+                    showsVerticalScrollIndicator={false}
                     style={styles.virtualList}
                     onEndReachedThreshold={0.25}
                     onEndReached={() => {

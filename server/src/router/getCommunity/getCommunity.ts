@@ -26,7 +26,9 @@ export const getCommunityTrpcRoute = trpcLoggedProcedure
         name: true,
         description: true,
         avatar: true,
+        isVerified: true,
         createdAt: true,
+        ownerId: true,
         owner: {
           select: {
             id: true,
@@ -120,6 +122,20 @@ export const getCommunityTrpcRoute = trpcLoggedProcedure
           }),
         )
       : false;
+    const latestVerificationRequest =
+      ctx.me && community.ownerId === ctx.me.id
+        ? await ctx.prisma.communityVerificationRequest.findFirst({
+            where: {
+              communityId: community.id,
+            },
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            select: {
+              id: true,
+              createdAt: true,
+              status: true,
+            },
+          })
+        : null;
 
     return {
       community: {
@@ -129,6 +145,7 @@ export const getCommunityTrpcRoute = trpcLoggedProcedure
         myRole: meMember?.role ?? null,
         isSubscribedByMe,
         isBlockedByMe,
+        latestVerificationRequest,
       },
     };
   });

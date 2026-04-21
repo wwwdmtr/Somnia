@@ -61,6 +61,8 @@ export const linking = {
           [ScreenName.AdminHome]: "",
           [ScreenName.DeletedPosts]: "deleted-posts",
           [ScreenName.AdminReports]: "reports",
+          [ScreenName.AdminCommunityVerificationRequests]:
+            "community-verification-requests",
           [ScreenName.Profile]: "profile/:userId",
           [ScreenName.Community]: "community/:id",
           [ScreenName.UpdateCommunity]: "community/:id/edit",

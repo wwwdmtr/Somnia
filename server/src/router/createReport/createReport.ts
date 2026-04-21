@@ -1,3 +1,4 @@
+import { notifyAdmins } from "../../lib/adminNotifications";
 import { isCommunityManagerRole } from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
@@ -87,17 +88,32 @@ export const createReportTrpcRoute = trpcLoggedProcedure
         );
       }
 
-      const report = await ctx.prisma.report.create({
-        data: {
-          reporterUserId: ctx.me.id,
-          targetType: "POST",
+      const report = await ctx.prisma.$transaction(async (tx) => {
+        const createdReport = await tx.report.create({
+          data: {
+            reporterUserId: ctx.me!.id,
+            targetType: "POST",
+            postId: post.id,
+            description: input.description.trim(),
+          },
+          select: {
+            id: true,
+            status: true,
+          },
+        });
+
+        await notifyAdmins({
+          prisma: tx,
+          actorUserId: ctx.me!.id,
+          type: "ADMIN_NEW_REPORT",
           postId: post.id,
-          description: input.description.trim(),
-        },
-        select: {
-          id: true,
-          status: true,
-        },
+          details: {
+            reportId: createdReport.id,
+            targetType: "POST",
+          },
+        });
+
+        return createdReport;
       });
 
       return {
@@ -143,17 +159,31 @@ export const createReportTrpcRoute = trpcLoggedProcedure
       throw new ExpectedError("Жалоба уже отправлена и находится в обработке");
     }
 
-    const report = await ctx.prisma.report.create({
-      data: {
-        reporterUserId: ctx.me.id,
-        targetType: "USER",
-        targetUserId,
-        description: input.description.trim(),
-      },
-      select: {
-        id: true,
-        status: true,
-      },
+    const report = await ctx.prisma.$transaction(async (tx) => {
+      const createdReport = await tx.report.create({
+        data: {
+          reporterUserId: ctx.me!.id,
+          targetType: "USER",
+          targetUserId,
+          description: input.description.trim(),
+        },
+        select: {
+          id: true,
+          status: true,
+        },
+      });
+
+      await notifyAdmins({
+        prisma: tx,
+        actorUserId: ctx.me!.id,
+        type: "ADMIN_NEW_REPORT",
+        details: {
+          reportId: createdReport.id,
+          targetType: "USER",
+        },
+      });
+
+      return createdReport;
     });
 
     return {

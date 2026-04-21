@@ -4,6 +4,7 @@ export type AdminStackParamList = {
   [ScreenName.AdminHome]: undefined;
   [ScreenName.DeletedPosts]: undefined;
   [ScreenName.AdminReports]: undefined;
+  [ScreenName.AdminCommunityVerificationRequests]: undefined;
   [ScreenName.Profile]:
     | {
         userId?: string;

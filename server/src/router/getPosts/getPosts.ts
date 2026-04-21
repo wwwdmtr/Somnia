@@ -46,6 +46,7 @@ export const getPostsTrpcRoute = trpcLoggedProcedure
             id: true,
             name: true,
             avatar: true,
+            isVerified: true,
           },
         },
 

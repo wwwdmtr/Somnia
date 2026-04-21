@@ -337,7 +337,16 @@ export const CommunityScreen = () => {
           source={getAvatarSource(community.avatar, "big")}
           style={styles.communityAvatar}
         />
-        <Text style={typography.h3_white85}>{community.name}</Text>
+        <View style={styles.communityNameRow}>
+          <Text style={typography.h3_white85}>{community.name}</Text>
+          {community.isVerified ? (
+            <Ionicons
+              name="checkmark-circle"
+              size={18}
+              color={COLORS.white85}
+            />
+          ) : null}
+        </View>
         {community.description ? (
           <Text style={styles.communityDescription}>
             {community.description}
@@ -537,6 +546,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",
+  },
+  communityNameRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 6,
   },
   container: {
     flex: 1,

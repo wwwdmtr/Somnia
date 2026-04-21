@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import {
+  CompositeNavigationProp,
+  useNavigation,
+} from "@react-navigation/native";
 import { format } from "date-fns";
 import { useCallback, useMemo, useState } from "react";
 import {
@@ -14,15 +17,22 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import ScreenName from "../../constants/ScreenName";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
 
 import type { FeedStackParamList } from "../../navigation/FeedStackParamList";
+import type { RootStackParamList } from "../../navigation/RootStackParamList";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-type NavigationProp = NativeStackNavigationProp<
+type FeedNavigationProp = NativeStackNavigationProp<
   FeedStackParamList,
   "Notifications"
+>;
+type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = CompositeNavigationProp<
+  FeedNavigationProp,
+  RootNavigationProp
 >;
 const MAX_INFINITE_PAGES = 10;
 
@@ -34,7 +44,9 @@ type NotificationItem = {
     | "COMMENT_REPLIED"
     | "USER_FOLLOWED"
     | "COMMUNITY_BLACKLISTED"
-    | "COMMUNITY_UNBLACKLISTED";
+    | "COMMUNITY_UNBLACKLISTED"
+    | "ADMIN_NEW_REPORT"
+    | "ADMIN_NEW_COMMUNITY_VERIFICATION_REQUEST";
   createdAt: Date;
   readAt: Date | null;
   details: unknown;
@@ -119,6 +131,16 @@ const getNotificationText = (notification: NotificationItem) => {
         : `@${notification.actor.nickname} снял(а) блокировку в сообществе`;
   }
 
+  if (notification.type === "ADMIN_NEW_REPORT") {
+    return `@${notification.actor.nickname} отправил(а) новую жалобу`;
+  }
+
+  if (notification.type === "ADMIN_NEW_COMMUNITY_VERIFICATION_REQUEST") {
+    return notification.community
+      ? `@${notification.actor.nickname} отправил(а) заявку на верификацию: ${notification.community.name}`
+      : `@${notification.actor.nickname} отправил(а) заявку на верификацию сообщества`;
+  }
+
   return `@${notification.actor.nickname} ответил(а) на ваш комментарий`;
 };
 
@@ -201,6 +223,20 @@ export const NotificationsScreen = () => {
       if (notification.community?.id) {
         navigation.navigate("Community", { id: notification.community.id });
       }
+      return;
+    }
+
+    if (notification.type === "ADMIN_NEW_REPORT") {
+      navigation.navigate(ScreenName.AdminStack, {
+        screen: ScreenName.AdminReports,
+      });
+      return;
+    }
+
+    if (notification.type === "ADMIN_NEW_COMMUNITY_VERIFICATION_REQUEST") {
+      navigation.navigate(ScreenName.AdminStack, {
+        screen: ScreenName.AdminCommunityVerificationRequests,
+      });
       return;
     }
 
@@ -302,6 +338,14 @@ export const NotificationsScreen = () => {
                 ) : item.type === "COMMUNITY_UNBLACKLISTED" ? (
                   <Text style={typography.caption_white85} numberOfLines={1}>
                     Нажмите, чтобы открыть сообщество
+                  </Text>
+                ) : item.type === "ADMIN_NEW_REPORT" ? (
+                  <Text style={typography.caption_white85} numberOfLines={1}>
+                    Нажмите, чтобы открыть жалобы
+                  </Text>
+                ) : item.type === "ADMIN_NEW_COMMUNITY_VERIFICATION_REQUEST" ? (
+                  <Text style={typography.caption_white85} numberOfLines={1}>
+                    Нажмите, чтобы открыть заявки на верификацию
                   </Text>
                 ) : (
                   <Text style={typography.caption_white85} numberOfLines={1}>

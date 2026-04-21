@@ -104,6 +104,7 @@ export const getRatedPostsTrpcRoute = trpcLoggedProcedure
             id: true,
             name: true,
             avatar: true,
+            isVerified: true,
           },
         },
 
