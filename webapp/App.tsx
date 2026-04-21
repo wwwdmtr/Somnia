@@ -1,22 +1,36 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import 'react-native-gesture-handler';
-import { NavigationContainer } from '@react-navigation/native';
-import React, { useEffect } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import "react-native-gesture-handler";
+import { NavigationContainer } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
+import { Platform, StyleSheet, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { WEB_SHELL_WIDTH } from './src/constants/layout';
-import { SentryUser } from './src/lib/SentryUser';
-import { AppContextProvider } from './src/lib/ctx';
-import { MixpanelUser } from './src/lib/mixpanel';
-import { TrpcProvider } from './src/lib/trpc';
-import { linking } from './src/navigation/linking';
-import { RootNavigation } from './src/navigation/navigation';
+import { WEB_SHELL_WIDTH } from "./src/constants/layout";
+import { SentryUser } from "./src/lib/SentryUser";
+import { AppContextProvider } from "./src/lib/ctx";
+import { MixpanelUser } from "./src/lib/mixpanel";
+import { TrpcProvider } from "./src/lib/trpc";
+import { linking } from "./src/navigation/linking";
+import { RootNavigation } from "./src/navigation/navigation";
 
-const WEB_TEXTAREA_SCROLLBAR_STYLE_ID = 'somnia-hide-textarea-scrollbar';
+const WEB_TEXTAREA_SCROLLBAR_STYLE_ID = "somnia-hide-textarea-scrollbar";
+
+function getWebViewportHeight() {
+  const maybeWindow = (globalThis as { window?: Window }).window;
+  if (!maybeWindow) {
+    return 0;
+  }
+
+  const nextHeight =
+    maybeWindow.visualViewport?.height ?? maybeWindow.innerHeight;
+  return Number.isFinite(nextHeight) ? Math.round(nextHeight) : 0;
+}
 
 export default function App() {
-  const isWeb = Platform.OS === 'web';
+  const isWeb = Platform.OS === "web";
+  const [webViewportHeight, setWebViewportHeight] = useState<number>(() =>
+    isWeb ? getWebViewportHeight() : 0,
+  );
 
   useEffect(() => {
     if (!isWeb) {
@@ -32,7 +46,7 @@ export default function App() {
       return;
     }
 
-    const styleElement = maybeDocument.createElement('style');
+    const styleElement = maybeDocument.createElement("style");
     styleElement.id = WEB_TEXTAREA_SCROLLBAR_STYLE_ID;
     styleElement.textContent = `
       textarea {
@@ -50,6 +64,37 @@ export default function App() {
     maybeDocument.head?.appendChild(styleElement);
   }, [isWeb]);
 
+  useEffect(() => {
+    if (!isWeb) {
+      return;
+    }
+
+    const maybeWindow = (globalThis as { window?: Window }).window;
+    if (!maybeWindow) {
+      return;
+    }
+
+    const syncViewportHeight = () => {
+      const nextHeight = getWebViewportHeight();
+      if (nextHeight > 0) {
+        setWebViewportHeight(nextHeight);
+      }
+    };
+
+    syncViewportHeight();
+
+    maybeWindow.addEventListener("resize", syncViewportHeight);
+    maybeWindow.visualViewport?.addEventListener("resize", syncViewportHeight);
+
+    return () => {
+      maybeWindow.removeEventListener("resize", syncViewportHeight);
+      maybeWindow.visualViewport?.removeEventListener(
+        "resize",
+        syncViewportHeight,
+      );
+    };
+  }, [isWeb]);
+
   const content = (
     <SafeAreaProvider>
       <NavigationContainer linking={linking}>
@@ -63,8 +108,24 @@ export default function App() {
         <MixpanelUser />
         <SentryUser />
         {isWeb ? (
-          <View style={styles.webRoot}>
-            <View style={styles.webShell}>{content}</View>
+          <View
+            style={[
+              styles.webRoot,
+              webViewportHeight > 0
+                ? { height: webViewportHeight, minHeight: webViewportHeight }
+                : null,
+            ]}
+          >
+            <View
+              style={[
+                styles.webShell,
+                webViewportHeight > 0
+                  ? { height: webViewportHeight, maxHeight: webViewportHeight }
+                  : null,
+              ]}
+            >
+              {content}
+            </View>
           </View>
         ) : (
           content
@@ -75,23 +136,23 @@ export default function App() {
 }
 
 const COLORS = {
-  background: '#fff',
-  shadow: '#000',
+  background: "#fff",
+  shadow: "#000",
 };
 
 const styles = StyleSheet.create({
   webRoot: {
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: COLORS.background,
     flex: 1,
-    justifyContent: 'flex-start',
+    justifyContent: "flex-start",
   },
   webShell: {
     borderRadius: 28,
-    height: '100%',
-    maxHeight: '100%',
-    maxWidth: '100%',
-    overflow: 'hidden',
+    height: "100%",
+    maxHeight: "100%",
+    maxWidth: "100%",
+    overflow: "hidden",
     shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.25,
