@@ -251,6 +251,9 @@ export const CommunityScreen = () => {
       });
 
       setIsActionsMenuOpen(false);
+      if (isBlocked && navigation.canGoBack()) {
+        navigation.goBack();
+      }
       Alert.alert(
         "Готово",
         isBlocked ? "Сообщество заблокировано" : "Сообщество разблокировано",

@@ -488,6 +488,9 @@ export const PostScreen = () => {
         isBlocked,
       });
       setIsActionsMenuOpen(false);
+      if (isBlocked && navigation.canGoBack()) {
+        navigation.goBack();
+      }
       Alert.alert(
         "Готово",
         isBlocked ? "Пользователь заблокирован" : "Пользователь разблокирован",
@@ -500,7 +503,7 @@ export const PostScreen = () => {
           : "Не удалось изменить блокировку",
       );
     }
-  }, [data?.post, me?.id, setUserContentBlock]);
+  }, [data?.post, me?.id, navigation, setUserContentBlock]);
 
   const handleToggleCommunityBlock = useCallback(async () => {
     if (
@@ -520,6 +523,9 @@ export const PostScreen = () => {
         isBlocked,
       });
       setIsActionsMenuOpen(false);
+      if (isBlocked && navigation.canGoBack()) {
+        navigation.goBack();
+      }
       Alert.alert(
         "Готово",
         isBlocked ? "Сообщество заблокировано" : "Сообщество разблокировано",
@@ -532,7 +538,7 @@ export const PostScreen = () => {
           : "Не удалось изменить блокировку",
       );
     }
-  }, [data?.post, me?.id, setUserContentBlock]);
+  }, [data?.post, me?.id, navigation, setUserContentBlock]);
 
   const handleOpenReportModal = useCallback(() => {
     setIsActionsMenuOpen(false);

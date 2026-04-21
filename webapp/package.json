@@ -9,10 +9,10 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build": "pnpm build:web",
-    "build:web": "expo export --platform web --output-dir dist --clear",
+    "build:web": "expo export --platform web --output-dir dist --clear && node ./scripts/postexport-web.cjs",
     "build:ios": "expo export --platform ios --output-dir dist-ios --clear",
     "build:android": "expo export --platform android --output-dir dist-android --clear",
-    "build:web:debug": "EXPO_DEBUG=1 expo export --platform web --output-dir dist-debug --clear",
+    "build:web:debug": "EXPO_DEBUG=1 expo export --platform web --output-dir dist-debug --clear && WEB_DIST_DIR=dist-debug node ./scripts/postexport-web.cjs",
     "types": "tsc --noEmit --project ./tsconfig.json",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/.eslintcache \"src/**/*.{ts,tsx}\""
   },

@@ -229,6 +229,9 @@ export const ProfileScreen = () => {
       });
 
       setIsActionsMenuOpen(false);
+      if (isBlocked && navigation.canGoBack()) {
+        navigation.goBack();
+      }
       Alert.alert(
         "Готово",
         isBlocked ? "Пользователь заблокирован" : "Пользователь разблокирован",
