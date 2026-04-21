@@ -4,6 +4,7 @@ import {
   canDeletePost,
   canDeleteThisPost,
   isPostOwner,
+  isSuperAdmin,
   isUserAdmin,
 } from "./can";
 
@@ -41,6 +42,10 @@ describe("can utils", () => {
       expect(canDeletePost(user({ permissions: ["ALL"] }))).toBe(true);
     });
 
+    it("returns true when user has SUPER_ADMIN permission", () => {
+      expect(canDeletePost(user({ permissions: ["SUPER_ADMIN"] }))).toBe(true);
+    });
+
     it("returns false when user permissions are empty", () => {
       expect(canDeletePost(user({ permissions: [] }))).toBe(false);
     });
@@ -74,9 +79,18 @@ describe("can utils", () => {
   });
 
   describe("isUserAdmin", () => {
-    it("returns true only for ALL permission", () => {
+    it("returns true for ALL and SUPER_ADMIN permissions", () => {
       expect(isUserAdmin(user({ permissions: ["ALL"] }))).toBe(true);
+      expect(isUserAdmin(user({ permissions: ["SUPER_ADMIN"] }))).toBe(true);
       expect(isUserAdmin(user({ permissions: ["DELETE_POST"] }))).toBe(false);
+    });
+  });
+
+  describe("isSuperAdmin", () => {
+    it("returns true only for SUPER_ADMIN permission", () => {
+      expect(isSuperAdmin(user({ permissions: ["SUPER_ADMIN"] }))).toBe(true);
+      expect(isSuperAdmin(user({ permissions: ["ALL"] }))).toBe(false);
+      expect(isSuperAdmin(user({ permissions: ["DELETE_POST"] }))).toBe(false);
     });
   });
 

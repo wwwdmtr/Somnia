@@ -5,6 +5,7 @@ import {
 } from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import { isCommunityBlockedByUser } from "../../lib/userContentBlock";
 
 import { zGetCommunityTrpcInput } from "./input";
 
@@ -67,16 +68,27 @@ export const getCommunityTrpcRoute = trpcLoggedProcedure
     const isManagedCommunity = isCommunityManagerRole(meMember?.role ?? null);
 
     if (ctx.me && !isManagedCommunity) {
-      const blacklistEntry = await getActiveCommunityBlacklistEntry({
-        prisma: ctx.prisma,
-        communityId: input.id,
-        userId: ctx.me.id,
-      });
+      const [blacklistEntry, isBlockedByMe] = await Promise.all([
+        getActiveCommunityBlacklistEntry({
+          prisma: ctx.prisma,
+          communityId: input.id,
+          userId: ctx.me.id,
+        }),
+        isCommunityBlockedByUser({
+          prisma: ctx.prisma,
+          userId: ctx.me.id,
+          communityId: input.id,
+        }),
+      ]);
 
       if (blacklistEntry) {
         throw new ExpectedError(
           "Вы добавлены в черный список этого сообщества",
         );
+      }
+
+      if (isBlockedByMe) {
+        throw new ExpectedError("Сообщество недоступно");
       }
     }
 

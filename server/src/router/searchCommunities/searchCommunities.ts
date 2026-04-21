@@ -9,6 +9,7 @@ export const searchCommunitiesTrpcRoute = trpcLoggedProcedure
     if (!normalizedSearch) {
       return { communities: [] };
     }
+    const now = new Date();
 
     const communities = await ctx.prisma.community.findMany({
       where: {
@@ -26,6 +27,36 @@ export const searchCommunitiesTrpcRoute = trpcLoggedProcedure
             },
           },
         ],
+        ...(ctx.me
+          ? {
+              AND: [
+                {
+                  blockedByUsers: {
+                    none: {
+                      userId: ctx.me.id,
+                    },
+                  },
+                },
+                {
+                  blacklistEntries: {
+                    none: {
+                      userId: ctx.me.id,
+                      OR: [
+                        {
+                          expiresAt: null,
+                        },
+                        {
+                          expiresAt: {
+                            gt: now,
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            }
+          : {}),
       },
       orderBy: {
         name: "asc",

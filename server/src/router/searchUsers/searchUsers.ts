@@ -26,6 +26,26 @@ export const searchUsersTrpcRoute = trpcLoggedProcedure
             },
           },
         ],
+        ...(ctx.me
+          ? {
+              AND: [
+                {
+                  blockedUsers: {
+                    none: {
+                      blockedUserId: ctx.me.id,
+                    },
+                  },
+                },
+                {
+                  blockedByUsers: {
+                    none: {
+                      userId: ctx.me.id,
+                    },
+                  },
+                },
+              ],
+            }
+          : {}),
       },
       orderBy: {
         nickname: "asc",

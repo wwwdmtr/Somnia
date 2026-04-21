@@ -2,6 +2,7 @@ import _ from "lodash";
 
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import { hasUserBlockRelation } from "../../lib/userContentBlock";
 
 import { zGetUserPostsTrpcInput } from "./input";
 
@@ -23,6 +24,18 @@ export const getUserPostsTrpcRoute = trpcLoggedProcedure
 
     if (!user) {
       throw new ExpectedError("Пользователь не найден");
+    }
+
+    if (ctx.me.id !== input.userId) {
+      const blocked = await hasUserBlockRelation({
+        prisma: ctx.prisma,
+        firstUserId: ctx.me.id,
+        secondUserId: input.userId,
+      });
+
+      if (blocked) {
+        throw new ExpectedError("Контент пользователя недоступен");
+      }
     }
 
     const rawPosts = await ctx.prisma.post.findMany({

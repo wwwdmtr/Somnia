@@ -253,7 +253,7 @@ export const CommunityScreen = () => {
       setIsActionsMenuOpen(false);
       Alert.alert(
         "Готово",
-        isBlocked ? "Сообщество скрыто из ленты" : "Сообщество снова доступно",
+        isBlocked ? "Сообщество заблокировано" : "Сообщество разблокировано",
       );
     } catch (error) {
       Alert.alert(
@@ -468,8 +468,8 @@ export const CommunityScreen = () => {
                 >
                   <Text style={typography.body_white85}>
                     {community.isBlockedByMe
-                      ? "Показать сообщество"
-                      : "Скрыть сообщество"}
+                      ? "Разблокировать сообщество"
+                      : "Заблокировать сообщество"}
                   </Text>
                 </TouchableOpacity>
                 {canReportCommunity ? (

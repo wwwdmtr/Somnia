@@ -5,6 +5,10 @@ import {
 } from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import {
+  hasUserBlockRelation,
+  isCommunityBlockedByUser,
+} from "../../lib/userContentBlock";
 
 import { zCreateCommentTrpcInput } from "./input";
 
@@ -30,6 +34,18 @@ export const createCommentTrpcRoute = trpcLoggedProcedure
       throw new ExpectedError("Post not found");
     }
 
+    if (post.publisherType === "USER" && post.authorId !== ctx.me.id) {
+      const blocked = await hasUserBlockRelation({
+        prisma: ctx.prisma,
+        firstUserId: ctx.me.id,
+        secondUserId: post.authorId,
+      });
+
+      if (blocked) {
+        throw new ExpectedError("Пост пользователя недоступен");
+      }
+    }
+
     if (
       post.publisherType === "COMMUNITY" &&
       post.publisherCommunityId &&
@@ -42,13 +58,20 @@ export const createCommentTrpcRoute = trpcLoggedProcedure
       });
 
       if (!isCommunityManagerRole(role)) {
-        const blacklistEntry = await getActiveCommunityBlacklistEntry({
-          prisma: ctx.prisma,
-          communityId: post.publisherCommunityId,
-          userId: ctx.me.id,
-        });
+        const [blacklistEntry, isBlockedByMe] = await Promise.all([
+          getActiveCommunityBlacklistEntry({
+            prisma: ctx.prisma,
+            communityId: post.publisherCommunityId,
+            userId: ctx.me.id,
+          }),
+          isCommunityBlockedByUser({
+            prisma: ctx.prisma,
+            userId: ctx.me.id,
+            communityId: post.publisherCommunityId,
+          }),
+        ]);
 
-        if (blacklistEntry) {
+        if (blacklistEntry || isBlockedByMe) {
           throw new ExpectedError("Пост сообщества недоступен");
         }
       }

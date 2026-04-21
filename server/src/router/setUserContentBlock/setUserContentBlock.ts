@@ -96,7 +96,7 @@ export const setUserContentBlockTrpcRoute = trpcLoggedProcedure
         isCommunityManagerRole(myMembership?.role ?? null))
     ) {
       throw new ExpectedError(
-        "Нельзя скрыть сообщество, которым вы управляете",
+        "Нельзя заблокировать сообщество, которым вы управляете",
       );
     }
 

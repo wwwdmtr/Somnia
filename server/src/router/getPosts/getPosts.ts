@@ -3,6 +3,7 @@ import _ from "lodash";
 import { getBlockedCommunityIds } from "../../lib/communityModeration";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 import {
+  getUsersWhoBlockedUserIds,
   getUserBlockedCommunityIds,
   getUserBlockedUserIds,
 } from "../../lib/userContentBlock";
@@ -17,6 +18,7 @@ export const getPostsTrpcRoute = trpcLoggedProcedure
     let blockedCommunityIdsByCommunity = new Set<string>();
     let blockedCommunityIdsByMe = new Set<string>();
     let blockedUserIdsByMe = new Set<string>();
+    let blockedUserIdsByThem = new Set<string>();
 
     const rawPosts = await ctx.prisma.post.findMany({
       where: {
@@ -101,40 +103,50 @@ export const getPostsTrpcRoute = trpcLoggedProcedure
         ),
       );
 
-      const [memberships, blockedByCommunity, blockedByMe, blockedUsersByMe] =
-        await Promise.all([
-          communityIds.length > 0
-            ? ctx.prisma.communityMember.findMany({
-                where: {
-                  userId,
-                  communityId: {
-                    in: communityIds,
-                  },
-                  role: {
-                    in: ["OWNER", "MODERATOR"],
-                  },
+      const [
+        memberships,
+        blockedByCommunity,
+        blockedByMe,
+        blockedUsersByMe,
+        blockedUsersByThem,
+      ] = await Promise.all([
+        communityIds.length > 0
+          ? ctx.prisma.communityMember.findMany({
+              where: {
+                userId,
+                communityId: {
+                  in: communityIds,
                 },
-                select: {
-                  communityId: true,
+                role: {
+                  in: ["OWNER", "MODERATOR"],
                 },
-              })
-            : [],
-          getBlockedCommunityIds({
-            prisma: ctx.prisma,
-            userId,
-            communityIds,
-          }),
-          getUserBlockedCommunityIds({
-            prisma: ctx.prisma,
-            userId,
-            communityIds,
-          }),
-          getUserBlockedUserIds({
-            prisma: ctx.prisma,
-            userId,
-            targetUserIds: authorIds,
-          }),
-        ]);
+              },
+              select: {
+                communityId: true,
+              },
+            })
+          : [],
+        getBlockedCommunityIds({
+          prisma: ctx.prisma,
+          userId,
+          communityIds,
+        }),
+        getUserBlockedCommunityIds({
+          prisma: ctx.prisma,
+          userId,
+          communityIds,
+        }),
+        getUserBlockedUserIds({
+          prisma: ctx.prisma,
+          userId,
+          targetUserIds: authorIds,
+        }),
+        getUsersWhoBlockedUserIds({
+          prisma: ctx.prisma,
+          userId,
+          targetUserIds: authorIds,
+        }),
+      ]);
 
       memberships.forEach((membership) => {
         managedCommunityIds.add(membership.communityId);
@@ -143,11 +155,17 @@ export const getPostsTrpcRoute = trpcLoggedProcedure
       blockedCommunityIdsByCommunity = blockedByCommunity;
       blockedCommunityIdsByMe = blockedByMe;
       blockedUserIdsByMe = blockedUsersByMe;
+      blockedUserIdsByThem = blockedUsersByThem;
     }
 
     const posts = rawPosts
       .filter((post) => {
-        if (blockedUserIdsByMe.has(post.author.id)) {
+        const isUserPost = post.publisherType === "USER";
+        if (
+          isUserPost &&
+          (blockedUserIdsByMe.has(post.author.id) ||
+            blockedUserIdsByThem.has(post.author.id))
+        ) {
           return false;
         }
 

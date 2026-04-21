@@ -1,4 +1,4 @@
-export type UserPermission = "DELETE_POST" | "ALL";
+export type UserPermission = "DELETE_POST" | "ALL" | "SUPER_ADMIN";
 
 export type ClientMe = {
   id?: string;

@@ -490,7 +490,7 @@ export const PostScreen = () => {
       setIsActionsMenuOpen(false);
       Alert.alert(
         "Готово",
-        isBlocked ? "Пользователь скрыт" : "Пользователь снова доступен",
+        isBlocked ? "Пользователь заблокирован" : "Пользователь разблокирован",
       );
     } catch (error) {
       Alert.alert(
@@ -522,7 +522,7 @@ export const PostScreen = () => {
       setIsActionsMenuOpen(false);
       Alert.alert(
         "Готово",
-        isBlocked ? "Сообщество скрыто из ленты" : "Сообщество снова доступно",
+        isBlocked ? "Сообщество заблокировано" : "Сообщество разблокировано",
       );
     } catch (error) {
       Alert.alert(
@@ -1137,8 +1137,8 @@ export const PostScreen = () => {
                   >
                     <Text style={typography.body_white85}>
                       {post.isAuthorBlockedByMe
-                        ? "Показывать пользователя"
-                        : "Скрыть публикации пользователя"}
+                        ? "Разблокировать пользователя"
+                        : "Заблокировать пользователя"}
                     </Text>
                   </TouchableOpacity>
                 ) : null}
@@ -1153,8 +1153,8 @@ export const PostScreen = () => {
                   >
                     <Text style={typography.body_white85}>
                       {post.isPublisherCommunityBlockedByMe
-                        ? "Показать сообщество"
-                        : "Скрыть публикации сообщество"}
+                        ? "Разблокировать сообщество"
+                        : "Заблокировать сообщество"}
                     </Text>
                   </TouchableOpacity>
                 ) : null}

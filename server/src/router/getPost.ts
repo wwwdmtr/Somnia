@@ -8,6 +8,10 @@ import {
 } from "../lib/communityModeration";
 import { ExpectedError } from "../lib/error";
 import { trpcLoggedProcedure } from "../lib/trpc";
+import {
+  hasUserBlockRelation,
+  isCommunityBlockedByUser,
+} from "../lib/userContentBlock";
 import { canDeleteThisPost, isPostOwner, isUserAdmin } from "../utils/can";
 
 export const getPostTrpcRoute = trpcLoggedProcedure
@@ -57,6 +61,23 @@ export const getPostTrpcRoute = trpcLoggedProcedure
       throw new ExpectedError("Пост был удален");
     }
 
+    if (
+      rawPost &&
+      userId &&
+      rawPost.publisherType === "USER" &&
+      rawPost.authorId !== userId
+    ) {
+      const blocked = await hasUserBlockRelation({
+        prisma: ctx.prisma,
+        firstUserId: userId,
+        secondUserId: rawPost.authorId,
+      });
+
+      if (blocked) {
+        throw new ExpectedError("Пост пользователя недоступен");
+      }
+    }
+
     let canManageCommunityPost = false;
     if (
       rawPost &&
@@ -73,13 +94,20 @@ export const getPostTrpcRoute = trpcLoggedProcedure
       canManageCommunityPost = isCommunityManagerRole(role);
 
       if (!canManageCommunityPost) {
-        const blacklistEntry = await getActiveCommunityBlacklistEntry({
-          prisma: ctx.prisma,
-          communityId: rawPost.publisherCommunityId,
-          userId,
-        });
+        const [blacklistEntry, isBlockedByMe] = await Promise.all([
+          getActiveCommunityBlacklistEntry({
+            prisma: ctx.prisma,
+            communityId: rawPost.publisherCommunityId,
+            userId,
+          }),
+          isCommunityBlockedByUser({
+            prisma: ctx.prisma,
+            userId,
+            communityId: rawPost.publisherCommunityId,
+          }),
+        ]);
 
-        if (blacklistEntry) {
+        if (blacklistEntry || isBlockedByMe) {
           throw new ExpectedError("Пост сообщества недоступен");
         }
       }

@@ -15,7 +15,9 @@ const hasPermission = (user: MaybeUser, permission: UserPermission) => {
   }
 
   return (
-    user.permissions.includes(permission) || user.permissions.includes("ALL")
+    user.permissions.includes(permission) ||
+    user.permissions.includes("ALL") ||
+    user.permissions.includes("SUPER_ADMIN")
   );
 };
 
@@ -33,6 +35,10 @@ export const isPostOwner = (user: MaybeUser, post: MaybePost) => {
 
 export const isUserAdmin = (user: MaybeUser) => {
   return hasPermission(user, "ALL");
+};
+
+export const isSuperAdmin = (user: MaybeUser) => {
+  return Boolean(user?.permissions?.includes("SUPER_ADMIN"));
 };
 
 export const canDeleteThisPost = (user: MaybeUser, post: MaybePost) => {

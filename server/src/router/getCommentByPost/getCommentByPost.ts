@@ -5,6 +5,10 @@ import {
 } from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import {
+  hasUserBlockRelation,
+  isCommunityBlockedByUser,
+} from "../../lib/userContentBlock";
 import { isUserAdmin } from "../../utils/can";
 
 import { zGetCommentsByPostTrpcInput } from "./input";
@@ -16,6 +20,7 @@ export const getCommentsByPostTrpcRoute = trpcLoggedProcedure
       where: { id: input.postId },
       select: {
         id: true,
+        authorId: true,
         deletedAt: true,
         publisherType: true,
         publisherCommunityId: true,
@@ -31,6 +36,22 @@ export const getCommentsByPostTrpcRoute = trpcLoggedProcedure
 
     if (
       ctx.me?.id &&
+      post.publisherType === "USER" &&
+      post.authorId !== ctx.me.id
+    ) {
+      const blocked = await hasUserBlockRelation({
+        prisma: ctx.prisma,
+        firstUserId: ctx.me.id,
+        secondUserId: post.authorId,
+      });
+
+      if (blocked) {
+        throw new ExpectedError("Пост пользователя недоступен");
+      }
+    }
+
+    if (
+      ctx.me?.id &&
       post.publisherType === "COMMUNITY" &&
       post.publisherCommunityId
     ) {
@@ -41,13 +62,20 @@ export const getCommentsByPostTrpcRoute = trpcLoggedProcedure
       });
 
       if (!isCommunityManagerRole(role)) {
-        const blacklistEntry = await getActiveCommunityBlacklistEntry({
-          prisma: ctx.prisma,
-          communityId: post.publisherCommunityId,
-          userId: ctx.me.id,
-        });
+        const [blacklistEntry, isBlockedByMe] = await Promise.all([
+          getActiveCommunityBlacklistEntry({
+            prisma: ctx.prisma,
+            communityId: post.publisherCommunityId,
+            userId: ctx.me.id,
+          }),
+          isCommunityBlockedByUser({
+            prisma: ctx.prisma,
+            userId: ctx.me.id,
+            communityId: post.publisherCommunityId,
+          }),
+        ]);
 
-        if (blacklistEntry) {
+        if (blacklistEntry || isBlockedByMe) {
           throw new ExpectedError("Пост сообщества недоступен");
         }
       }

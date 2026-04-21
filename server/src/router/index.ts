@@ -11,6 +11,7 @@ import { deleteCommentTrpcRoute } from "./deleteComment/deleteComment";
 import { deleteCommunityTrpcRoute } from "./deleteCommunity/deleteCommunity";
 import { deletePostTrpcRoute } from "./deletePost/deletePost";
 import { getAdminReportsTrpcRoute } from "./getAdminReports/getAdminReports";
+import { getAdminUsersListTrpcRoute } from "./getAdminUsersList/getAdminUsersList";
 import { getCommentsByPostTrpcRoute } from "./getCommentByPost/getCommentByPost";
 import { getCommunityTrpcRoute } from "./getCommunity/getCommunity";
 import { getCommunityActionLogTrpcRoute } from "./getCommunityActionLog/getCommunityActionLog";
@@ -42,6 +43,7 @@ import { setCommunityModeratorTrpcRoute } from "./setCommunityModerator/setCommu
 import { setCommunitySubscriptionTrpcRoute } from "./setCommunitySubscription/setCommunitySubscription";
 import { setMyAvatarTrpcRoute } from "./setMyAvatar/setMyAvatar";
 import { setPostLikeTrpcRoute } from "./setPostLike/setPostLike";
+import { setUserAdminTrpcRoute } from "./setUserAdmin/setUserAdmin";
 import { setUserContentBlockTrpcRoute } from "./setUserContentBlock/setUserContentBlock";
 import { setUserFollowTrpcRoute } from "./setUserFollow/setUserFollow";
 import { signInTrpcRoute } from "./signIn/signIn";
@@ -82,6 +84,7 @@ export const trpcRouter = createTrpcRouter({
   getCommunityModeration: getCommunityModerationTrpcRoute,
   getCommunityModerationList: getCommunityModerationListTrpcRoute,
   getAdminReports: getAdminReportsTrpcRoute,
+  getAdminUsersList: getAdminUsersListTrpcRoute,
   getCommunityPosts: getCommunityPostsTrpcRoute,
   getSubscribedPosts: getSubscribedPostsTrpcRoute,
   setCommunityAvatar: setCommunityAvatarTrpcRoute,
@@ -94,6 +97,7 @@ export const trpcRouter = createTrpcRouter({
   updatePassword: updatePasswordTrpcRoute,
   setPostLike: setPostLikeTrpcRoute,
   setAdminReportStatus: setAdminReportStatusTrpcRoute,
+  setUserAdmin: setUserAdminTrpcRoute,
   setCommunitySubscription: setCommunitySubscriptionTrpcRoute,
   setUserContentBlock: setUserContentBlockTrpcRoute,
   setUserFollow: setUserFollowTrpcRoute,

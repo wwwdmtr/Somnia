@@ -7,6 +7,7 @@ import {
 } from "../../lib/communityModeration";
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import { isCommunityBlockedByUser } from "../../lib/userContentBlock";
 
 import { zGetCommunityPostsTrpcInput } from "./input";
 
@@ -39,13 +40,20 @@ export const getCommunityPostsTrpcRoute = trpcLoggedProcedure
       canSeeCommunityAuthor = isCommunityManagerRole(role);
 
       if (!canSeeCommunityAuthor) {
-        const blacklistEntry = await getActiveCommunityBlacklistEntry({
-          prisma: ctx.prisma,
-          communityId: input.communityId,
-          userId,
-        });
+        const [blacklistEntry, isBlockedByMe] = await Promise.all([
+          getActiveCommunityBlacklistEntry({
+            prisma: ctx.prisma,
+            communityId: input.communityId,
+            userId,
+          }),
+          isCommunityBlockedByUser({
+            prisma: ctx.prisma,
+            userId,
+            communityId: input.communityId,
+          }),
+        ]);
 
-        if (blacklistEntry) {
+        if (blacklistEntry || isBlockedByMe) {
           throw new ExpectedError("Контент сообщества недоступен");
         }
       }

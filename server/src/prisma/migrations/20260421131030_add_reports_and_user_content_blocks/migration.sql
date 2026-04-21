@@ -5,7 +5,7 @@ CREATE TYPE "ReportTargetType" AS ENUM ('POST', 'USER');
 CREATE TYPE "ReportStatus" AS ENUM ('OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED');
 
 -- DropIndex
-DROP INDEX "public"."CommunityBlacklist_userId_unblockedNotifiedAt_idx";
+DROP INDEX IF EXISTS "public"."CommunityBlacklist_userId_unblockedNotifiedAt_idx";
 
 -- CreateTable
 CREATE TABLE "UserBlockedUser" (

@@ -1,5 +1,6 @@
 import { ExpectedError } from "../../lib/error";
 import { trpcLoggedProcedure } from "../../lib/trpc";
+import { hasUserBlockRelation } from "../../lib/userContentBlock";
 
 import { zGetUserProfileTrpcInput } from "./input";
 
@@ -35,6 +36,18 @@ export const getUserProfileTrpcRoute = trpcLoggedProcedure
     }
 
     const isMe = ctx.me?.id === user.id;
+
+    if (ctx.me && !isMe) {
+      const blocked = await hasUserBlockRelation({
+        prisma: ctx.prisma,
+        firstUserId: ctx.me.id,
+        secondUserId: user.id,
+      });
+
+      if (blocked) {
+        throw new ExpectedError("Профиль пользователя недоступен");
+      }
+    }
 
     const [isFollowedByMe, isBlockedByMe] =
       !isMe && ctx.me

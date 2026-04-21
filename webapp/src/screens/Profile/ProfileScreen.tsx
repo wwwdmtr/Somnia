@@ -71,6 +71,8 @@ const PROFILE_POSTS_LIMIT = 15;
 const MAX_INFINITE_PAGES = 10;
 const SIDE_MENU_OVERLAY_BACKGROUND = "rgba(0,0,0,0.45)";
 const FLAG_ACTION_ICON_COLOR = "rgba(255,255,255,0.62)";
+const ADMIN_PANEL_BUTTON_BACKGROUND = "rgba(22, 104, 220, 0.22)";
+const ADMIN_PANEL_BUTTON_BORDER = "rgba(22, 104, 220, 0.9)";
 const ACTION_MENU_TOP_OFFSET = 24;
 const ACTION_MENU_CARD_WIDTH = 236;
 
@@ -229,7 +231,7 @@ export const ProfileScreen = () => {
       setIsActionsMenuOpen(false);
       Alert.alert(
         "Готово",
-        isBlocked ? "Пользователь скрыт" : "Пользователь снова доступен",
+        isBlocked ? "Пользователь заблокирован" : "Пользователь разблокирован",
       );
     } catch (error) {
       Alert.alert(
@@ -420,14 +422,19 @@ export const ProfileScreen = () => {
 
       {profile.isMe && isUserAdmin(me) ? (
         <TouchableOpacity
-          style={styles.adminPanelBlock}
+          style={styles.adminPanelButton}
           onPress={() =>
             navigation.navigate(ScreenName.AdminStack, {
               screen: ScreenName.AdminHome,
             })
           }
         >
-          <Text style={typography.body_white85}>Перейти в админ панель</Text>
+          <Ionicons
+            name="shield-checkmark-outline"
+            size={18}
+            color={COLORS.white100}
+          />
+          <Text style={styles.adminPanelButtonText}>Админ панель</Text>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -513,8 +520,8 @@ export const ProfileScreen = () => {
                   >
                     <Text style={typography.body_white85}>
                       {profile.isBlockedByMe
-                        ? "Показывать пользователя"
-                        : "Скрыть публикации пользователя"}
+                        ? "Разблокировать пользователя"
+                        : "Заблокировать пользователя"}
                     </Text>
                   </TouchableOpacity>
                 ) : null}
@@ -561,13 +568,23 @@ export const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  adminPanelBlock: {
+  adminPanelButton: {
     alignItems: "center",
-    backgroundColor: COLORS.postsCardBackground,
-    borderRadius: 32,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    backgroundColor: ADMIN_PANEL_BUTTON_BACKGROUND,
+    borderColor: ADMIN_PANEL_BUTTON_BORDER,
+    borderRadius: 99,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "center",
+    minHeight: 44,
+    paddingHorizontal: 18,
     width: "100%",
+  },
+  adminPanelButtonText: {
+    color: COLORS.white100,
+    fontSize: 15,
+    lineHeight: 22,
   },
   avatar: {
     borderRadius: 50,
