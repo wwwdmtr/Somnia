@@ -412,7 +412,7 @@ export const CommunityScreen = () => {
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.backgroundImage}
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
         <FlatList
           data={posts}
           keyExtractor={(item) => item.id}

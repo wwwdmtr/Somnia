@@ -125,7 +125,7 @@ export const AdminScreen = () => {
         source={require("../../assets/backgrounds/application-bg.png")}
         style={styles.backgroundImage}
       >
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
           <View style={styles.headerContainer}>
             <TouchableOpacity
               onPress={() => navigation.goBack()}
@@ -150,7 +150,7 @@ export const AdminScreen = () => {
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.backgroundImage}
     >
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
         <View style={styles.headerContainer}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}

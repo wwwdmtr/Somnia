@@ -120,7 +120,7 @@ export const UserConnectionsScreen = () => {
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.backgroundImage}
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
         <View style={styles.headerWrap}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}

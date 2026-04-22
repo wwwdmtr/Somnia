@@ -29,7 +29,7 @@ export const SignUpScreen = () => {
       source={require("../../assets/backgrounds/onboarding-auth.png")}
       style={styles.BackgroundImage}
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
         <View style={styles.header}>
           <Text style={typography.h2_white100}>Добро пожаловать</Text>
           <Text style={typography.h2_white100}>в Универ</Text>

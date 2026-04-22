@@ -785,7 +785,9 @@ export const PostScreen = () => {
                   />
                 ) : null}
               </View>
-              <Text style={typography.additionalInfo_white25}>{headerMetaText}</Text>
+              <Text style={typography.additionalInfo_white25}>
+                {headerMetaText}
+              </Text>
             </View>
           </TouchableOpacity>
 
@@ -941,7 +943,10 @@ export const PostScreen = () => {
         source={require("../../assets/backgrounds/application-bg.png")}
         style={styles.BackgroundImage}
       >
-        <SafeAreaView style={styles.centerContent}>
+        <SafeAreaView
+          edges={["top", "left", "right"]}
+          style={styles.centerContent}
+        >
           <ActivityIndicator size="large" color={COLORS.white85} />
           <StatusBar style="auto" />
         </SafeAreaView>
@@ -955,7 +960,10 @@ export const PostScreen = () => {
         source={require("../../assets/backgrounds/application-bg.png")}
         style={styles.BackgroundImage}
       >
-        <SafeAreaView style={styles.centerContent}>
+        <SafeAreaView
+          edges={["top", "left", "right"]}
+          style={styles.centerContent}
+        >
           <Text style={typography.body_white85}>Error: {error.message}</Text>
           <StatusBar style="auto" />
         </SafeAreaView>
@@ -969,7 +977,7 @@ export const PostScreen = () => {
         source={require("../../assets/backgrounds/application-bg.png")}
         style={styles.BackgroundImage}
       >
-        <SafeAreaView />
+        <SafeAreaView edges={["top", "left", "right"]} />
       </ImageBackground>
     );
   }
@@ -1044,7 +1052,7 @@ export const PostScreen = () => {
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.BackgroundImage}
     >
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}

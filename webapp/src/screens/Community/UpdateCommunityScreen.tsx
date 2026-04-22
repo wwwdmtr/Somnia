@@ -629,7 +629,7 @@ export const UpdateCommunityScreen = () => {
         source={require("../../assets/backgrounds/application-bg.png")}
         style={styles.backgroundImage}
       >
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
           <View style={styles.header}>
             <TouchableOpacity
               onPress={() => navigation.goBack()}
@@ -685,7 +685,7 @@ export const UpdateCommunityScreen = () => {
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.backgroundImage}
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -751,7 +751,9 @@ export const UpdateCommunityScreen = () => {
               </View>
 
               <View style={styles.settingsCard}>
-                <Text style={typography.h4_white_85}>Верификация сообщества</Text>
+                <Text style={typography.h4_white_85}>
+                  Верификация сообщества
+                </Text>
                 <Text style={styles.warningText}>
                   {latestVerificationRequest
                     ? `Последняя заявка: ${VERIFICATION_STATUS_LABELS[latestVerificationRequest.status]} (${new Date(latestVerificationRequest.createdAt).toLocaleString("ru-RU")})`

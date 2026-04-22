@@ -328,7 +328,7 @@ export const CommunityVerificationRequestsScreen = () => {
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.backgroundImage}
     >
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
         <FlatList
           data={requests}
           keyExtractor={(item) => item.id}

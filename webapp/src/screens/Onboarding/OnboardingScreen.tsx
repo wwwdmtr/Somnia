@@ -23,7 +23,7 @@ export const OnboardingScreen = () => {
       source={require("../../assets/backgrounds/onboarding-main.png")}
       style={styles.BackgroundImage}
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
         <View style={styles.spacer} />
         <View style={styles.logo}>
           <Text style={typography.h1_white100}>Универ</Text>

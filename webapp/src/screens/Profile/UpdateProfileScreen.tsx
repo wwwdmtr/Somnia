@@ -52,7 +52,9 @@ export const UpdateProfileScreen = () => {
     string | null
   >(null);
   const debouncedBlockedSearch = useDebouncedValue(blockedSearch, 350);
-  const blockedSearchTerm = (blockedSearch ? debouncedBlockedSearch : "").trim();
+  const blockedSearchTerm = (
+    blockedSearch ? debouncedBlockedSearch : ""
+  ).trim();
 
   const blockedUsersQuery = trpc.getMyBlockedUsers.useInfiniteQuery(
     {
@@ -134,7 +136,7 @@ export const UpdateProfileScreen = () => {
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.BackgroundImage}
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <TouchableOpacity

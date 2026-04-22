@@ -207,6 +207,8 @@ function updateViewportMeta(html) {
     .filter(Boolean)
     .filter((part) => !part.startsWith('viewport-fit='));
 
+  parts.push('viewport-fit=cover');
+
   const nextMeta = `<meta name="viewport" content="${parts.join(', ')}" />`;
   return html.replace(viewportRegex, nextMeta);
 }

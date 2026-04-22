@@ -340,7 +340,7 @@ export const AllPostsScreen = () => {
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.BackgroundImage}
     >
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
         <FlatList
           data={activePosts}
           keyExtractor={(item) => item.id}

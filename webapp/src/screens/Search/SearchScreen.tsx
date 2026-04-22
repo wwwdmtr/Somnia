@@ -533,7 +533,7 @@ export const SearchScreen = () => {
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.backgroundImage}
     >
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
         {isInitialLoading ? (
           <View style={styles.centered}>
             <Text style={typography.body_white85}>Загрузка...</Text>

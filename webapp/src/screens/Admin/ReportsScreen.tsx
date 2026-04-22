@@ -351,7 +351,7 @@ export const ReportsScreen = () => {
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.backgroundImage}
     >
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
         <FlatList
           data={reports}
           keyExtractor={(item) => item.id}

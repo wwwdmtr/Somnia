@@ -140,7 +140,7 @@ export const UpdatePostScreen = () => {
         source={require("../../assets/backgrounds/application-bg.png")}
         style={styles.BackgroundImage}
       >
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
           <View style={styles.header}>
             <TouchableOpacity
               onPress={() => navigation.goBack()}
@@ -167,7 +167,7 @@ export const UpdatePostScreen = () => {
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.BackgroundImage}
     >
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <TouchableOpacity

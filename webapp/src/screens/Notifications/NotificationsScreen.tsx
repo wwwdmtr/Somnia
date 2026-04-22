@@ -285,7 +285,7 @@ export const NotificationsScreen = () => {
       source={require("../../assets/backgrounds/application-bg.png")}
       style={styles.background}
     >
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleGoBack} style={styles.iconButton}>
             <Ionicons name="chevron-back" size={20} color={COLORS.white85} />
