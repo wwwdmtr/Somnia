@@ -204,11 +204,8 @@ function updateViewportMeta(html) {
   const parts = content
     .split(',')
     .map((part) => part.trim())
-    .filter(Boolean);
-
-  if (!parts.some((part) => part.startsWith('viewport-fit='))) {
-    parts.push('viewport-fit=cover');
-  }
+    .filter(Boolean)
+    .filter((part) => !part.startsWith('viewport-fit='));
 
   const nextMeta = `<meta name="viewport" content="${parts.join(', ')}" />`;
   return html.replace(viewportRegex, nextMeta);
