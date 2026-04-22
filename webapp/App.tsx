@@ -14,6 +14,23 @@ import { linking } from "./src/navigation/linking";
 import { RootNavigation } from "./src/navigation/navigation";
 
 const WEB_TEXTAREA_SCROLLBAR_STYLE_ID = "somnia-hide-textarea-scrollbar";
+const MOBILE_STANDALONE_SCREEN_WIDTH_LIMIT = 480;
+
+function isStandaloneWebApp() {
+  const maybeWindow = (globalThis as { window?: Window }).window;
+  if (!maybeWindow) {
+    return false;
+  }
+
+  const maybeNavigator = maybeWindow.navigator as Navigator & {
+    standalone?: boolean;
+  };
+
+  return (
+    maybeNavigator.standalone === true ||
+    maybeWindow.matchMedia?.("(display-mode: standalone)").matches === true
+  );
+}
 
 function getWebViewportHeight() {
   const maybeWindow = (globalThis as { window?: Window }).window;
@@ -22,10 +39,15 @@ function getWebViewportHeight() {
   }
 
   const maybeDocument = (globalThis as { document?: Document }).document;
+  const canUseStandaloneScreenHeight =
+    isStandaloneWebApp() &&
+    Number.isFinite(maybeWindow.screen?.width) &&
+    maybeWindow.screen.width <= MOBILE_STANDALONE_SCREEN_WIDTH_LIMIT;
   const heights = [
     maybeWindow.innerHeight,
     maybeWindow.visualViewport?.height,
     maybeDocument?.documentElement?.clientHeight,
+    canUseStandaloneScreenHeight ? maybeWindow.screen?.height : undefined,
   ].filter((value): value is number => Number.isFinite(value) && value > 0);
 
   if (heights.length === 0) {

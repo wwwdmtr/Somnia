@@ -326,6 +326,7 @@ export function AppNav() {
   return (
     <Tab.Navigator
       initialRouteName={TabName.FeedTab}
+      safeAreaInsets={{ bottom: 0 }}
       screenOptions={({ route }) => {
         return {
           headerShown: false,
