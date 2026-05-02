@@ -5,7 +5,6 @@ import React, { useEffect, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { WEB_SHELL_WIDTH } from "./src/constants/layout";
 import { SentryUser } from "./src/lib/SentryUser";
 import { AppContextProvider } from "./src/lib/ctx";
 import { MixpanelUser } from "./src/lib/mixpanel";
@@ -15,6 +14,7 @@ import { RootNavigation } from "./src/navigation/navigation";
 
 const WEB_TEXTAREA_SCROLLBAR_STYLE_ID = "somnia-hide-textarea-scrollbar";
 const MOBILE_STANDALONE_SCREEN_WIDTH_LIMIT = 480;
+const WEB_SHELL_MAX_WIDTH = 1224;
 
 function isStandaloneWebApp() {
   const maybeWindow = (globalThis as { window?: Window }).window;
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     marginTop: 0,
     maxHeight: "100%",
-    maxWidth: "100%",
+    maxWidth: WEB_SHELL_MAX_WIDTH,
     overflow: "hidden",
     paddingBottom: 0,
     paddingTop: 0,
@@ -196,6 +196,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.25,
     shadowRadius: 24,
-    width: WEB_SHELL_WIDTH,
+    width: "100%",
   },
 });

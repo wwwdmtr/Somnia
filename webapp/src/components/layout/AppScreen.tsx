@@ -11,10 +11,13 @@ import {
 } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 
+import { COLORS } from "../../theme/typography";
+
 type AppScreenBackground = "app" | "auth" | "onboarding";
 
 type AppScreenProps = {
   background?: AppScreenBackground;
+  resizeMode?: "cover" | "contain" | "stretch" | "repeat" | "center";
   children?: React.ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
   edges?: Edge[];
@@ -33,6 +36,7 @@ const BACKGROUNDS: Record<AppScreenBackground, ImageSourcePropType> = {
 
 export function AppScreen({
   background = "app",
+  resizeMode = "cover",
   children,
   contentStyle,
   edges = ["top", "left", "right"],
@@ -47,10 +51,14 @@ export function AppScreen({
     <ImageBackground
       source={BACKGROUNDS[background]}
       style={[styles.root, style]}
+      resizeMode={resizeMode}
       imageStyle={imageStyle}
     >
       <StatusBar style={statusBarStyle} />
-      <Content edges={withSafeArea ? edges : undefined} style={contentStyle}>
+      <Content
+        edges={withSafeArea ? edges : undefined}
+        style={[styles.content, contentStyle]}
+      >
         {children}
       </Content>
     </ImageBackground>
@@ -58,7 +66,14 @@ export function AppScreen({
 }
 
 const styles = StyleSheet.create({
-  root: {
+  content: {
     flex: 1,
+  },
+  root: {
+    backgroundColor: COLORS.navBarBackground,
+    flex: 1,
+    height: "100%",
+    minHeight: "100%",
+    width: "100%",
   },
 });

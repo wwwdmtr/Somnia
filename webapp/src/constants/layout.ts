@@ -1,4 +1,4 @@
-export const WEB_SHELL_WIDTH = 393;
+export const WEB_SHELL_WIDTH = 440;
 export const WEB_SHELL_HEIGHT = 852;
 export const SCREEN_HORIZONTAL_PADDING = 14;
 export const SHELL_CONTENT_WIDTH =
