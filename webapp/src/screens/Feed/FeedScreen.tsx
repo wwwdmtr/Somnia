@@ -347,7 +347,7 @@ export const AllPostsScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#ffffff"
+            tintColor={COLORS.white100}
           />
         }
         onEndReached={() => {

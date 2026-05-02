@@ -171,11 +171,7 @@ export const DeletedPostsScreen = () => {
           </Text>
 
           <View style={styles.rightMeta}>
-            <Ionicons
-              name="trash-outline"
-              size={16}
-              color="rgba(255,255,255,0.45)"
-            />
+            <Ionicons name="trash-outline" size={16} color={COLORS.mutedIcon} />
             <Text style={typography.additionalInfo_white25}>#{post.seq}</Text>
           </View>
         </View>
@@ -196,7 +192,7 @@ export const DeletedPostsScreen = () => {
             <Ionicons
               name="person-outline"
               size={18}
-              color="rgba(255,255,255,0.45)"
+              color={COLORS.mutedIcon}
             />
             <Text style={typography.caption_white85}>
               {post.author?.nickname
@@ -206,11 +202,7 @@ export const DeletedPostsScreen = () => {
           </View>
 
           <View style={styles.metaItem}>
-            <Ionicons
-              name="star-outline"
-              size={18}
-              color="rgba(255,255,255,0.45)"
-            />
+            <Ionicons name="star-outline" size={18} color={COLORS.mutedIcon} />
             <Text style={typography.caption_white85}>
               {post.likesCount} нравится
             </Text>
@@ -245,7 +237,7 @@ export const DeletedPostsScreen = () => {
           <RefreshControl
             refreshing={refreshing || isRefetching}
             onRefresh={onRefresh}
-            tintColor="#ffffff"
+            tintColor={COLORS.white100}
           />
         }
         onEndReached={loadMore}

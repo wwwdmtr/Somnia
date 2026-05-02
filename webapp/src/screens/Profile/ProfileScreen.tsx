@@ -68,10 +68,10 @@ type ProfileScreenNavigationProp = CompositeNavigationProp<
 
 const PROFILE_POSTS_LIMIT = 15;
 const MAX_INFINITE_PAGES = 10;
-const SIDE_MENU_OVERLAY_BACKGROUND = "rgba(0,0,0,0.45)";
-const FLAG_ACTION_ICON_COLOR = "rgba(255,255,255,0.62)";
-const ADMIN_PANEL_BUTTON_BACKGROUND = "rgba(22, 104, 220, 0.22)";
-const ADMIN_PANEL_BUTTON_BORDER = "rgba(22, 104, 220, 0.9)";
+const SIDE_MENU_OVERLAY_BACKGROUND = COLORS.modalOverlay;
+const FLAG_ACTION_ICON_COLOR = COLORS.mutedIcon;
+const ADMIN_PANEL_BUTTON_BACKGROUND = COLORS.notificationUnreadBackground;
+const ADMIN_PANEL_BUTTON_BORDER = COLORS.notificationUnreadBorder;
 const ACTION_MENU_TOP_OFFSET = 24;
 const ACTION_MENU_CARD_WIDTH = 236;
 
@@ -482,7 +482,7 @@ export const ProfileScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#ffffff"
+            tintColor={COLORS.white100}
           />
         }
         onEndReached={() => {

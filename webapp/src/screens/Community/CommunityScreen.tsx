@@ -40,8 +40,8 @@ import type { RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 const MAX_INFINITE_PAGES = 10;
-const SIDE_MENU_OVERLAY_BACKGROUND = "rgba(0,0,0,0.45)";
-const FLAG_ACTION_ICON_COLOR = "rgba(255,255,255,0.62)";
+const SIDE_MENU_OVERLAY_BACKGROUND = COLORS.modalOverlay;
+const FLAG_ACTION_ICON_COLOR = COLORS.mutedIcon;
 const ACTION_MENU_TOP_OFFSET = 14;
 const ACTION_MENU_CARD_WIDTH = 236;
 

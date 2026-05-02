@@ -33,6 +33,7 @@ import { SignOutScreen } from "../screens/Profile/SignOutScreen";
 import { UpdateProfileScreen } from "../screens/Profile/UpdateProfileScreen";
 import { UserConnectionsScreen } from "../screens/Profile/UserConnectionsScreen";
 import { SearchScreen } from "../screens/Search/SearchScreen";
+import { COLORS } from "../theme/typography";
 
 import { AddPostStackParamList } from "./AddPostStackParamList";
 import { AdminStackParamList } from "./AdminStackParamList";
@@ -281,7 +282,7 @@ export const BASE_TAB_BAR_STYLE = {
   height: 60,
 
   borderRadius: 999,
-  backgroundColor: "#070F32",
+  backgroundColor: COLORS.navBarBackground,
   borderTopWidth: 0,
   elevation: 0, // Android
   shadowOpacity: 0, // iOS
@@ -365,9 +366,7 @@ export function AppNav() {
               <Ionicons
                 name={iconName}
                 size={TAB_ICON_SIZE}
-                color={
-                  focused ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.55)"
-                }
+                color={focused ? COLORS.activeIcon : COLORS.mutedIcon}
               />
             );
           },

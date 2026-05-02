@@ -11,6 +11,7 @@ import { MixpanelUser } from "./src/lib/mixpanel";
 import { TrpcProvider } from "./src/lib/trpc";
 import { linking } from "./src/navigation/linking";
 import { RootNavigation } from "./src/navigation/navigation";
+import { COLORS } from "./src/theme/typography";
 
 const WEB_TEXTAREA_SCROLLBAR_STYLE_ID = "somnia-hide-textarea-scrollbar";
 const MOBILE_STANDALONE_SCREEN_WIDTH_LIMIT = 480;
@@ -166,15 +167,10 @@ export default function App() {
   );
 }
 
-const COLORS = {
-  background: "#fff",
-  shadow: "#000",
-};
-
 const styles = StyleSheet.create({
   webRoot: {
     alignItems: "center",
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.campusMist,
     flex: 1,
     justifyContent: "flex-start",
     marginBottom: 0,
@@ -192,7 +188,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     paddingBottom: 0,
     paddingTop: 0,
-    shadowColor: COLORS.shadow,
+    shadowColor: COLORS.shadowInk,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.25,
     shadowRadius: 24,

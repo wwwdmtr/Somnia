@@ -319,10 +319,10 @@ const styles = {
     position: "relative" as const,
   },
   inputError: {
-    borderColor: "white",
+    borderColor: COLORS.inputErrorBorderColor,
   },
   errorText: {
-    color: "white",
+    color: COLORS.inputErrorBorderColor,
     fontSize: 12,
     marginBottom: 4,
   },

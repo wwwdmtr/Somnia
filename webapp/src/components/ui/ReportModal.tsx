@@ -22,7 +22,7 @@ type ReportModalProps = {
   onSubmit: (description: string) => void;
 };
 
-const MODAL_OVERLAY_BACKGROUND = "rgba(0, 0, 0, 0.45)";
+const MODAL_OVERLAY_BACKGROUND = COLORS.modalOverlay;
 
 export const ReportModal = ({
   visible,

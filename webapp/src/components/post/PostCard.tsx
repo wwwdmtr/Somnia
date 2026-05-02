@@ -72,8 +72,8 @@ const DEFAULT_IMAGE_WIDTH = 260;
 const PREVIEW_TEXT_LINE_HEIGHT = 24;
 const FALLBACK_IMAGE_ASPECT_RATIO = 4 / 3;
 const imageAspectRatioCache = new Map<string, number>();
-const MEDIA_COUNTER_BACKGROUND = "rgba(0,0,0,0.45)";
-const MEDIA_ARROW_BACKGROUND = "rgba(0,0,0,0.4)";
+const MEDIA_COUNTER_BACKGROUND = COLORS.mediaOverlayStrong;
+const MEDIA_ARROW_BACKGROUND = COLORS.mediaOverlay;
 
 const getContainedImageSize = ({
   containerWidth,
@@ -106,7 +106,7 @@ const getContainedImageSize = ({
 };
 
 export const PostCard = ({
-  badgeColor = "rgba(255,255,255,0.2)",
+  badgeColor = COLORS.surfaceBorder,
   badgeLabel,
   commentsFallbackLabel = "комментариев",
   contentOrder = "mediaFirst",
@@ -526,7 +526,7 @@ export const PostCard = ({
             <Ionicons
               name={post.isLikedByMe ? "star" : "star-outline"}
               size={20}
-              color={post.isLikedByMe ? "red" : "rgba(255,255,255,0.45)"}
+              color={post.isLikedByMe ? COLORS.like : COLORS.mutedIcon}
             />
           </TouchableOpacity>
           <Text style={typography.caption_white85}>

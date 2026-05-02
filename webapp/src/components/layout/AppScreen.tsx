@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import {
   ImageBackground,
   StyleSheet,
+  useWindowDimensions,
   View,
   type ImageSourcePropType,
   type ImageStyle,
@@ -14,6 +15,10 @@ import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 import { COLORS } from "../../theme/typography";
 
 type AppScreenBackground = "app" | "auth" | "onboarding";
+type ResponsiveBackground = {
+  landscape: ImageSourcePropType;
+  portrait: ImageSourcePropType;
+};
 
 type AppScreenProps = {
   background?: AppScreenBackground;
@@ -27,11 +32,25 @@ type AppScreenProps = {
   withSafeArea?: boolean;
 };
 
-const BACKGROUNDS: Record<AppScreenBackground, ImageSourcePropType> = {
-  app: require("../../assets/backgrounds/application-bg.png") as ImageSourcePropType,
-  auth: require("../../assets/backgrounds/onboarding-auth.png") as ImageSourcePropType,
-  onboarding:
-    require("../../assets/backgrounds/onboarding-main.png") as ImageSourcePropType,
+const BACKGROUNDS: Record<AppScreenBackground, ResponsiveBackground> = {
+  app: {
+    landscape:
+      require("../../assets/backgrounds/application-bg-landscape.webp") as ImageSourcePropType,
+    portrait:
+      require("../../assets/backgrounds/application-bg-portrait.webp") as ImageSourcePropType,
+  },
+  auth: {
+    landscape:
+      require("../../assets/backgrounds/onboarding-auth-landscape.webp") as ImageSourcePropType,
+    portrait:
+      require("../../assets/backgrounds/onboarding-auth-portrait.webp") as ImageSourcePropType,
+  },
+  onboarding: {
+    landscape:
+      require("../../assets/backgrounds/onboarding-main-landscape.webp") as ImageSourcePropType,
+    portrait:
+      require("../../assets/backgrounds/onboarding-main-portrait.webp") as ImageSourcePropType,
+  },
 };
 
 export function AppScreen({
@@ -46,10 +65,15 @@ export function AppScreen({
   withSafeArea = true,
 }: AppScreenProps) {
   const Content = withSafeArea ? SafeAreaView : View;
+  const { height, width } = useWindowDimensions();
+  const source =
+    width > height
+      ? BACKGROUNDS[background].landscape
+      : BACKGROUNDS[background].portrait;
 
   return (
     <ImageBackground
-      source={BACKGROUNDS[background]}
+      source={source}
       style={[styles.root, style]}
       resizeMode={resizeMode}
       imageStyle={imageStyle}

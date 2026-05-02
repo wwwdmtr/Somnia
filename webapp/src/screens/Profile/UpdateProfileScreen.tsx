@@ -34,8 +34,8 @@ type ProfileScreenNavigationProp = NativeStackNavigationProp<
   ProfileStackParamList,
   ScreenName.UpdateProfile
 >;
-const MODAL_OVERLAY_BACKGROUND = "rgba(0, 0, 0, 0.45)";
-const ERROR_TEXT_COLOR = "rgba(255,154,154,1)";
+const MODAL_OVERLAY_BACKGROUND = COLORS.modalOverlay;
+const ERROR_TEXT_COLOR = COLORS.inputErrorBorderColor;
 const BLOCKED_LIST_PAGE_LIMIT = 20;
 const MAX_INFINITE_PAGES = 10;
 

@@ -48,7 +48,7 @@ const EMPTY_COMMUNITIES: Array<{
   name: string;
   role: "OWNER" | "MODERATOR";
 }> = [];
-const MODAL_OVERLAY_BACKGROUND = "rgba(0, 0, 0, 0.45)";
+const MODAL_OVERLAY_BACKGROUND = COLORS.modalOverlay;
 
 export const AddPostScreen = () => {
   const navigation = useNavigation<AddPostNavProp>();

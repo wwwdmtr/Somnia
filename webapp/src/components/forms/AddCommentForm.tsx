@@ -1,7 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
-import { zCreateCommentTrpcInput } from '@somnia/shared/src/router/createComment/input';
-import { useFormik } from 'formik';
-import React, { useEffect, useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { zCreateCommentTrpcInput } from "@somnia/shared/src/router/createComment/input";
+import { useFormik } from "formik";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   View,
@@ -9,12 +9,12 @@ import {
   Text,
   TouchableOpacity,
   Platform,
-} from 'react-native';
-import { toFormikValidationSchema } from 'zod-formik-adapter';
+} from "react-native";
+import { toFormikValidationSchema } from "zod-formik-adapter";
 
-import { trpc } from '../../lib/trpc';
-import { webInputFocusReset } from '../../theme/inputFocus';
-import { COLORS, typography } from '../../theme/typography';
+import { trpc } from "../../lib/trpc";
+import { webInputFocusReset } from "../../theme/inputFocus";
+import { COLORS, typography } from "../../theme/typography";
 
 type CommentFormValues = {
   content: string;
@@ -54,7 +54,7 @@ export const AddCommentForm = ({
 
   const formik = useFormik<CommentFormValues>({
     initialValues: {
-      content: '',
+      content: "",
     },
     validationSchema: toFormikValidationSchema(
       zCreateCommentTrpcInput.pick({ content: true }),
@@ -73,7 +73,7 @@ export const AddCommentForm = ({
     if (parentId && replyToNickname) {
       const prefix = `@${replyToNickname}:  `;
       if (!formik.values.content.startsWith(prefix)) {
-        formik.setFieldValue('content', prefix);
+        formik.setFieldValue("content", prefix);
       }
     }
   }, [parentId, replyToNickname, formik]);
@@ -117,19 +117,19 @@ export const AddCommentForm = ({
           }}
           accessible={false}
         >
-          {formik.values.content || ' '}
+          {formik.values.content || " "}
         </Text>
 
         <TextInput
           placeholder={
             parentId && replyToNickname
               ? `Ответить @${replyToNickname}...`
-              : 'Написать комментарий...'
+              : "Написать комментарий..."
           }
           placeholderTextColor={COLORS.white25}
           value={formik.values.content}
-          onChangeText={(text) => formik.setFieldValue('content', text)}
-          onBlur={() => formik.setFieldTouched('content')}
+          onChangeText={(text) => formik.setFieldValue("content", text)}
+          onBlur={() => formik.setFieldTouched("content")}
           multiline
           scrollEnabled={isInputScrollable}
           style={[
@@ -170,12 +170,12 @@ const styles = {
     gap: 8,
   },
   composerWrap: {
-    position: 'relative' as const,
+    position: "relative" as const,
   },
   replyIndicator: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between' as const,
-    alignItems: 'center' as const,
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
     paddingVertical: 8,
     paddingHorizontal: 12,
     backgroundColor: COLORS.postsCardBackground,
@@ -191,12 +191,12 @@ const styles = {
     paddingHorizontal: COMMENT_INPUT_PADDING_HORIZONTAL,
     paddingRight: COMMENT_INPUT_PADDING_HORIZONTAL + SEND_BUTTON_SIZE + 12,
     paddingTop: COMMENT_INPUT_PADDING_VERTICAL,
-    textAlignVertical: 'top' as const,
-    ...(Platform.OS === 'web' ? { fontSize: 16 } : {}),
+    textAlignVertical: "top" as const,
+    ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
     ...webInputFocusReset,
   },
   inputError: {
-    borderColor: 'white',
+    borderColor: COLORS.inputErrorBorderColor,
     borderWidth: 1,
   },
   inputMeasure: {
@@ -204,27 +204,27 @@ const styles = {
     left: COMMENT_INPUT_PADDING_HORIZONTAL,
     lineHeight: COMMENT_INPUT_LINE_HEIGHT,
     opacity: 0,
-    pointerEvents: 'none' as const,
-    position: 'absolute' as const,
+    pointerEvents: "none" as const,
+    position: "absolute" as const,
     right: COMMENT_INPUT_PADDING_HORIZONTAL + SEND_BUTTON_SIZE + 12,
     top: 0,
   },
   sendButton: {
-    alignItems: 'center' as const,
-    backgroundColor: '#2AABEE',
+    alignItems: "center" as const,
+    backgroundColor: COLORS.buttonBackground,
     borderRadius: 999,
     bottom: 6,
     height: SEND_BUTTON_SIZE,
-    justifyContent: 'center' as const,
-    position: 'absolute' as const,
+    justifyContent: "center" as const,
+    position: "absolute" as const,
     right: 6,
     width: SEND_BUTTON_SIZE,
   },
   sendButtonDisabled: {
-    backgroundColor: 'rgba(42, 171, 238, 0.45)',
+    backgroundColor: COLORS.buttonBackgroundMuted,
   },
   errorText: {
-    color: 'white',
+    color: COLORS.inputErrorBorderColor,
     fontSize: 12,
     marginBottom: 4,
   },

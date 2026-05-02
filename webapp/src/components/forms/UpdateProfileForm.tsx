@@ -119,7 +119,7 @@ const styles = {
 
   inputError: {},
   errorText: {
-    color: "white",
+    color: COLORS.white100,
     fontSize: 12,
     marginBottom: 4,
   },

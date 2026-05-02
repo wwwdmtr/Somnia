@@ -60,10 +60,10 @@ const MAX_POST_IMAGE_HEIGHT = 650;
 const DEFAULT_POST_IMAGE_WIDTH = 280;
 const FALLBACK_IMAGE_ASPECT_RATIO = 4 / 3;
 const imageAspectRatioCache = new Map<string, number>();
-const MEDIA_COUNTER_BACKGROUND = "rgba(0,0,0,0.45)";
-const MEDIA_ARROW_BACKGROUND = "rgba(0,0,0,0.4)";
-const SIDE_MENU_OVERLAY_BACKGROUND = "rgba(0,0,0,0.45)";
-const FLAG_ACTION_ICON_COLOR = "rgba(255,255,255,0.62)";
+const MEDIA_COUNTER_BACKGROUND = COLORS.mediaOverlayStrong;
+const MEDIA_ARROW_BACKGROUND = COLORS.mediaOverlay;
+const SIDE_MENU_OVERLAY_BACKGROUND = COLORS.modalOverlay;
+const FLAG_ACTION_ICON_COLOR = COLORS.mutedIcon;
 const ACTION_MENU_TOP_OFFSET = 14;
 const ACTION_MENU_CARD_WIDTH = 236;
 
@@ -605,7 +605,11 @@ export const PostScreen = () => {
                     deleteComment.mutate({ commentId: comment.id });
                   }}
                 >
-                  <Ionicons name="trash-outline" size={24} color="white" />
+                  <Ionicons
+                    name="trash-outline"
+                    size={24}
+                    color={COLORS.white100}
+                  />
                 </TouchableOpacity>
               )}
             </View>
@@ -671,7 +675,7 @@ export const PostScreen = () => {
                         <Ionicons
                           name="trash-outline"
                           size={20}
-                          color="white"
+                          color={COLORS.white100}
                         />
                       </TouchableOpacity>
                     )}
@@ -896,7 +900,7 @@ export const PostScreen = () => {
                 <Ionicons
                   name={post.isLikedByMe ? "star" : "star-outline"}
                   size={20}
-                  color={post.isLikedByMe ? "red" : "rgba(255,255,255,0.45)"}
+                  color={post.isLikedByMe ? COLORS.like : COLORS.mutedIcon}
                 />
               </TouchableOpacity>
               <Text style={typography.caption_white85}>
@@ -1053,7 +1057,11 @@ export const PostScreen = () => {
                 })
               }
             >
-              <Ionicons name="create-outline" size={24} color="white" />
+              <Ionicons
+                name="create-outline"
+                size={24}
+                color={COLORS.white100}
+              />
             </TouchableOpacity>
           ) : null}
 
@@ -1062,7 +1070,11 @@ export const PostScreen = () => {
               onPress={onUndoDeletePress}
               disabled={undoDeletePost.isPending}
             >
-              <Ionicons name="refresh-outline" size={24} color="white" />
+              <Ionicons
+                name="refresh-outline"
+                size={24}
+                color={COLORS.white100}
+              />
             </TouchableOpacity>
           ) : null}
         </View>

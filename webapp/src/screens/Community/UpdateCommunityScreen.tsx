@@ -36,10 +36,10 @@ import type { SearchStackParamList } from "../../navigation/SearchStackParamList
 import type { RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-const MODAL_OVERLAY_BACKGROUND = "rgba(0, 0, 0, 0.45)";
-const DANGER_BUTTON_BACKGROUND = "rgba(255, 59, 48, 0.22)";
-const DANGER_BUTTON_BORDER = "rgba(255, 59, 48, 0.8)";
-const DANGER_BUTTON_TEXT = "rgba(255, 210, 210, 1)";
+const MODAL_OVERLAY_BACKGROUND = COLORS.modalOverlay;
+const DANGER_BUTTON_BACKGROUND = COLORS.dangerBackground;
+const DANGER_BUTTON_BORDER = COLORS.dangerBorder;
+const DANGER_BUTTON_TEXT = COLORS.dangerText;
 const ACTION_LOG_PAGE_LIMIT = 30;
 const MODERATION_LIST_PAGE_LIMIT = 20;
 const MAX_INFINITE_PAGES = 10;

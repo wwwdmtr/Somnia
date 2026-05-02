@@ -31,7 +31,7 @@ type NavigationProp = NativeStackNavigationProp<
 
 const MAX_INFINITE_PAGES = 10;
 const LIMIT = 10;
-const ACTION_DANGER_BORDER = "rgba(255,99,99,0.55)";
+const ACTION_DANGER_BORDER = COLORS.dangerBorder;
 
 const REPORT_STATUS_LABELS: Record<
   "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED",
@@ -47,10 +47,10 @@ const REPORT_STATUS_COLORS: Record<
   "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED",
   string
 > = {
-  OPEN: "rgba(255,255,255,0.82)",
-  IN_REVIEW: "#F6C85F",
-  RESOLVED: "#58D68D",
-  REJECTED: "#FF6B6B",
+  OPEN: COLORS.white85,
+  IN_REVIEW: COLORS.warning,
+  RESOLVED: COLORS.success,
+  REJECTED: COLORS.danger,
 };
 
 export const ReportsScreen = () => {
@@ -360,7 +360,7 @@ export const ReportsScreen = () => {
           <RefreshControl
             refreshing={refreshing || isRefetching}
             onRefresh={onRefresh}
-            tintColor="#ffffff"
+            tintColor={COLORS.white100}
           />
         }
         onEndReached={loadMore}

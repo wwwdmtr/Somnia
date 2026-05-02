@@ -58,7 +58,7 @@ export const PostImageViewerModal = ({
             {imagePublicIds.length}
           </Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="white" />
+            <Ionicons name="close" size={24} color={COLORS.white100} />
           </TouchableOpacity>
         </View>
 

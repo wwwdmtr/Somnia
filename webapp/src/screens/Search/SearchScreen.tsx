@@ -293,7 +293,11 @@ export const SearchScreen = () => {
                 {PERIOD_LABELS[period]}
               </Text>
               {selectedPeriod === period ? (
-                <Ionicons name="checkmark" size={20} color="#FF6B6B" />
+                <Ionicons
+                  name="checkmark"
+                  size={20}
+                  color={COLORS.brandBlueLight}
+                />
               ) : null}
             </TouchableOpacity>
           ))}
@@ -310,7 +314,7 @@ export const SearchScreen = () => {
     index: number;
   }) => {
     const badgeColor =
-      index === 0 ? "#FFD700" : index === 1 ? "#C0C0C0" : "#CD7F32";
+      index === 0 ? COLORS.gold : index === 1 ? COLORS.silver : COLORS.bronze;
 
     return (
       <PostCard
@@ -399,12 +403,12 @@ export const SearchScreen = () => {
   const headerEl = (
     <View style={styles.headerContainer}>
       <View style={styles.searchBox}>
-        <Ionicons name="search" size={18} color="rgba(255,255,255,0.9)" />
+        <Ionicons name="search" size={18} color={COLORS.activeIcon} />
         <TextInput
           value={formik.values.search}
           onChangeText={(t) => formik.setFieldValue("search", t)}
           placeholder={SEARCH_PLACEHOLDERS[selectedSearchTarget]}
-          placeholderTextColor="rgba(255,255,255,0.4)"
+          placeholderTextColor={COLORS.white25}
           style={styles.searchInput}
           autoCorrect={false}
           autoCapitalize="none"
@@ -415,11 +419,7 @@ export const SearchScreen = () => {
             onPress={() => formik.setFieldValue("search", "")}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons
-              name="close-circle"
-              size={18}
-              color="rgba(255,255,255,0.6)"
-            />
+            <Ionicons name="close-circle" size={18} color={COLORS.mutedIcon} />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -464,7 +464,7 @@ export const SearchScreen = () => {
         </View>
       ) : isPostsTarget ? (
         <View style={styles.header}>
-          <Ionicons name="flame" size={24} color="#FF6B6B" />
+          <Ionicons name="flame" size={24} color={COLORS.unreadDot} />
           <Text style={typography.h3_white85}>Популярные посты</Text>
         </View>
       ) : (
@@ -483,17 +483,13 @@ export const SearchScreen = () => {
           <Text style={typography.body_white85}>
             {PERIOD_LABELS[selectedPeriod]}
           </Text>
-          <Ionicons
-            name="chevron-down"
-            size={20}
-            color="rgba(255,255,255,0.85)"
-          />
+          <Ionicons name="chevron-down" size={20} color={COLORS.white85} />
         </TouchableOpacity>
       ) : null}
 
       {isUpdating ? (
         <View style={styles.updatingRow}>
-          <ActivityIndicator size="small" color="rgba(255,255,255,0.65)" />
+          <ActivityIndicator size="small" color={COLORS.mutedIcon} />
         </View>
       ) : null}
     </View>
@@ -520,7 +516,7 @@ export const SearchScreen = () => {
       <RefreshControl
         refreshing={refreshing}
         onRefresh={onRefresh}
-        tintColor="#ffffff"
+        tintColor={COLORS.white100}
       />
     ),
     showsVerticalScrollIndicator: false,
@@ -637,16 +633,16 @@ const styles = StyleSheet.create({
     padding: 16,
   },
 
-  modalOptionActive: { backgroundColor: "rgba(255, 107, 107, 0.1)" },
+  modalOptionActive: { backgroundColor: COLORS.notificationUnreadBackground },
 
   modalOptionTextActive: {
-    color: "#FF6B6B",
+    color: COLORS.linkColor,
     fontSize: 16,
     fontWeight: "400",
   },
 
   modalOverlay: {
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: COLORS.modalOverlay,
     flex: 1,
     justifyContent: "center",
   },
@@ -676,13 +672,17 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 
-  searchError: { color: "#FF6B6B", fontSize: 13, marginTop: 8 },
+  searchError: {
+    color: COLORS.inputErrorBorderColor,
+    fontSize: 13,
+    marginTop: 8,
+  },
 
   searchInput: {
     backgroundColor: "transparent",
     borderColor: "transparent",
     borderWidth: 0,
-    color: "rgba(255,255,255,0.85)",
+    color: COLORS.white85,
     flex: 1,
     fontSize: 16,
     margin: 0,
@@ -708,24 +708,24 @@ const styles = StyleSheet.create({
   },
 
   searchTabIndicatorActive: {
-    backgroundColor: "#ffffff",
+    backgroundColor: COLORS.campusCyan,
   },
 
   searchTabText: {
-    color: "rgba(255,255,255,0.55)",
+    color: COLORS.mutedIcon,
     fontSize: 16,
     fontWeight: "400",
   },
 
   searchTabTextActive: {
-    color: "rgba(255,255,255,0.85)",
+    color: COLORS.white85,
     fontSize: 16,
     fontWeight: "400",
   },
 
   searchTabsRow: {
     alignItems: "flex-end",
-    borderBottomColor: "rgba(255,255,255,0.18)",
+    borderBottomColor: COLORS.surfaceBorder,
     borderBottomWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -743,7 +743,7 @@ const styles = StyleSheet.create({
 
   updatingText: {
     alignSelf: "center",
-    color: "rgba(255,255,255,0.55)",
+    color: COLORS.mutedIcon,
     fontSize: 13,
     marginTop: -6,
   },
