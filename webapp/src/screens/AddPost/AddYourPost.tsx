@@ -6,7 +6,6 @@ import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
-  ImageBackground,
   Modal,
   ScrollView,
   StyleSheet,
@@ -14,11 +13,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AddCommunityPostForm } from "../../components/forms/AddCommunityPostForm";
 import { AddPostForm } from "../../components/forms/AddPostForm";
 import { CreateCommunityForm } from "../../components/forms/CreateCommunityForm";
+import { AppScreen } from "../../components/layout/AppScreen";
 import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
 import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
@@ -109,187 +108,173 @@ export const AddPostScreen = () => {
   }, [composerMode, selectedPublisher.type, selectedCommunity]);
 
   return (
-    <ImageBackground
-      source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.backgroundImage}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.goBackWrapper}
-          >
-            <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
-            <Text style={typography.body_white85}>Назад</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.addDreamHeader}>
-          <Text style={typography.h2_white85}>{screenTitle}</Text>
-
-          <TouchableOpacity
-            style={styles.publisherSwitch}
-            onPress={() => setIsPublisherPickerOpen(true)}
-          >
-            {isLoading ? (
-              <ActivityIndicator color={COLORS.white85} size="small" />
-            ) : (
-              <>
-                <Image
-                  source={getAvatarSource(currentPublisherAvatar, "small")}
-                  style={styles.publisherAvatar}
-                />
-                <Text style={styles.publisherText} numberOfLines={1}>
-                  {currentPublisherLabel}
-                </Text>
-                <Ionicons
-                  name="chevron-down"
-                  size={18}
-                  color={COLORS.white85}
-                />
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView
-          style={styles.formScroll}
-          contentContainerStyle={styles.formScrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+    <AppScreen contentStyle={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.goBackWrapper}
         >
-          {composerMode === "createCommunity" ? (
-            <CreateCommunityForm
-              onCancel={() => setComposerMode("post")}
-              onCreated={(community) => {
-                setComposerMode("post");
-                setSelectedPublisher({
-                  type: "community",
-                  communityId: community.id,
-                });
-                void refetch();
-              }}
-            />
-          ) : selectedPublisher.type === "community" && selectedCommunity ? (
-            <AddCommunityPostForm
-              communityId={selectedCommunity.id}
-              communityName={selectedCommunity.name}
-              publisherName={actorName}
-            />
+          <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
+          <Text style={typography.body_white85}>Назад</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.addDreamHeader}>
+        <Text style={typography.h2_white85}>{screenTitle}</Text>
+
+        <TouchableOpacity
+          style={styles.publisherSwitch}
+          onPress={() => setIsPublisherPickerOpen(true)}
+        >
+          {isLoading ? (
+            <ActivityIndicator color={COLORS.white85} size="small" />
           ) : (
-            <AddPostForm />
+            <>
+              <Image
+                source={getAvatarSource(currentPublisherAvatar, "small")}
+                style={styles.publisherAvatar}
+              />
+              <Text style={styles.publisherText} numberOfLines={1}>
+                {currentPublisherLabel}
+              </Text>
+              <Ionicons name="chevron-down" size={18} color={COLORS.white85} />
+            </>
           )}
-        </ScrollView>
+        </TouchableOpacity>
+      </View>
 
-        <Modal
-          visible={isPublisherPickerOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setIsPublisherPickerOpen(false)}
+      <ScrollView
+        style={styles.formScroll}
+        contentContainerStyle={styles.formScrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {composerMode === "createCommunity" ? (
+          <CreateCommunityForm
+            onCancel={() => setComposerMode("post")}
+            onCreated={(community) => {
+              setComposerMode("post");
+              setSelectedPublisher({
+                type: "community",
+                communityId: community.id,
+              });
+              void refetch();
+            }}
+          />
+        ) : selectedPublisher.type === "community" && selectedCommunity ? (
+          <AddCommunityPostForm
+            communityId={selectedCommunity.id}
+            communityName={selectedCommunity.name}
+            publisherName={actorName}
+          />
+        ) : (
+          <AddPostForm />
+        )}
+      </ScrollView>
+
+      <Modal
+        visible={isPublisherPickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsPublisherPickerOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setIsPublisherPickerOpen(false)}
         >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setIsPublisherPickerOpen(false)}
-          >
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Публикация от лица</Text>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Публикация от лица</Text>
 
-              <TouchableOpacity
-                style={styles.publisherOption}
-                onPress={() => {
-                  setSelectedPublisher({ type: "user" });
-                  setComposerMode("post");
-                  setIsPublisherPickerOpen(false);
-                }}
-              >
-                <Image
-                  source={getAvatarSource(
-                    data?.me.avatar ?? me?.avatar,
-                    "small",
-                  )}
-                  style={styles.optionAvatar}
-                />
-                <View style={styles.optionTextWrap}>
-                  <Text style={styles.optionTitle} numberOfLines={1}>
-                    {data?.me.nickname || me?.nickname
-                      ? `@${data?.me.nickname ?? me?.nickname}`
-                      : "Личный профиль"}
-                  </Text>
-                  <Text style={styles.optionCaption}>Ваш профиль</Text>
-                </View>
-                {selectedPublisher.type === "user" ? (
-                  <Ionicons name="checkmark" size={18} color={COLORS.white85} />
-                ) : null}
-              </TouchableOpacity>
-
-              {managedCommunities.map((community) => {
-                const isSelected =
-                  selectedPublisher.type === "community" &&
-                  selectedPublisher.communityId === community.id;
-
-                return (
-                  <TouchableOpacity
-                    key={community.id}
-                    style={styles.publisherOption}
-                    onPress={() => {
-                      setSelectedPublisher({
-                        type: "community",
-                        communityId: community.id,
-                      });
-                      setComposerMode("post");
-                      setIsPublisherPickerOpen(false);
-                    }}
-                  >
-                    <Image
-                      source={getAvatarSource(community.avatar, "small")}
-                      style={styles.optionAvatar}
-                    />
-                    <View style={styles.optionTextWrap}>
-                      <Text style={styles.optionTitle} numberOfLines={1}>
-                        {community.name}
-                      </Text>
-                      <Text style={styles.optionCaption}>
-                        {community.role === "OWNER" ? "Владелец" : "Модератор"}
-                      </Text>
-                    </View>
-                    {isSelected ? (
-                      <Ionicons
-                        name="checkmark"
-                        size={18}
-                        color={COLORS.white85}
-                      />
-                    ) : null}
-                  </TouchableOpacity>
-                );
-              })}
-
-              <TouchableOpacity
-                style={styles.createCommunityOption}
-                onPress={() => {
-                  setComposerMode("createCommunity");
-                  setIsPublisherPickerOpen(false);
-                }}
-              >
-                <Ionicons
-                  name="add-circle-outline"
-                  size={18}
-                  color={COLORS.white85}
-                />
-                <Text style={styles.createCommunityText}>
-                  Создать сообщество
+            <TouchableOpacity
+              style={styles.publisherOption}
+              onPress={() => {
+                setSelectedPublisher({ type: "user" });
+                setComposerMode("post");
+                setIsPublisherPickerOpen(false);
+              }}
+            >
+              <Image
+                source={getAvatarSource(data?.me.avatar ?? me?.avatar, "small")}
+                style={styles.optionAvatar}
+              />
+              <View style={styles.optionTextWrap}>
+                <Text style={styles.optionTitle} numberOfLines={1}>
+                  {data?.me.nickname || me?.nickname
+                    ? `@${data?.me.nickname ?? me?.nickname}`
+                    : "Личный профиль"}
                 </Text>
-              </TouchableOpacity>
-
-              {error ? (
-                <Text style={styles.errorText}>{error.message}</Text>
+                <Text style={styles.optionCaption}>Ваш профиль</Text>
+              </View>
+              {selectedPublisher.type === "user" ? (
+                <Ionicons name="checkmark" size={18} color={COLORS.white85} />
               ) : null}
-            </View>
-          </TouchableOpacity>
-        </Modal>
-        <StatusBar style="auto" />
-      </SafeAreaView>
-    </ImageBackground>
+            </TouchableOpacity>
+
+            {managedCommunities.map((community) => {
+              const isSelected =
+                selectedPublisher.type === "community" &&
+                selectedPublisher.communityId === community.id;
+
+              return (
+                <TouchableOpacity
+                  key={community.id}
+                  style={styles.publisherOption}
+                  onPress={() => {
+                    setSelectedPublisher({
+                      type: "community",
+                      communityId: community.id,
+                    });
+                    setComposerMode("post");
+                    setIsPublisherPickerOpen(false);
+                  }}
+                >
+                  <Image
+                    source={getAvatarSource(community.avatar, "small")}
+                    style={styles.optionAvatar}
+                  />
+                  <View style={styles.optionTextWrap}>
+                    <Text style={styles.optionTitle} numberOfLines={1}>
+                      {community.name}
+                    </Text>
+                    <Text style={styles.optionCaption}>
+                      {community.role === "OWNER" ? "Владелец" : "Модератор"}
+                    </Text>
+                  </View>
+                  {isSelected ? (
+                    <Ionicons
+                      name="checkmark"
+                      size={18}
+                      color={COLORS.white85}
+                    />
+                  ) : null}
+                </TouchableOpacity>
+              );
+            })}
+
+            <TouchableOpacity
+              style={styles.createCommunityOption}
+              onPress={() => {
+                setComposerMode("createCommunity");
+                setIsPublisherPickerOpen(false);
+              }}
+            >
+              <Ionicons
+                name="add-circle-outline"
+                size={18}
+                color={COLORS.white85}
+              />
+              <Text style={styles.createCommunityText}>Создать сообщество</Text>
+            </TouchableOpacity>
+
+            {error ? (
+              <Text style={styles.errorText}>{error.message}</Text>
+            ) : null}
+          </View>
+        </TouchableOpacity>
+      </Modal>
+      <StatusBar style="auto" />
+    </AppScreen>
   );
 };
 
@@ -299,9 +284,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 30,
-  },
-  backgroundImage: {
-    flex: 1,
   },
   container: {
     flex: 1,

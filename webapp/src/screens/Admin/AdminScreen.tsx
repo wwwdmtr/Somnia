@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  ImageBackground,
   Modal,
   StyleSheet,
   Text,
@@ -14,8 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AppScreen } from "../../components/layout/AppScreen";
 import { AppButton } from "../../components/ui/AppButton";
 import ScreenName from "../../constants/ScreenName";
 import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
@@ -121,36 +120,7 @@ export const AdminScreen = () => {
 
   if (!isUserAdmin(me)) {
     return (
-      <ImageBackground
-        source={require("../../assets/backgrounds/application-bg.png")}
-        style={styles.backgroundImage}
-      >
-        <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
-          <View style={styles.headerContainer}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.goBackWrapper}
-            >
-              <Image
-                source={require("../../assets/Icons/navIcons/goBack.png")}
-              />
-              <Text style={typography.body_white85}>Назад</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={typography.body_white85}>
-            У вас нет доступа к этому экрану
-          </Text>
-        </SafeAreaView>
-      </ImageBackground>
-    );
-  }
-
-  return (
-    <ImageBackground
-      source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.backgroundImage}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
+      <AppScreen contentStyle={styles.safeArea}>
         <View style={styles.headerContainer}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -159,214 +129,227 @@ export const AdminScreen = () => {
             <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
             <Text style={typography.body_white85}>Назад</Text>
           </TouchableOpacity>
-          <Text style={typography.body_white85}>Админ Панель</Text>
         </View>
+        <Text style={typography.body_white85}>
+          У вас нет доступа к этому экрану
+        </Text>
+      </AppScreen>
+    );
+  }
 
-        <View style={styles.contentWrap}>
-          <TouchableOpacity
-            style={styles.adminOption}
-            onPress={() => {
-              setAdminSearch("");
-              setIsAdminsModalOpen(true);
-            }}
-          >
-            <Text style={typography.button}>Управление администраторами</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.adminOption}
-            onPress={() => navigation.navigate(ScreenName.DeletedPosts)}
-          >
-            <Text style={typography.button}>Посмотреть удаленные посты</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.adminOption}
-            onPress={() => navigation.navigate(ScreenName.AdminReports)}
-          >
-            <Text style={typography.button}>Посмотреть жалобы</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.adminOption}
-            onPress={() =>
-              navigation.navigate(ScreenName.AdminCommunityVerificationRequests)
-            }
-          >
-            <Text style={typography.button}>Заявки на верификацию</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Modal
-          visible={isAdminsModalOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setIsAdminsModalOpen(false)}
+  return (
+    <AppScreen contentStyle={styles.safeArea}>
+      <View style={styles.headerContainer}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.goBackWrapper}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Управление админами</Text>
-                <TouchableOpacity onPress={() => setIsAdminsModalOpen(false)}>
-                  <Text style={styles.closeText}>Закрыть</Text>
-                </TouchableOpacity>
-              </View>
+          <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
+          <Text style={typography.body_white85}>Назад</Text>
+        </TouchableOpacity>
+        <Text style={typography.body_white85}>Админ Панель</Text>
+      </View>
 
-              <View style={styles.modalScrollContent}>
-                {adminsListQuery.error ? (
-                  <Text style={styles.errorText}>
-                    {adminsListQuery.error.message}
-                  </Text>
-                ) : null}
-                {usersListQuery.error ? (
-                  <Text style={styles.errorText}>
-                    {usersListQuery.error.message}
-                  </Text>
-                ) : null}
+      <View style={styles.contentWrap}>
+        <TouchableOpacity
+          style={styles.adminOption}
+          onPress={() => {
+            setAdminSearch("");
+            setIsAdminsModalOpen(true);
+          }}
+        >
+          <Text style={typography.button}>Управление администраторами</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.adminOption}
+          onPress={() => navigation.navigate(ScreenName.DeletedPosts)}
+        >
+          <Text style={typography.button}>Посмотреть удаленные посты</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.adminOption}
+          onPress={() => navigation.navigate(ScreenName.AdminReports)}
+        >
+          <Text style={typography.button}>Посмотреть жалобы</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.adminOption}
+          onPress={() =>
+            navigation.navigate(ScreenName.AdminCommunityVerificationRequests)
+          }
+        >
+          <Text style={typography.button}>Заявки на верификацию</Text>
+        </TouchableOpacity>
+      </View>
 
-                <Text style={styles.sectionTitle}>Текущие администраторы</Text>
+      <Modal
+        visible={isAdminsModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsAdminsModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Управление админами</Text>
+              <TouchableOpacity onPress={() => setIsAdminsModalOpen(false)}>
+                <Text style={styles.closeText}>Закрыть</Text>
+              </TouchableOpacity>
+            </View>
 
-                {isInitialLoading ? (
-                  <View style={styles.modalLoadingWrap}>
-                    <ActivityIndicator color={COLORS.white85} />
-                  </View>
-                ) : admins.length === 0 ? (
-                  <Text style={styles.emptyText}>
-                    Администраторы не найдены
-                  </Text>
-                ) : (
-                  <FlatList
-                    data={admins}
-                    keyExtractor={(item) => item.id}
-                    showsVerticalScrollIndicator={false}
-                    style={styles.virtualList}
-                    onEndReachedThreshold={0.25}
-                    onEndReached={() => {
-                      if (
-                        !adminsListQuery.hasNextPage ||
-                        adminsListQuery.isFetchingNextPage
-                      ) {
-                        return;
-                      }
+            <View style={styles.modalScrollContent}>
+              {adminsListQuery.error ? (
+                <Text style={styles.errorText}>
+                  {adminsListQuery.error.message}
+                </Text>
+              ) : null}
+              {usersListQuery.error ? (
+                <Text style={styles.errorText}>
+                  {usersListQuery.error.message}
+                </Text>
+              ) : null}
 
-                      void adminsListQuery.fetchNextPage();
-                    }}
-                    renderItem={({ item: admin }) => (
-                      <View style={styles.userRow}>
-                        <View style={styles.userInfoWrap}>
-                          <Text style={styles.userName}>@{admin.nickname}</Text>
-                          <Text style={styles.userCaption}>
-                            {admin.isSuperAdmin
-                              ? "Супер-админ"
-                              : admin.name || "Без имени"}
-                          </Text>
-                        </View>
+              <Text style={styles.sectionTitle}>Текущие администраторы</Text>
 
-                        <AppButton
-                          title={
-                            setUserAdmin.isPending &&
-                            pendingAdminUserId === admin.id
-                              ? "Сохраняем..."
-                              : admin.isSuperAdmin
-                                ? "Защищено"
-                                : "Снять права"
-                          }
-                          onPress={() => handleToggleAdmin(admin.id, false)}
-                          disabled={
-                            setUserAdmin.isPending || admin.isSuperAdmin
-                          }
-                          style={styles.inlineDangerButton}
-                          TextStyle={styles.inlineDangerButtonText}
-                        />
-                      </View>
-                    )}
-                    ListFooterComponent={
-                      adminsListQuery.isFetchingNextPage ? (
-                        <View style={styles.listLoader}>
-                          <ActivityIndicator color={COLORS.white85} />
-                        </View>
-                      ) : null
+              {isInitialLoading ? (
+                <View style={styles.modalLoadingWrap}>
+                  <ActivityIndicator color={COLORS.white85} />
+                </View>
+              ) : admins.length === 0 ? (
+                <Text style={styles.emptyText}>Администраторы не найдены</Text>
+              ) : (
+                <FlatList
+                  data={admins}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  style={styles.virtualList}
+                  onEndReachedThreshold={0.25}
+                  onEndReached={() => {
+                    if (
+                      !adminsListQuery.hasNextPage ||
+                      adminsListQuery.isFetchingNextPage
+                    ) {
+                      return;
                     }
-                  />
-                )}
 
-                <View style={styles.divider} />
+                    void adminsListQuery.fetchNextPage();
+                  }}
+                  renderItem={({ item: admin }) => (
+                    <View style={styles.userRow}>
+                      <View style={styles.userInfoWrap}>
+                        <Text style={styles.userName}>@{admin.nickname}</Text>
+                        <Text style={styles.userCaption}>
+                          {admin.isSuperAdmin
+                            ? "Супер-админ"
+                            : admin.name || "Без имени"}
+                        </Text>
+                      </View>
 
-                <Text style={styles.sectionTitle}>Пользователи платформы</Text>
-
-                <TextInput
-                  placeholder="Поиск по никнейму или имени"
-                  placeholderTextColor={COLORS.white25}
-                  value={adminSearch}
-                  onChangeText={setAdminSearch}
-                  autoCapitalize="none"
-                  style={styles.searchInput}
+                      <AppButton
+                        title={
+                          setUserAdmin.isPending &&
+                          pendingAdminUserId === admin.id
+                            ? "Сохраняем..."
+                            : admin.isSuperAdmin
+                              ? "Защищено"
+                              : "Снять права"
+                        }
+                        onPress={() => handleToggleAdmin(admin.id, false)}
+                        disabled={setUserAdmin.isPending || admin.isSuperAdmin}
+                        style={styles.inlineDangerButton}
+                        TextStyle={styles.inlineDangerButtonText}
+                      />
+                    </View>
+                  )}
+                  ListFooterComponent={
+                    adminsListQuery.isFetchingNextPage ? (
+                      <View style={styles.listLoader}>
+                        <ActivityIndicator color={COLORS.white85} />
+                      </View>
+                    ) : null
+                  }
                 />
+              )}
 
-                {isInitialLoading ? (
-                  <View style={styles.modalLoadingWrap}>
-                    <ActivityIndicator color={COLORS.white85} />
-                  </View>
-                ) : users.length === 0 ? (
-                  <Text style={styles.emptyText}>
-                    {adminSearch.trim()
-                      ? "Пользователи не найдены"
-                      : "Нет пользователей для назначения"}
-                  </Text>
-                ) : (
-                  <FlatList
-                    data={users}
-                    keyExtractor={(item) => item.id}
-                    showsVerticalScrollIndicator={false}
-                    style={styles.virtualList}
-                    onEndReachedThreshold={0.25}
-                    onEndReached={() => {
-                      if (
-                        !usersListQuery.hasNextPage ||
-                        usersListQuery.isFetchingNextPage
-                      ) {
-                        return;
-                      }
+              <View style={styles.divider} />
 
-                      void usersListQuery.fetchNextPage();
-                    }}
-                    renderItem={({ item: user }) => (
-                      <View style={styles.userRow}>
-                        <View style={styles.userInfoWrap}>
-                          <Text style={styles.userName}>@{user.nickname}</Text>
-                          <Text style={styles.userCaption}>
-                            {user.name || "Без имени"}
-                          </Text>
-                        </View>
+              <Text style={styles.sectionTitle}>Пользователи платформы</Text>
 
-                        <AppButton
-                          title={
-                            setUserAdmin.isPending &&
-                            pendingAdminUserId === user.id
-                              ? "Сохраняем..."
-                              : user.isAdmin
-                                ? "Уже админ"
-                                : "Сделать админом"
-                          }
-                          onPress={() => handleToggleAdmin(user.id, true)}
-                          disabled={setUserAdmin.isPending || user.isAdmin}
-                          style={styles.inlineActionButton}
-                          TextStyle={styles.inlineActionButtonText}
-                        />
-                      </View>
-                    )}
-                    ListFooterComponent={
-                      usersListQuery.isFetchingNextPage ? (
-                        <View style={styles.listLoader}>
-                          <ActivityIndicator color={COLORS.white85} />
-                        </View>
-                      ) : null
+              <TextInput
+                placeholder="Поиск по никнейму или имени"
+                placeholderTextColor={COLORS.white25}
+                value={adminSearch}
+                onChangeText={setAdminSearch}
+                autoCapitalize="none"
+                style={styles.searchInput}
+              />
+
+              {isInitialLoading ? (
+                <View style={styles.modalLoadingWrap}>
+                  <ActivityIndicator color={COLORS.white85} />
+                </View>
+              ) : users.length === 0 ? (
+                <Text style={styles.emptyText}>
+                  {adminSearch.trim()
+                    ? "Пользователи не найдены"
+                    : "Нет пользователей для назначения"}
+                </Text>
+              ) : (
+                <FlatList
+                  data={users}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  style={styles.virtualList}
+                  onEndReachedThreshold={0.25}
+                  onEndReached={() => {
+                    if (
+                      !usersListQuery.hasNextPage ||
+                      usersListQuery.isFetchingNextPage
+                    ) {
+                      return;
                     }
-                  />
-                )}
-              </View>
+
+                    void usersListQuery.fetchNextPage();
+                  }}
+                  renderItem={({ item: user }) => (
+                    <View style={styles.userRow}>
+                      <View style={styles.userInfoWrap}>
+                        <Text style={styles.userName}>@{user.nickname}</Text>
+                        <Text style={styles.userCaption}>
+                          {user.name || "Без имени"}
+                        </Text>
+                      </View>
+
+                      <AppButton
+                        title={
+                          setUserAdmin.isPending &&
+                          pendingAdminUserId === user.id
+                            ? "Сохраняем..."
+                            : user.isAdmin
+                              ? "Уже админ"
+                              : "Сделать админом"
+                        }
+                        onPress={() => handleToggleAdmin(user.id, true)}
+                        disabled={setUserAdmin.isPending || user.isAdmin}
+                        style={styles.inlineActionButton}
+                        TextStyle={styles.inlineActionButtonText}
+                      />
+                    </View>
+                  )}
+                  ListFooterComponent={
+                    usersListQuery.isFetchingNextPage ? (
+                      <View style={styles.listLoader}>
+                        <ActivityIndicator color={COLORS.white85} />
+                      </View>
+                    ) : null
+                  }
+                />
+              )}
             </View>
           </View>
-        </Modal>
-      </SafeAreaView>
-    </ImageBackground>
+        </View>
+      </Modal>
+    </AppScreen>
   );
 };
 
@@ -379,9 +362,6 @@ const styles = StyleSheet.create({
     height: 64,
     justifyContent: "center",
     marginBottom: 8,
-  },
-  backgroundImage: {
-    flex: 1,
   },
   closeText: {
     color: COLORS.white25,

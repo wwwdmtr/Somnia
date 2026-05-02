@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  ImageBackground,
   Modal,
   RefreshControl,
   StyleSheet,
@@ -16,8 +15,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AppScreen } from "../../components/layout/AppScreen";
 import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { ReportModal } from "../../components/ui/ReportModal";
@@ -408,116 +407,108 @@ export const CommunityScreen = () => {
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.backgroundImage}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
-        <FlatList
-          data={posts}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <PostCard
-              post={item}
-              onOpenPost={handleOpenPost}
-              onToggleLike={toggleLike}
-              onOpenImageViewer={openImageViewer}
-              onOpenCommunity={handleOpenCommunity}
-              onOpenUser={handleOpenProfile}
-            />
-          )}
-          ListHeaderComponent={header}
-          ListEmptyComponent={renderEmpty}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={COLORS.white85}
-            />
+    <AppScreen contentStyle={styles.container}>
+      <FlatList
+        data={posts}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <PostCard
+            post={item}
+            onOpenPost={handleOpenPost}
+            onToggleLike={toggleLike}
+            onOpenImageViewer={openImageViewer}
+            onOpenCommunity={handleOpenCommunity}
+            onOpenUser={handleOpenProfile}
+          />
+        )}
+        ListHeaderComponent={header}
+        ListEmptyComponent={renderEmpty}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.white85}
+          />
+        }
+        onEndReached={() => {
+          if (!postsQuery.hasNextPage || postsQuery.isFetchingNextPage) {
+            return;
           }
-          onEndReached={() => {
-            if (!postsQuery.hasNextPage || postsQuery.isFetchingNextPage) {
-              return;
-            }
 
-            postsQuery.fetchNextPage();
-          }}
-          onEndReachedThreshold={0.2}
-        />
+          postsQuery.fetchNextPage();
+        }}
+        onEndReachedThreshold={0.2}
+      />
 
-        <PostImageViewerModal
-          visible={imageViewerState.isOpen}
-          imagePublicIds={imageViewerState.images}
-          initialIndex={imageViewerState.index}
-          onClose={() =>
-            setImageViewerState((prev) => ({
-              ...prev,
-              isOpen: false,
-            }))
-          }
-        />
-        <Modal
-          visible={isActionsMenuOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setIsActionsMenuOpen(false)}
-        >
-          <View style={styles.sideMenuOverlay}>
-            <TouchableOpacity
-              style={styles.sideMenuBackdrop}
-              onPress={() => setIsActionsMenuOpen(false)}
-            />
-            <View style={styles.sideMenuShell}>
-              <View style={styles.sideMenuContent}>
+      <PostImageViewerModal
+        visible={imageViewerState.isOpen}
+        imagePublicIds={imageViewerState.images}
+        initialIndex={imageViewerState.index}
+        onClose={() =>
+          setImageViewerState((prev) => ({
+            ...prev,
+            isOpen: false,
+          }))
+        }
+      />
+      <Modal
+        visible={isActionsMenuOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsActionsMenuOpen(false)}
+      >
+        <View style={styles.sideMenuOverlay}>
+          <TouchableOpacity
+            style={styles.sideMenuBackdrop}
+            onPress={() => setIsActionsMenuOpen(false)}
+          />
+          <View style={styles.sideMenuShell}>
+            <View style={styles.sideMenuContent}>
+              <TouchableOpacity
+                style={styles.sideMenuButton}
+                disabled={setUserContentBlock.isPending}
+                onPress={() => {
+                  void handleToggleCommunityBlock();
+                }}
+              >
+                <Text style={typography.body_white85}>
+                  {community.isBlockedByMe
+                    ? "Разблокировать сообщество"
+                    : "Заблокировать сообщество"}
+                </Text>
+              </TouchableOpacity>
+              {canReportCommunity ? (
                 <TouchableOpacity
                   style={styles.sideMenuButton}
-                  disabled={setUserContentBlock.isPending}
                   onPress={() => {
-                    void handleToggleCommunityBlock();
+                    setIsActionsMenuOpen(false);
+                    setIsReportModalOpen(true);
                   }}
                 >
-                  <Text style={typography.body_white85}>
-                    {community.isBlockedByMe
-                      ? "Разблокировать сообщество"
-                      : "Заблокировать сообщество"}
-                  </Text>
+                  <Text style={typography.body_white85}>Пожаловаться</Text>
                 </TouchableOpacity>
-                {canReportCommunity ? (
-                  <TouchableOpacity
-                    style={styles.sideMenuButton}
-                    onPress={() => {
-                      setIsActionsMenuOpen(false);
-                      setIsReportModalOpen(true);
-                    }}
-                  >
-                    <Text style={typography.body_white85}>Пожаловаться</Text>
-                  </TouchableOpacity>
-                ) : null}
-              </View>
+              ) : null}
             </View>
           </View>
-        </Modal>
-        <ReportModal
-          visible={isReportModalOpen}
-          title="Жалоба на сообщество"
-          isSubmitting={createReport.isPending}
-          onClose={() => setIsReportModalOpen(false)}
-          onSubmit={(description) => {
-            void handleSubmitCommunityReport(description);
-          }}
-        />
-        <StatusBar style="auto" />
-      </SafeAreaView>
-    </ImageBackground>
+        </View>
+      </Modal>
+      <ReportModal
+        visible={isReportModalOpen}
+        title="Жалоба на сообщество"
+        isSubmitting={createReport.isPending}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmit={(description) => {
+          void handleSubmitCommunityReport(description);
+        }}
+      />
+      <StatusBar style="auto" />
+    </AppScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-  },
   centered: {
     alignItems: "center",
     flex: 1,

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 import { Ionicons } from "@expo/vector-icons";
 import {
   CompositeNavigationProp,
@@ -8,15 +7,14 @@ import { format } from "date-fns";
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  ImageBackground,
   SectionList,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AppScreen } from "../../components/layout/AppScreen";
 import ScreenName from "../../constants/ScreenName";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
@@ -281,100 +279,92 @@ export const NotificationsScreen = () => {
   }
 
   return (
-    <ImageBackground
-      source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.background}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleGoBack} style={styles.iconButton}>
-            <Ionicons name="chevron-back" size={20} color={COLORS.white85} />
-          </TouchableOpacity>
-          <Text style={typography.h4_white_85}>Уведомления</Text>
-          <View style={styles.headerSpacer} />
-        </View>
+    <AppScreen contentStyle={styles.safeArea}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleGoBack} style={styles.iconButton}>
+          <Ionicons name="chevron-back" size={20} color={COLORS.white85} />
+        </TouchableOpacity>
+        <Text style={typography.h4_white_85}>Уведомления</Text>
+        <View style={styles.headerSpacer} />
+      </View>
 
-        {notifications.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={typography.body_white85}>Пока уведомлений нет</Text>
-          </View>
-        ) : (
-          <SectionList
-            sections={sections}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            refreshing={isPullRefreshing}
-            onRefresh={handleRefresh}
-            onEndReached={() => {
-              if (!hasNextPage || isFetchingNextPage) {
-                return;
-              }
-              fetchNextPage();
-            }}
-            onEndReachedThreshold={0.2}
-            renderSectionHeader={({ section }) => (
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-            )}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => handleOpenNotification(item)}
-                style={[
-                  styles.card,
-                  !item.readAt ? styles.cardUnread : styles.cardRead,
-                ]}
-              >
-                <Text style={typography.body_white85}>
-                  {getNotificationText(item)}
-                </Text>
-                {item.post ? (
-                  <Text style={typography.caption_white85} numberOfLines={1}>
-                    Пост: {item.post.title}
-                  </Text>
-                ) : item.type === "COMMUNITY_BLACKLISTED" ? (
-                  <Text style={typography.caption_white85} numberOfLines={1}>
-                    Ограничение уже применено
-                  </Text>
-                ) : item.type === "COMMUNITY_UNBLACKLISTED" ? (
-                  <Text style={typography.caption_white85} numberOfLines={1}>
-                    Нажмите, чтобы открыть сообщество
-                  </Text>
-                ) : item.type === "ADMIN_NEW_REPORT" ? (
-                  <Text style={typography.caption_white85} numberOfLines={1}>
-                    Нажмите, чтобы открыть жалобы
-                  </Text>
-                ) : item.type === "ADMIN_NEW_COMMUNITY_VERIFICATION_REQUEST" ? (
-                  <Text style={typography.caption_white85} numberOfLines={1}>
-                    Нажмите, чтобы открыть заявки на верификацию
-                  </Text>
-                ) : (
-                  <Text style={typography.caption_white85} numberOfLines={1}>
-                    Нажмите, чтобы открыть профиль
-                  </Text>
-                )}
-                <Text style={typography.additionalInfo_white25}>
-                  {format(new Date(item.createdAt), "dd.MM.yyyy HH:mm")}
-                </Text>
-              </TouchableOpacity>
-            )}
-            ListFooterComponent={
-              isFetchingNextPage ? (
-                <View style={styles.footerLoader}>
-                  <ActivityIndicator color={COLORS.white100} />
-                </View>
-              ) : null
+      {notifications.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={typography.body_white85}>Пока уведомлений нет</Text>
+        </View>
+      ) : (
+        <SectionList
+          sections={sections}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          refreshing={isPullRefreshing}
+          onRefresh={handleRefresh}
+          onEndReached={() => {
+            if (!hasNextPage || isFetchingNextPage) {
+              return;
             }
-          />
-        )}
-      </SafeAreaView>
-    </ImageBackground>
+            fetchNextPage();
+          }}
+          onEndReachedThreshold={0.2}
+          renderSectionHeader={({ section }) => (
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+          )}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => handleOpenNotification(item)}
+              style={[
+                styles.card,
+                !item.readAt ? styles.cardUnread : styles.cardRead,
+              ]}
+            >
+              <Text style={typography.body_white85}>
+                {getNotificationText(item)}
+              </Text>
+              {item.post ? (
+                <Text style={typography.caption_white85} numberOfLines={1}>
+                  Пост: {item.post.title}
+                </Text>
+              ) : item.type === "COMMUNITY_BLACKLISTED" ? (
+                <Text style={typography.caption_white85} numberOfLines={1}>
+                  Ограничение уже применено
+                </Text>
+              ) : item.type === "COMMUNITY_UNBLACKLISTED" ? (
+                <Text style={typography.caption_white85} numberOfLines={1}>
+                  Нажмите, чтобы открыть сообщество
+                </Text>
+              ) : item.type === "ADMIN_NEW_REPORT" ? (
+                <Text style={typography.caption_white85} numberOfLines={1}>
+                  Нажмите, чтобы открыть жалобы
+                </Text>
+              ) : item.type === "ADMIN_NEW_COMMUNITY_VERIFICATION_REQUEST" ? (
+                <Text style={typography.caption_white85} numberOfLines={1}>
+                  Нажмите, чтобы открыть заявки на верификацию
+                </Text>
+              ) : (
+                <Text style={typography.caption_white85} numberOfLines={1}>
+                  Нажмите, чтобы открыть профиль
+                </Text>
+              )}
+              <Text style={typography.additionalInfo_white25}>
+                {format(new Date(item.createdAt), "dd.MM.yyyy HH:mm")}
+              </Text>
+            </TouchableOpacity>
+          )}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={styles.footerLoader}>
+                <ActivityIndicator color={COLORS.white100} />
+              </View>
+            ) : null
+          }
+        />
+      )}
+    </AppScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
   card: {
     borderRadius: 20,
     gap: 4,

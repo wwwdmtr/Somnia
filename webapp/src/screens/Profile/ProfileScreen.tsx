@@ -15,7 +15,6 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  ImageBackground,
   Modal,
   RefreshControl,
   StyleSheet,
@@ -23,8 +22,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AppScreen } from "../../components/layout/AppScreen";
 import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { ReportModal } from "../../components/ui/ReportModal";
@@ -457,116 +456,111 @@ export const ProfileScreen = () => {
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.backgroundImage}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
-        <FlatList
-          data={posts}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          ListHeaderComponent={renderHeader}
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Text style={typography.body_white85}>
-                У пользователя пока нет постов
-              </Text>
+    <AppScreen contentStyle={styles.safeArea}>
+      <FlatList
+        data={posts}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={typography.body_white85}>
+              У пользователя пока нет постов
+            </Text>
+          </View>
+        }
+        ListFooterComponent={
+          postsQuery.isFetchingNextPage ? (
+            <View style={styles.footerLoader}>
+              <ActivityIndicator color={COLORS.white85} />
             </View>
+          ) : null
+        }
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#ffffff"
+          />
+        }
+        onEndReached={() => {
+          if (!postsQuery.hasNextPage || postsQuery.isFetchingNextPage) {
+            return;
           }
-          ListFooterComponent={
-            postsQuery.isFetchingNextPage ? (
-              <View style={styles.footerLoader}>
-                <ActivityIndicator color={COLORS.white85} />
-              </View>
-            ) : null
-          }
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor="#ffffff"
-            />
-          }
-          onEndReached={() => {
-            if (!postsQuery.hasNextPage || postsQuery.isFetchingNextPage) {
-              return;
-            }
 
-            postsQuery.fetchNextPage();
-          }}
-          onEndReachedThreshold={0.2}
-        />
+          postsQuery.fetchNextPage();
+        }}
+        onEndReachedThreshold={0.2}
+      />
 
-        <Modal
-          visible={isActionsMenuOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setIsActionsMenuOpen(false)}
-        >
-          <View style={styles.sideMenuOverlay}>
-            <TouchableOpacity
-              style={styles.sideMenuBackdrop}
-              onPress={() => setIsActionsMenuOpen(false)}
-            />
-            <View style={styles.sideMenuShell}>
-              <View style={styles.sideMenuContent}>
-                {!profile.isMe ? (
-                  <TouchableOpacity
-                    style={styles.sideMenuButton}
-                    disabled={setUserContentBlock.isPending}
-                    onPress={() => {
-                      void handleToggleUserBlock();
-                    }}
-                  >
-                    <Text style={typography.body_white85}>
-                      {profile.isBlockedByMe
-                        ? "Разблокировать пользователя"
-                        : "Заблокировать пользователя"}
-                    </Text>
-                  </TouchableOpacity>
-                ) : null}
-                {!profile.isMe && profile.canReportByMe ? (
-                  <TouchableOpacity
-                    style={styles.sideMenuButton}
-                    onPress={() => {
-                      setIsActionsMenuOpen(false);
-                      setIsReportModalOpen(true);
-                    }}
-                  >
-                    <Text style={typography.body_white85}>Пожаловаться</Text>
-                  </TouchableOpacity>
-                ) : null}
-              </View>
+      <Modal
+        visible={isActionsMenuOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsActionsMenuOpen(false)}
+      >
+        <View style={styles.sideMenuOverlay}>
+          <TouchableOpacity
+            style={styles.sideMenuBackdrop}
+            onPress={() => setIsActionsMenuOpen(false)}
+          />
+          <View style={styles.sideMenuShell}>
+            <View style={styles.sideMenuContent}>
+              {!profile.isMe ? (
+                <TouchableOpacity
+                  style={styles.sideMenuButton}
+                  disabled={setUserContentBlock.isPending}
+                  onPress={() => {
+                    void handleToggleUserBlock();
+                  }}
+                >
+                  <Text style={typography.body_white85}>
+                    {profile.isBlockedByMe
+                      ? "Разблокировать пользователя"
+                      : "Заблокировать пользователя"}
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
+              {!profile.isMe && profile.canReportByMe ? (
+                <TouchableOpacity
+                  style={styles.sideMenuButton}
+                  onPress={() => {
+                    setIsActionsMenuOpen(false);
+                    setIsReportModalOpen(true);
+                  }}
+                >
+                  <Text style={typography.body_white85}>Пожаловаться</Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
           </View>
-        </Modal>
+        </View>
+      </Modal>
 
-        <ReportModal
-          visible={isReportModalOpen}
-          title="Жалоба на пользователя"
-          isSubmitting={createReport.isPending}
-          onClose={() => setIsReportModalOpen(false)}
-          onSubmit={(description) => {
-            void handleSubmitUserReport(description);
-          }}
-        />
+      <ReportModal
+        visible={isReportModalOpen}
+        title="Жалоба на пользователя"
+        isSubmitting={createReport.isPending}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmit={(description) => {
+          void handleSubmitUserReport(description);
+        }}
+      />
 
-        <PostImageViewerModal
-          visible={imageViewerState.isOpen}
-          imagePublicIds={imageViewerState.images}
-          initialIndex={imageViewerState.index}
-          onClose={() =>
-            setImageViewerState((prev) => ({
-              ...prev,
-              isOpen: false,
-            }))
-          }
-        />
-      </SafeAreaView>
-    </ImageBackground>
+      <PostImageViewerModal
+        visible={imageViewerState.isOpen}
+        imagePublicIds={imageViewerState.images}
+        initialIndex={imageViewerState.index}
+        onClose={() =>
+          setImageViewerState((prev) => ({
+            ...prev,
+            isOpen: false,
+          }))
+        }
+      />
+    </AppScreen>
   );
 };
 
@@ -593,9 +587,6 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     height: 100,
     width: 100,
-  },
-  backgroundImage: {
-    flex: 1,
   },
   centered: {
     alignItems: "center",

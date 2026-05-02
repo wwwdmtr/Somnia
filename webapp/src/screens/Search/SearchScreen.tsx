@@ -1,6 +1,5 @@
 /* eslint-disable react-native/no-unused-styles */
 /* eslint-disable react-native/no-color-literals */
-/* eslint-disable @typescript-eslint/no-require-imports */
 
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -12,7 +11,6 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  ImageBackground,
   Modal,
   RefreshControl,
   StyleSheet,
@@ -21,9 +19,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { AppScreen } from "../../components/layout/AppScreen";
 import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { getAvatarSource } from "../../lib/avatar";
@@ -529,68 +527,61 @@ export const SearchScreen = () => {
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.backgroundImage}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
-        {isInitialLoading ? (
-          <View style={styles.centered}>
-            <Text style={typography.body_white85}>Загрузка...</Text>
-            <StatusBar style="auto" />
-          </View>
-        ) : isPostsTarget ? (
-          <FlatList
-            {...commonProps}
-            data={posts}
-            key="posts"
-            keyExtractor={(item) => item.id}
-            renderItem={renderPostItem}
-            onEndReached={() => {
-              if (!postsQuery.hasNextPage || postsQuery.isFetchingNextPage) {
-                return;
-              }
+    <AppScreen contentStyle={styles.safeArea}>
+      {isInitialLoading ? (
+        <View style={styles.centered}>
+          <Text style={typography.body_white85}>Загрузка...</Text>
+          <StatusBar style="auto" />
+        </View>
+      ) : isPostsTarget ? (
+        <FlatList
+          {...commonProps}
+          data={posts}
+          key="posts"
+          keyExtractor={(item) => item.id}
+          renderItem={renderPostItem}
+          onEndReached={() => {
+            if (!postsQuery.hasNextPage || postsQuery.isFetchingNextPage) {
+              return;
+            }
 
-              postsQuery.fetchNextPage();
-            }}
-            onEndReachedThreshold={0.15}
-          />
-        ) : isUsersTarget ? (
-          <FlatList
-            {...commonProps}
-            data={users}
-            key="users"
-            keyExtractor={(item) => item.id}
-            renderItem={renderUserItem}
-          />
-        ) : (
-          <FlatList
-            {...commonProps}
-            data={communities}
-            key="communities"
-            keyExtractor={(item) => item.id}
-            renderItem={renderCommunityItem}
-          />
-        )}
-
-        <PostImageViewerModal
-          visible={imageViewerState.isOpen}
-          imagePublicIds={imageViewerState.images}
-          initialIndex={imageViewerState.index}
-          onClose={() =>
-            setImageViewerState((prev) => ({ ...prev, isOpen: false }))
-          }
+            postsQuery.fetchNextPage();
+          }}
+          onEndReachedThreshold={0.15}
         />
-      </SafeAreaView>
+      ) : isUsersTarget ? (
+        <FlatList
+          {...commonProps}
+          data={users}
+          key="users"
+          keyExtractor={(item) => item.id}
+          renderItem={renderUserItem}
+        />
+      ) : (
+        <FlatList
+          {...commonProps}
+          data={communities}
+          key="communities"
+          keyExtractor={(item) => item.id}
+          renderItem={renderCommunityItem}
+        />
+      )}
+
+      <PostImageViewerModal
+        visible={imageViewerState.isOpen}
+        imagePublicIds={imageViewerState.images}
+        initialIndex={imageViewerState.index}
+        onClose={() =>
+          setImageViewerState((prev) => ({ ...prev, isOpen: false }))
+        }
+      />
 
       {isPostsTarget && !isSearchMode ? renderPeriodModal() : null}
-    </ImageBackground>
+    </AppScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  backgroundImage: { flex: 1 },
-
   centered: { alignItems: "center", flex: 1, justifyContent: "center" },
 
   emptyContainer: { alignItems: "center", marginTop: 32 },

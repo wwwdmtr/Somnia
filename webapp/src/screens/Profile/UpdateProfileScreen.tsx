@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   FlatList,
   StyleSheet,
-  ImageBackground,
   Modal,
   Platform,
   TouchableOpacity,
@@ -17,11 +16,11 @@ import {
   Image,
   ScrollView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AvatarUploader } from "../../components/forms/AvatarUploader";
 import { UpdatePasswordForm } from "../../components/forms/UpdatePasswordForm";
 import { UpdateProfileForm } from "../../components/forms/UpdateProfileForm";
+import { AppScreen } from "../../components/layout/AppScreen";
 import { AppButton } from "../../components/ui/AppButton";
 import ScreenName from "../../constants/ScreenName";
 import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
@@ -132,245 +131,231 @@ export const UpdateProfileScreen = () => {
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.BackgroundImage}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.goBackWrapper}
-            >
-              <Image
-                source={require("../../assets/Icons/navIcons/goBack.png")}
-              />
-              <Text style={typography.body_white85}>Назад</Text>
-            </TouchableOpacity>
-          </View>
+    <AppScreen contentStyle={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.goBackWrapper}
+          >
+            <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
+            <Text style={typography.body_white85}>Назад</Text>
+          </TouchableOpacity>
+        </View>
 
-          <View style={styles.name_settings_card}>
-            <Text style={typography.h4_white_85}>Имя профиля</Text>
-            <UpdateProfileForm />
-          </View>
+        <View style={styles.name_settings_card}>
+          <Text style={typography.h4_white_85}>Имя профиля</Text>
+          <UpdateProfileForm />
+        </View>
 
-          <View style={styles.name_settings_card}>
-            <Text style={typography.h4_white_85}>Аватарка</Text>
-            <AvatarUploader />
-          </View>
+        <View style={styles.name_settings_card}>
+          <Text style={typography.h4_white_85}>Аватарка</Text>
+          <AvatarUploader />
+        </View>
 
-          <View style={styles.name_settings_card}>
-            <Text style={typography.h4_white_85}>Изменение пароля</Text>
-            <UpdatePasswordForm />
-          </View>
+        <View style={styles.name_settings_card}>
+          <Text style={typography.h4_white_85}>Изменение пароля</Text>
+          <UpdatePasswordForm />
+        </View>
 
-          <View style={styles.name_settings_card}>
-            <Text style={typography.h4_white_85}>Управление блокировками</Text>
-            <AppButton
-              title="Посмотреть заблокированных"
-              style={styles.viewBlockedButton}
-              onPress={() => {
-                setBlockedSearch("");
-                setIsBlockedModalOpen(true);
-              }}
-            />
-          </View>
-
+        <View style={styles.name_settings_card}>
+          <Text style={typography.h4_white_85}>Управление блокировками</Text>
           <AppButton
-            title="Выйти из профиля"
-            onPress={() => navigation.navigate(ScreenName.SignOut)}
-            style={styles.signOutButton}
+            title="Посмотреть заблокированных"
+            style={styles.viewBlockedButton}
+            onPress={() => {
+              setBlockedSearch("");
+              setIsBlockedModalOpen(true);
+            }}
           />
-        </ScrollView>
+        </View>
 
-        <Modal
-          visible={isBlockedModalOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setIsBlockedModalOpen(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Управление блокировками</Text>
-                <TouchableOpacity onPress={() => setIsBlockedModalOpen(false)}>
-                  <Text style={styles.closeText}>Закрыть</Text>
-                </TouchableOpacity>
-              </View>
+        <AppButton
+          title="Выйти из профиля"
+          onPress={() => navigation.navigate(ScreenName.SignOut)}
+          style={styles.signOutButton}
+        />
+      </ScrollView>
 
-              <TextInput
-                value={blockedSearch}
-                onChangeText={setBlockedSearch}
-                placeholder="Поиск"
-                placeholderTextColor={COLORS.white25}
-                style={styles.searchInput}
-              />
-
-              {blockedUsersQuery.error ? (
-                <Text style={styles.errorText}>
-                  {blockedUsersQuery.error.message}
-                </Text>
-              ) : null}
-              {blockedCommunitiesQuery.error ? (
-                <Text style={styles.errorText}>
-                  {blockedCommunitiesQuery.error.message}
-                </Text>
-              ) : null}
-
-              <Text style={styles.sectionTitle}>
-                Заблокированные сообщества
-              </Text>
-
-              {isBlockedCommunitiesInitialLoading ? (
-                <View style={styles.modalLoadingWrap}>
-                  <ActivityIndicator color={COLORS.white85} />
-                </View>
-              ) : blockedCommunities.length === 0 ? (
-                <Text style={styles.emptyText}>Список пуст</Text>
-              ) : (
-                <FlatList
-                  data={blockedCommunities}
-                  keyExtractor={(item) => item.id}
-                  showsVerticalScrollIndicator={false}
-                  style={styles.virtualList}
-                  onEndReachedThreshold={0.25}
-                  onEndReached={() => {
-                    if (
-                      !blockedCommunitiesQuery.hasNextPage ||
-                      blockedCommunitiesQuery.isFetchingNextPage
-                    ) {
-                      return;
-                    }
-                    void blockedCommunitiesQuery.fetchNextPage();
-                  }}
-                  renderItem={({ item }) => (
-                    <View style={styles.userRow}>
-                      <View style={styles.userInfoWrap}>
-                        <Text style={styles.userName}>
-                          {item.community.name}
-                        </Text>
-                        <Text style={styles.userCaption}>
-                          {item.community.description || "Без описания"}
-                        </Text>
-                        <Text style={styles.blockedAtText}>
-                          Заблокировано:{" "}
-                          {new Date(item.createdAt).toLocaleString("ru-RU")}
-                        </Text>
-                      </View>
-
-                      <AppButton
-                        title={
-                          setUserContentBlock.isPending &&
-                          pendingBlockedCommunityId === item.community.id
-                            ? "Сохраняем..."
-                            : "Разблокировать"
-                        }
-                        onPress={() => {
-                          void handleUnblockCommunity(item.community.id);
-                        }}
-                        disabled={setUserContentBlock.isPending}
-                        style={styles.inlineActionButton}
-                        TextStyle={styles.inlineActionButtonText}
-                      />
-                    </View>
-                  )}
-                  ListFooterComponent={
-                    blockedCommunitiesQuery.isFetchingNextPage ? (
-                      <View style={styles.listLoader}>
-                        <ActivityIndicator color={COLORS.white85} />
-                      </View>
-                    ) : null
-                  }
-                  windowSize={8}
-                  initialNumToRender={8}
-                  maxToRenderPerBatch={10}
-                  removeClippedSubviews
-                />
-              )}
-
-              <Text style={styles.sectionTitle}>
-                Заблокированные пользователи
-              </Text>
-
-              {isBlockedUsersInitialLoading ? (
-                <View style={styles.modalLoadingWrap}>
-                  <ActivityIndicator color={COLORS.white85} />
-                </View>
-              ) : blockedUsers.length === 0 ? (
-                <Text style={styles.emptyText}>Список пуст</Text>
-              ) : (
-                <FlatList
-                  data={blockedUsers}
-                  keyExtractor={(item) => item.id}
-                  showsVerticalScrollIndicator={false}
-                  style={styles.virtualList}
-                  onEndReachedThreshold={0.25}
-                  onEndReached={() => {
-                    if (
-                      !blockedUsersQuery.hasNextPage ||
-                      blockedUsersQuery.isFetchingNextPage
-                    ) {
-                      return;
-                    }
-                    void blockedUsersQuery.fetchNextPage();
-                  }}
-                  renderItem={({ item }) => (
-                    <View style={styles.userRow}>
-                      <View style={styles.userInfoWrap}>
-                        <Text style={styles.userName}>
-                          @{item.blockedUser.nickname}
-                        </Text>
-                        <Text style={styles.userCaption}>
-                          {item.blockedUser.name || "Без имени"}
-                        </Text>
-                        <Text style={styles.blockedAtText}>
-                          Заблокирован:{" "}
-                          {new Date(item.createdAt).toLocaleString("ru-RU")}
-                        </Text>
-                      </View>
-
-                      <AppButton
-                        title={
-                          setUserContentBlock.isPending &&
-                          pendingBlockedUserId === item.blockedUser.id
-                            ? "Сохраняем..."
-                            : "Разблокировать"
-                        }
-                        onPress={() => {
-                          void handleUnblockUser(item.blockedUser.id);
-                        }}
-                        disabled={setUserContentBlock.isPending}
-                        style={styles.inlineActionButton}
-                        TextStyle={styles.inlineActionButtonText}
-                      />
-                    </View>
-                  )}
-                  ListFooterComponent={
-                    blockedUsersQuery.isFetchingNextPage ? (
-                      <View style={styles.listLoader}>
-                        <ActivityIndicator color={COLORS.white85} />
-                      </View>
-                    ) : null
-                  }
-                  windowSize={8}
-                  initialNumToRender={8}
-                  maxToRenderPerBatch={10}
-                  removeClippedSubviews
-                />
-              )}
+      <Modal
+        visible={isBlockedModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsBlockedModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Управление блокировками</Text>
+              <TouchableOpacity onPress={() => setIsBlockedModalOpen(false)}>
+                <Text style={styles.closeText}>Закрыть</Text>
+              </TouchableOpacity>
             </View>
+
+            <TextInput
+              value={blockedSearch}
+              onChangeText={setBlockedSearch}
+              placeholder="Поиск"
+              placeholderTextColor={COLORS.white25}
+              style={styles.searchInput}
+            />
+
+            {blockedUsersQuery.error ? (
+              <Text style={styles.errorText}>
+                {blockedUsersQuery.error.message}
+              </Text>
+            ) : null}
+            {blockedCommunitiesQuery.error ? (
+              <Text style={styles.errorText}>
+                {blockedCommunitiesQuery.error.message}
+              </Text>
+            ) : null}
+
+            <Text style={styles.sectionTitle}>Заблокированные сообщества</Text>
+
+            {isBlockedCommunitiesInitialLoading ? (
+              <View style={styles.modalLoadingWrap}>
+                <ActivityIndicator color={COLORS.white85} />
+              </View>
+            ) : blockedCommunities.length === 0 ? (
+              <Text style={styles.emptyText}>Список пуст</Text>
+            ) : (
+              <FlatList
+                data={blockedCommunities}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                style={styles.virtualList}
+                onEndReachedThreshold={0.25}
+                onEndReached={() => {
+                  if (
+                    !blockedCommunitiesQuery.hasNextPage ||
+                    blockedCommunitiesQuery.isFetchingNextPage
+                  ) {
+                    return;
+                  }
+                  void blockedCommunitiesQuery.fetchNextPage();
+                }}
+                renderItem={({ item }) => (
+                  <View style={styles.userRow}>
+                    <View style={styles.userInfoWrap}>
+                      <Text style={styles.userName}>{item.community.name}</Text>
+                      <Text style={styles.userCaption}>
+                        {item.community.description || "Без описания"}
+                      </Text>
+                      <Text style={styles.blockedAtText}>
+                        Заблокировано:{" "}
+                        {new Date(item.createdAt).toLocaleString("ru-RU")}
+                      </Text>
+                    </View>
+
+                    <AppButton
+                      title={
+                        setUserContentBlock.isPending &&
+                        pendingBlockedCommunityId === item.community.id
+                          ? "Сохраняем..."
+                          : "Разблокировать"
+                      }
+                      onPress={() => {
+                        void handleUnblockCommunity(item.community.id);
+                      }}
+                      disabled={setUserContentBlock.isPending}
+                      style={styles.inlineActionButton}
+                      TextStyle={styles.inlineActionButtonText}
+                    />
+                  </View>
+                )}
+                ListFooterComponent={
+                  blockedCommunitiesQuery.isFetchingNextPage ? (
+                    <View style={styles.listLoader}>
+                      <ActivityIndicator color={COLORS.white85} />
+                    </View>
+                  ) : null
+                }
+                windowSize={8}
+                initialNumToRender={8}
+                maxToRenderPerBatch={10}
+                removeClippedSubviews
+              />
+            )}
+
+            <Text style={styles.sectionTitle}>
+              Заблокированные пользователи
+            </Text>
+
+            {isBlockedUsersInitialLoading ? (
+              <View style={styles.modalLoadingWrap}>
+                <ActivityIndicator color={COLORS.white85} />
+              </View>
+            ) : blockedUsers.length === 0 ? (
+              <Text style={styles.emptyText}>Список пуст</Text>
+            ) : (
+              <FlatList
+                data={blockedUsers}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                style={styles.virtualList}
+                onEndReachedThreshold={0.25}
+                onEndReached={() => {
+                  if (
+                    !blockedUsersQuery.hasNextPage ||
+                    blockedUsersQuery.isFetchingNextPage
+                  ) {
+                    return;
+                  }
+                  void blockedUsersQuery.fetchNextPage();
+                }}
+                renderItem={({ item }) => (
+                  <View style={styles.userRow}>
+                    <View style={styles.userInfoWrap}>
+                      <Text style={styles.userName}>
+                        @{item.blockedUser.nickname}
+                      </Text>
+                      <Text style={styles.userCaption}>
+                        {item.blockedUser.name || "Без имени"}
+                      </Text>
+                      <Text style={styles.blockedAtText}>
+                        Заблокирован:{" "}
+                        {new Date(item.createdAt).toLocaleString("ru-RU")}
+                      </Text>
+                    </View>
+
+                    <AppButton
+                      title={
+                        setUserContentBlock.isPending &&
+                        pendingBlockedUserId === item.blockedUser.id
+                          ? "Сохраняем..."
+                          : "Разблокировать"
+                      }
+                      onPress={() => {
+                        void handleUnblockUser(item.blockedUser.id);
+                      }}
+                      disabled={setUserContentBlock.isPending}
+                      style={styles.inlineActionButton}
+                      TextStyle={styles.inlineActionButtonText}
+                    />
+                  </View>
+                )}
+                ListFooterComponent={
+                  blockedUsersQuery.isFetchingNextPage ? (
+                    <View style={styles.listLoader}>
+                      <ActivityIndicator color={COLORS.white85} />
+                    </View>
+                  ) : null
+                }
+                windowSize={8}
+                initialNumToRender={8}
+                maxToRenderPerBatch={10}
+                removeClippedSubviews
+              />
+            )}
           </View>
-        </Modal>
-      </SafeAreaView>
-    </ImageBackground>
+        </View>
+      </Modal>
+    </AppScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  BackgroundImage: {
-    flex: 1,
-  },
   blockedAtText: {
     color: COLORS.white25,
     fontSize: 11,

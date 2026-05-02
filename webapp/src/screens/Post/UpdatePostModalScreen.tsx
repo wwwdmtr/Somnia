@@ -5,7 +5,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import {
   Alert,
-  ImageBackground,
   Image,
   Platform,
   Pressable,
@@ -15,9 +14,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { UpdatePostForms } from "../../components/forms/UpdatePostForm";
+import { AppScreen } from "../../components/layout/AppScreen";
 import ScreenName from "../../constants/ScreenName";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
@@ -136,86 +135,67 @@ export const UpdatePostScreen = () => {
 
   if (!data.post.canEditByMe) {
     return (
-      <ImageBackground
-        source={require("../../assets/backgrounds/application-bg.png")}
-        style={styles.BackgroundImage}
-      >
-        <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.goBackWrapper}
-            >
-              <Image
-                source={require("../../assets/Icons/navIcons/goBack.png")}
-              />
-              <Text style={typography.body_white85}>Назад</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.content}>
-            <Text style={typography.body_white85}>
-              У вас нет прав на редактирование этого поста.
-            </Text>
-          </View>
-        </SafeAreaView>
-      </ImageBackground>
+      <AppScreen contentStyle={styles.safeArea}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.goBackWrapper}
+          >
+            <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
+            <Text style={typography.body_white85}>Назад</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.content}>
+          <Text style={typography.body_white85}>
+            У вас нет прав на редактирование этого поста.
+          </Text>
+        </View>
+      </AppScreen>
     );
   }
 
   return (
-    <ImageBackground
-      source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.BackgroundImage}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.goBackWrapper}
-            >
-              <Image
-                source={require("../../assets/Icons/navIcons/goBack.png")}
-              />
-              <Text style={typography.body_white85}>Назад</Text>
-            </TouchableOpacity>
-            <Pressable
-              onPress={handleDeletePost}
-              disabled={deletePost.isPending}
-              style={styles.actionButton}
-            >
-              <Ionicons
-                name="trash-outline"
-                size={20}
-                color={
-                  data.post.canDeleteByMe ? COLORS.white85 : COLORS.white25
-                }
-              />
-            </Pressable>
-          </View>
-          <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
+    <AppScreen contentStyle={styles.safeArea}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.goBackWrapper}
           >
-            <Text style={typography.h2_white100}>Изменение поста</Text>
-            <View style={styles.form_container}>
-              <UpdatePostForms
-                post={data.post}
-                onSuccess={() => navigation.popToTop()}
-              />
-            </View>
-          </ScrollView>
+            <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
+            <Text style={typography.body_white85}>Назад</Text>
+          </TouchableOpacity>
+          <Pressable
+            onPress={handleDeletePost}
+            disabled={deletePost.isPending}
+            style={styles.actionButton}
+          >
+            <Ionicons
+              name="trash-outline"
+              size={20}
+              color={data.post.canDeleteByMe ? COLORS.white85 : COLORS.white25}
+            />
+          </Pressable>
+        </View>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={typography.h2_white100}>Изменение поста</Text>
+          <View style={styles.form_container}>
+            <UpdatePostForms
+              post={data.post}
+              onSuccess={() => navigation.popToTop()}
+            />
+          </View>
         </ScrollView>
-      </SafeAreaView>
-    </ImageBackground>
+      </ScrollView>
+    </AppScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  BackgroundImage: {
-    flex: 1,
-  },
   actionButton: {
     alignItems: "center",
     height: 44,

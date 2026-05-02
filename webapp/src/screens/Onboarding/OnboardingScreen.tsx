@@ -1,7 +1,7 @@
 import { useNavigation } from "@react-navigation/native";
-import { StyleSheet, Text, ImageBackground, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, Text, View } from "react-native";
 
+import { AppScreen } from "../../components/layout/AppScreen";
 import { AppButton } from "../../components/ui/AppButton";
 import ScreenName from "../../constants/ScreenName";
 import { typography } from "../../theme/typography";
@@ -18,32 +18,23 @@ export const OnboardingScreen = () => {
   const navigation = useNavigation<OnboardingScreenNavigationProp>();
 
   return (
-    <ImageBackground
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      source={require("../../assets/backgrounds/onboarding-main.png")}
-      style={styles.BackgroundImage}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
-        <View style={styles.spacer} />
-        <View style={styles.logo}>
-          <Text style={typography.h1_white100}>Универ</Text>
-          <Text style={typography.body_white85}>Пожалуй лучшая соцсеть</Text>
-        </View>
+    <AppScreen background="onboarding" contentStyle={styles.container}>
+      <View style={styles.spacer} />
+      <View style={styles.logo}>
+        <Text style={typography.h1_white100}>Универ</Text>
+        <Text style={typography.body_white85}>Пожалуй лучшая соцсеть</Text>
+      </View>
 
-        <AppButton
-          title="Начать"
-          onPress={() => navigation.navigate(ScreenName.SignIn)}
-          style={styles.startButton}
-        />
-      </SafeAreaView>
-    </ImageBackground>
+      <AppButton
+        title="Начать"
+        onPress={() => navigation.navigate(ScreenName.SignIn)}
+        style={styles.startButton}
+      />
+    </AppScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  BackgroundImage: {
-    flex: 1,
-  },
   container: {
     flex: 1,
     paddingHorizontal: 16,

@@ -14,7 +14,6 @@ import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   StyleSheet,
   Text,
-  ImageBackground,
   View,
   TouchableOpacity,
   Image,
@@ -27,9 +26,9 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AddCommentForm } from "../../components/forms/AddCommentForm";
+import { AppScreen } from "../../components/layout/AppScreen";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { ReportModal } from "../../components/ui/ReportModal";
 import ScreenName from "../../constants/ScreenName";
@@ -939,47 +938,24 @@ export const PostScreen = () => {
 
   if (isLoading) {
     return (
-      <ImageBackground
-        source={require("../../assets/backgrounds/application-bg.png")}
-        style={styles.BackgroundImage}
-      >
-        <SafeAreaView
-          edges={["top", "left", "right"]}
-          style={styles.centerContent}
-        >
-          <ActivityIndicator size="large" color={COLORS.white85} />
-          <StatusBar style="auto" />
-        </SafeAreaView>
-      </ImageBackground>
+      <AppScreen contentStyle={styles.centerContent}>
+        <ActivityIndicator size="large" color={COLORS.white85} />
+        <StatusBar style="auto" />
+      </AppScreen>
     );
   }
 
   if (error) {
     return (
-      <ImageBackground
-        source={require("../../assets/backgrounds/application-bg.png")}
-        style={styles.BackgroundImage}
-      >
-        <SafeAreaView
-          edges={["top", "left", "right"]}
-          style={styles.centerContent}
-        >
-          <Text style={typography.body_white85}>Error: {error.message}</Text>
-          <StatusBar style="auto" />
-        </SafeAreaView>
-      </ImageBackground>
+      <AppScreen contentStyle={styles.centerContent}>
+        <Text style={typography.body_white85}>Error: {error.message}</Text>
+        <StatusBar style="auto" />
+      </AppScreen>
     );
   }
 
   if (!data?.post) {
-    return (
-      <ImageBackground
-        source={require("../../assets/backgrounds/application-bg.png")}
-        style={styles.BackgroundImage}
-      >
-        <SafeAreaView edges={["top", "left", "right"]} />
-      </ImageBackground>
-    );
+    return <AppScreen />;
   }
   const post = data.post;
   const hasUserBlockAction = Boolean(
@@ -1048,181 +1024,171 @@ export const PostScreen = () => {
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.BackgroundImage}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.goBackWrapper}
-          >
-            <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
-            <Text style={typography.body_white85}>Назад</Text>
-          </TouchableOpacity>
-
-          <View style={styles.headerActions}>
-            {canOpenActionsMenu ? (
-              <TouchableOpacity onPress={() => setIsActionsMenuOpen(true)}>
-                <Ionicons
-                  name="flag-outline"
-                  size={20}
-                  color={FLAG_ACTION_ICON_COLOR}
-                />
-              </TouchableOpacity>
-            ) : null}
-
-            {post.canEditByMe ? (
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate(ScreenName.EditPost, {
-                    id: String(post.id),
-                  })
-                }
-              >
-                <Ionicons name="create-outline" size={24} color="white" />
-              </TouchableOpacity>
-            ) : null}
-
-            {isUserAdmin(me) && post.deletedAt ? (
-              <TouchableOpacity
-                onPress={onUndoDeletePress}
-                disabled={undoDeletePost.isPending}
-              >
-                <Ionicons name="refresh-outline" size={24} color="white" />
-              </TouchableOpacity>
-            ) : null}
-          </View>
-        </View>
-
-        <FlatList
-          data={comments}
-          renderItem={renderComment}
-          keyExtractor={(item) => item.id}
-          ListHeaderComponent={listHeaderComponent}
-          ListFooterComponent={renderFooter}
-          onEndReached={loadMoreComments}
-          onEndReachedThreshold={0.5}
-          contentContainerStyle={styles.flatListContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={handleRefresh}
-              tintColor={COLORS.white85}
-            />
-          }
-          ListEmptyComponent={
-            commentsLoading ? (
-              <View style={styles.loadingFooter}>
-                <ActivityIndicator size="small" color={COLORS.white85} />
-              </View>
-            ) : (
-              <View style={styles.emptyComments}>
-                <Text style={typography.body_white85}>
-                  Комментариев пока нет
-                </Text>
-              </View>
-            )
-          }
-        />
-
-        <View style={styles.commentFormWrapper}>
-          <AddCommentForm
-            postId={post.id}
-            parentId={replyingTo?.commentId}
-            replyToNickname={replyingTo?.nickname}
-            onSuccess={handleCommentSuccess}
-            onCancelReply={cancelReply}
-          />
-        </View>
-
-        <Modal
-          visible={isActionsMenuOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setIsActionsMenuOpen(false)}
+    <AppScreen contentStyle={styles.safeArea}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.goBackWrapper}
         >
-          <View style={styles.sideMenuOverlay}>
+          <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
+          <Text style={typography.body_white85}>Назад</Text>
+        </TouchableOpacity>
+
+        <View style={styles.headerActions}>
+          {canOpenActionsMenu ? (
+            <TouchableOpacity onPress={() => setIsActionsMenuOpen(true)}>
+              <Ionicons
+                name="flag-outline"
+                size={20}
+                color={FLAG_ACTION_ICON_COLOR}
+              />
+            </TouchableOpacity>
+          ) : null}
+
+          {post.canEditByMe ? (
             <TouchableOpacity
-              style={styles.sideMenuBackdrop}
-              onPress={() => setIsActionsMenuOpen(false)}
-            />
-            <View style={styles.sideMenuShell}>
-              <View style={styles.sideMenuContent}>
-                {hasUserBlockAction ? (
-                  <TouchableOpacity
-                    style={styles.sideMenuButton}
-                    disabled={setUserContentBlock.isPending}
-                    onPress={() => {
-                      void handleToggleUserBlock();
-                    }}
-                  >
-                    <Text style={typography.body_white85}>
-                      {post.isAuthorBlockedByMe
-                        ? "Разблокировать пользователя"
-                        : "Заблокировать пользователя"}
-                    </Text>
-                  </TouchableOpacity>
-                ) : null}
+              onPress={() =>
+                navigation.navigate(ScreenName.EditPost, {
+                  id: String(post.id),
+                })
+              }
+            >
+              <Ionicons name="create-outline" size={24} color="white" />
+            </TouchableOpacity>
+          ) : null}
 
-                {hasCommunityBlockAction ? (
-                  <TouchableOpacity
-                    style={styles.sideMenuButton}
-                    disabled={setUserContentBlock.isPending}
-                    onPress={() => {
-                      void handleToggleCommunityBlock();
-                    }}
-                  >
-                    <Text style={typography.body_white85}>
-                      {post.isPublisherCommunityBlockedByMe
-                        ? "Разблокировать сообщество"
-                        : "Заблокировать сообщество"}
-                    </Text>
-                  </TouchableOpacity>
-                ) : null}
+          {isUserAdmin(me) && post.deletedAt ? (
+            <TouchableOpacity
+              onPress={onUndoDeletePress}
+              disabled={undoDeletePost.isPending}
+            >
+              <Ionicons name="refresh-outline" size={24} color="white" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </View>
 
-                {hasReportAction ? (
-                  <TouchableOpacity
-                    style={styles.sideMenuButton}
-                    onPress={handleOpenReportModal}
-                  >
-                    <Text style={typography.body_white85}>Пожаловаться</Text>
-                  </TouchableOpacity>
-                ) : null}
-              </View>
+      <FlatList
+        data={comments}
+        renderItem={renderComment}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={listHeaderComponent}
+        ListFooterComponent={renderFooter}
+        onEndReached={loadMoreComments}
+        onEndReachedThreshold={0.5}
+        contentContainerStyle={styles.flatListContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={COLORS.white85}
+          />
+        }
+        ListEmptyComponent={
+          commentsLoading ? (
+            <View style={styles.loadingFooter}>
+              <ActivityIndicator size="small" color={COLORS.white85} />
+            </View>
+          ) : (
+            <View style={styles.emptyComments}>
+              <Text style={typography.body_white85}>Комментариев пока нет</Text>
+            </View>
+          )
+        }
+      />
+
+      <View style={styles.commentFormWrapper}>
+        <AddCommentForm
+          postId={post.id}
+          parentId={replyingTo?.commentId}
+          replyToNickname={replyingTo?.nickname}
+          onSuccess={handleCommentSuccess}
+          onCancelReply={cancelReply}
+        />
+      </View>
+
+      <Modal
+        visible={isActionsMenuOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsActionsMenuOpen(false)}
+      >
+        <View style={styles.sideMenuOverlay}>
+          <TouchableOpacity
+            style={styles.sideMenuBackdrop}
+            onPress={() => setIsActionsMenuOpen(false)}
+          />
+          <View style={styles.sideMenuShell}>
+            <View style={styles.sideMenuContent}>
+              {hasUserBlockAction ? (
+                <TouchableOpacity
+                  style={styles.sideMenuButton}
+                  disabled={setUserContentBlock.isPending}
+                  onPress={() => {
+                    void handleToggleUserBlock();
+                  }}
+                >
+                  <Text style={typography.body_white85}>
+                    {post.isAuthorBlockedByMe
+                      ? "Разблокировать пользователя"
+                      : "Заблокировать пользователя"}
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
+
+              {hasCommunityBlockAction ? (
+                <TouchableOpacity
+                  style={styles.sideMenuButton}
+                  disabled={setUserContentBlock.isPending}
+                  onPress={() => {
+                    void handleToggleCommunityBlock();
+                  }}
+                >
+                  <Text style={typography.body_white85}>
+                    {post.isPublisherCommunityBlockedByMe
+                      ? "Разблокировать сообщество"
+                      : "Заблокировать сообщество"}
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
+
+              {hasReportAction ? (
+                <TouchableOpacity
+                  style={styles.sideMenuButton}
+                  onPress={handleOpenReportModal}
+                >
+                  <Text style={typography.body_white85}>Пожаловаться</Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
           </View>
-        </Modal>
+        </View>
+      </Modal>
 
-        <ReportModal
-          visible={isReportModalOpen}
-          title="Жалоба на пост"
-          isSubmitting={createReport.isPending}
-          onClose={() => setIsReportModalOpen(false)}
-          onSubmit={(description) => {
-            void handleSubmitPostReport(description);
-          }}
-        />
+      <ReportModal
+        visible={isReportModalOpen}
+        title="Жалоба на пост"
+        isSubmitting={createReport.isPending}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmit={(description) => {
+          void handleSubmitPostReport(description);
+        }}
+      />
 
-        <PostImageViewerModal
-          visible={imageViewerState.isOpen}
-          imagePublicIds={imageViewerState.images}
-          initialIndex={imageViewerState.index}
-          onClose={() =>
-            setImageViewerState((prev) => ({ ...prev, isOpen: false }))
-          }
-        />
-      </SafeAreaView>
-    </ImageBackground>
+      <PostImageViewerModal
+        visible={imageViewerState.isOpen}
+        imagePublicIds={imageViewerState.images}
+        initialIndex={imageViewerState.index}
+        onClose={() =>
+          setImageViewerState((prev) => ({ ...prev, isOpen: false }))
+        }
+      />
+    </AppScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  BackgroundImage: {
-    flex: 1,
-  },
   action: {
     flexDirection: "row",
     gap: 7,

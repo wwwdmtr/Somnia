@@ -6,15 +6,14 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  ImageBackground,
   RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AppScreen } from "../../components/layout/AppScreen";
 import ScreenName from "../../constants/ScreenName";
 import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
@@ -116,107 +115,100 @@ export const UserConnectionsScreen = () => {
   }
 
   return (
-    <ImageBackground
-      source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.backgroundImage}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
-        <View style={styles.headerWrap}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.goBackWrapper}
-          >
-            <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
-            <Text style={typography.body_white85}>Назад</Text>
-          </TouchableOpacity>
-        </View>
+    <AppScreen contentStyle={styles.container}>
+      <View style={styles.headerWrap}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.goBackWrapper}
+        >
+          <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
+          <Text style={typography.body_white85}>Назад</Text>
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.titleBlock}>
-          <Text style={typography.h3_white85}>{title}</Text>
-          <Text style={typography.caption_white85}>
-            @{profileQuery.data?.profile.nickname ?? "user"}
-          </Text>
-        </View>
+      <View style={styles.titleBlock}>
+        <Text style={typography.h3_white85}>{title}</Text>
+        <Text style={typography.caption_white85}>
+          @{profileQuery.data?.profile.nickname ?? "user"}
+        </Text>
+      </View>
 
-        <FlatList
-          data={users}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => (
-            <View style={styles.userRow}>
-              <TouchableOpacity
-                style={styles.userMain}
-                onPress={() => handleOpenProfile(item.id)}
-              >
-                <Image
-                  source={getAvatarSource(item.avatar, "small")}
-                  style={styles.avatar}
-                />
+      <FlatList
+        data={users}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+        renderItem={({ item }) => (
+          <View style={styles.userRow}>
+            <TouchableOpacity
+              style={styles.userMain}
+              onPress={() => handleOpenProfile(item.id)}
+            >
+              <Image
+                source={getAvatarSource(item.avatar, "small")}
+                style={styles.avatar}
+              />
 
-                <View style={styles.userTextWrap}>
-                  <Text style={typography.body_white85}>
-                    {item.name || item.nickname}
-                  </Text>
-                  <Text style={typography.caption_white85}>
-                    @{item.nickname}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              {me?.id && me.id !== item.id ? (
-                <TouchableOpacity
-                  style={[
-                    styles.followButton,
-                    item.isFollowedByMe ? styles.unfollowButton : null,
-                  ]}
-                  disabled={setUserFollow.isPending}
-                  onPress={() => {
-                    setUserFollow.mutate({
-                      userId: item.id,
-                      isFollowing: !item.isFollowedByMe,
-                    });
-                  }}
-                >
-                  <Text style={styles.followButtonText}>
-                    {item.isFollowedByMe ? "Отписаться" : "Подписаться"}
-                  </Text>
-                </TouchableOpacity>
-              ) : null}
-            </View>
-          )}
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Text style={typography.body_white85}>Список пока пуст</Text>
-            </View>
-          }
-          ListFooterComponent={
-            followsQuery.isFetchingNextPage ? (
-              <View style={styles.footerLoader}>
-                <ActivityIndicator color={COLORS.white85} />
+              <View style={styles.userTextWrap}>
+                <Text style={typography.body_white85}>
+                  {item.name || item.nickname}
+                </Text>
+                <Text style={typography.caption_white85}>@{item.nickname}</Text>
               </View>
-            ) : null
-          }
-          refreshControl={
-            <RefreshControl
-              refreshing={followsQuery.isRefetching}
-              onRefresh={onRefresh}
-              tintColor={COLORS.white85}
-            />
-          }
-          onEndReached={() => {
-            if (!followsQuery.hasNextPage || followsQuery.isFetchingNextPage) {
-              return;
-            }
+            </TouchableOpacity>
 
-            followsQuery.fetchNextPage();
-          }}
-          onEndReachedThreshold={0.2}
-        />
+            {me?.id && me.id !== item.id ? (
+              <TouchableOpacity
+                style={[
+                  styles.followButton,
+                  item.isFollowedByMe ? styles.unfollowButton : null,
+                ]}
+                disabled={setUserFollow.isPending}
+                onPress={() => {
+                  setUserFollow.mutate({
+                    userId: item.id,
+                    isFollowing: !item.isFollowedByMe,
+                  });
+                }}
+              >
+                <Text style={styles.followButtonText}>
+                  {item.isFollowedByMe ? "Отписаться" : "Подписаться"}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        )}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={typography.body_white85}>Список пока пуст</Text>
+          </View>
+        }
+        ListFooterComponent={
+          followsQuery.isFetchingNextPage ? (
+            <View style={styles.footerLoader}>
+              <ActivityIndicator color={COLORS.white85} />
+            </View>
+          ) : null
+        }
+        refreshControl={
+          <RefreshControl
+            refreshing={followsQuery.isRefetching}
+            onRefresh={onRefresh}
+            tintColor={COLORS.white85}
+          />
+        }
+        onEndReached={() => {
+          if (!followsQuery.hasNextPage || followsQuery.isFetchingNextPage) {
+            return;
+          }
 
-        <StatusBar style="auto" />
-      </SafeAreaView>
-    </ImageBackground>
+          followsQuery.fetchNextPage();
+        }}
+        onEndReachedThreshold={0.2}
+      />
+
+      <StatusBar style="auto" />
+    </AppScreen>
   );
 };
 
@@ -225,9 +217,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     height: 40,
     width: 40,
-  },
-  backgroundImage: {
-    flex: 1,
   },
   centered: {
     alignItems: "center",

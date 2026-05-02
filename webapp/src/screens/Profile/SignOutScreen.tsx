@@ -1,13 +1,15 @@
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text } from "react-native";
 
+import { AppScreen } from "../../components/layout/AppScreen";
 import ScreenName from "../../constants/ScreenName";
 import TabName from "../../constants/TabName";
 import { mixpanelTrackSignOut } from "../../lib/mixpanel";
 import { clearToken } from "../../lib/tokenStorage";
 import { trpc } from "../../lib/trpc";
+import { COLORS, typography } from "../../theme/typography";
 
 import type { ProfileStackParamList } from "../../navigation/ProfileStackParamList";
 import type { RootTabParamList } from "../../navigation/RootTabParamList";
@@ -47,9 +49,18 @@ export const SignOutScreen: React.FC<Props> = ({ navigation }) => {
   }, [navigation, utils]);
 
   return (
-    <View>
-      <ActivityIndicator />
-      <Text>Выходим из аккаунта...</Text>
-    </View>
+    <AppScreen contentStyle={styles.container}>
+      <ActivityIndicator color={COLORS.white85} />
+      <Text style={typography.body_white85}>Выходим из аккаунта...</Text>
+    </AppScreen>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    flex: 1,
+    gap: 12,
+    justifyContent: "center",
+  },
+});

@@ -7,7 +7,6 @@ import {
   Alert,
   FlatList,
   Image,
-  ImageBackground,
   Modal,
   Platform,
   ScrollView,
@@ -17,10 +16,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CommunityAvatarUploader } from "../../components/forms/CommunityAvatarUploader";
 import { UpdateCommunityForm } from "../../components/forms/UpdateCommunityForm";
+import { AppScreen } from "../../components/layout/AppScreen";
 import { AppButton } from "../../components/ui/AppButton";
 import ScreenName from "../../constants/ScreenName";
 import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
@@ -625,30 +624,23 @@ export const UpdateCommunityScreen = () => {
 
   if (!canManageCommunity) {
     return (
-      <ImageBackground
-        source={require("../../assets/backgrounds/application-bg.png")}
-        style={styles.backgroundImage}
-      >
-        <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.goBackWrapper}
-            >
-              <Image
-                source={require("../../assets/Icons/navIcons/goBack.png")}
-              />
-              <Text style={typography.body_white85}>Назад</Text>
-            </TouchableOpacity>
-          </View>
+      <AppScreen contentStyle={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.goBackWrapper}
+          >
+            <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
+            <Text style={typography.body_white85}>Назад</Text>
+          </TouchableOpacity>
+        </View>
 
-          <View style={styles.deniedCard}>
-            <Text style={typography.body_white85}>
-              Только владелец или модератор могут управлять сообществом.
-            </Text>
-          </View>
-        </SafeAreaView>
-      </ImageBackground>
+        <View style={styles.deniedCard}>
+          <Text style={typography.body_white85}>
+            Только владелец или модератор могут управлять сообществом.
+          </Text>
+        </View>
+      </AppScreen>
     );
   }
 
@@ -681,644 +673,353 @@ export const UpdateCommunityScreen = () => {
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.backgroundImage}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.goBackWrapper}
-            >
-              <Image
-                source={require("../../assets/Icons/navIcons/goBack.png")}
-              />
-              <Text style={typography.body_white85}>Назад</Text>
-            </TouchableOpacity>
-          </View>
+    <AppScreen contentStyle={styles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.goBackWrapper}
+          >
+            <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
+            <Text style={typography.body_white85}>Назад</Text>
+          </TouchableOpacity>
+        </View>
 
-          <View style={styles.settingsCard}>
-            <Image
-              source={getAvatarSource(community.avatar, "small")}
-              style={styles.communityPreviewAvatar}
-            />
-            <View style={styles.communityPreviewTextWrap}>
-              <Text style={typography.body_white85}>{community.name}</Text>
-              <Text style={typography.additionalInfo_white25}>
-                {community.description || "Без описания"}
+        <View style={styles.settingsCard}>
+          <Image
+            source={getAvatarSource(community.avatar, "small")}
+            style={styles.communityPreviewAvatar}
+          />
+          <View style={styles.communityPreviewTextWrap}>
+            <Text style={typography.body_white85}>{community.name}</Text>
+            <Text style={typography.additionalInfo_white25}>
+              {community.description || "Без описания"}
+            </Text>
+          </View>
+        </View>
+
+        {isOwner ? (
+          <>
+            <View style={styles.settingsCard}>
+              <Text style={typography.h4_white_85}>
+                Имя и описание сообщества
               </Text>
+              <UpdateCommunityForm
+                communityId={community.id}
+                name={community.name}
+                description={community.description}
+                onUpdated={applyCommunityUpdate}
+              />
+            </View>
+
+            <View style={styles.settingsCard}>
+              <Text style={typography.h4_white_85}>Аватарка сообщества</Text>
+              <CommunityAvatarUploader
+                communityId={community.id}
+                avatar={community.avatar}
+                onUpdated={applyCommunityUpdate}
+              />
+            </View>
+
+            <View style={styles.settingsCard}>
+              <Text style={typography.h4_white_85}>Модераторы</Text>
+              <AppButton
+                title="Настроить модераторов"
+                onPress={() => {
+                  setModeratorSearch("");
+                  setIsModeratorsModalOpen(true);
+                }}
+                style={styles.actionButton}
+              />
+            </View>
+
+            <View style={styles.settingsCard}>
+              <Text style={typography.h4_white_85}>Верификация сообщества</Text>
+              <Text style={styles.warningText}>
+                {latestVerificationRequest
+                  ? `Последняя заявка: ${VERIFICATION_STATUS_LABELS[latestVerificationRequest.status]} (${new Date(latestVerificationRequest.createdAt).toLocaleString("ru-RU")})`
+                  : "Заявок на верификацию пока не было"}
+              </Text>
+              <AppButton
+                title="Пройти верификацию"
+                onPress={() => {
+                  setVerificationContact("");
+                  setIsVerificationModalOpen(true);
+                }}
+                style={styles.actionButton}
+              />
+            </View>
+          </>
+        ) : null}
+
+        <View style={styles.settingsCard}>
+          <Text style={typography.h4_white_85}>Управление черными спискам</Text>
+          <AppButton
+            title="Открыть управление"
+            onPress={() => {
+              setBlacklistSearch("");
+              setIsBlacklistModalOpen(true);
+            }}
+            style={styles.actionButton}
+          />
+        </View>
+
+        <View style={styles.settingsCard}>
+          <Text style={typography.h4_white_85}>
+            Просмотр действий сообщества
+          </Text>
+          <AppButton
+            title="Открыть журнал"
+            onPress={() => {
+              setIsActionLogModalOpen(true);
+              void actionLogQuery.refetch();
+            }}
+            style={styles.actionButton}
+          />
+        </View>
+
+        {isOwner ? (
+          <>
+            <View style={styles.settingsCard}>
+              <Text style={typography.h4_white_85}>Передача владения</Text>
+              <AppButton
+                title="Передать владение"
+                onPress={() => {
+                  setTransferOwnershipSearch("");
+                  setIsTransferOwnershipModalOpen(true);
+                }}
+                style={styles.actionButton}
+              />
+            </View>
+
+            <View style={styles.settingsCard}>
+              <Text style={typography.h4_white_85}>Опасная зона</Text>
+              <AppButton
+                title={
+                  deleteCommunity.isPending
+                    ? "Удаляем сообщество..."
+                    : "Удалить сообщество"
+                }
+                onPress={handleDeleteCommunity}
+                disabled={deleteCommunity.isPending}
+                style={styles.dangerButton}
+                TextStyle={styles.dangerButtonText}
+              />
+            </View>
+          </>
+        ) : null}
+      </ScrollView>
+
+      <Modal
+        visible={isVerificationModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsVerificationModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Запрос верификации</Text>
+              <TouchableOpacity
+                onPress={() => setIsVerificationModalOpen(false)}
+              >
+                <Text style={styles.closeText}>Закрыть</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalScrollContent}>
+              <Text style={styles.warningText}>
+                Укажите контакт для обратной связи.
+              </Text>
+              <TextInput
+                placeholder="Email, Telegram или другой контакт"
+                placeholderTextColor={COLORS.white25}
+                value={verificationContact}
+                onChangeText={setVerificationContact}
+                maxLength={200}
+                autoCapitalize="none"
+                style={styles.searchInput}
+              />
+              <Text style={styles.logMeta}>
+                {trimmedVerificationContact.length}/200
+              </Text>
+              <AppButton
+                title={
+                  createCommunityVerificationRequest.isPending
+                    ? "Отправляем..."
+                    : "Отправить запрос"
+                }
+                onPress={handleSubmitVerificationRequest}
+                disabled={
+                  createCommunityVerificationRequest.isPending ||
+                  isVerificationContactInvalid
+                }
+                style={styles.actionButton}
+              />
             </View>
           </View>
+        </View>
+      </Modal>
 
-          {isOwner ? (
-            <>
-              <View style={styles.settingsCard}>
-                <Text style={typography.h4_white_85}>
-                  Имя и описание сообщества
-                </Text>
-                <UpdateCommunityForm
-                  communityId={community.id}
-                  name={community.name}
-                  description={community.description}
-                  onUpdated={applyCommunityUpdate}
-                />
-              </View>
-
-              <View style={styles.settingsCard}>
-                <Text style={typography.h4_white_85}>Аватарка сообщества</Text>
-                <CommunityAvatarUploader
-                  communityId={community.id}
-                  avatar={community.avatar}
-                  onUpdated={applyCommunityUpdate}
-                />
-              </View>
-
-              <View style={styles.settingsCard}>
-                <Text style={typography.h4_white_85}>Модераторы</Text>
-                <AppButton
-                  title="Настроить модераторов"
-                  onPress={() => {
-                    setModeratorSearch("");
-                    setIsModeratorsModalOpen(true);
-                  }}
-                  style={styles.actionButton}
-                />
-              </View>
-
-              <View style={styles.settingsCard}>
-                <Text style={typography.h4_white_85}>
-                  Верификация сообщества
-                </Text>
-                <Text style={styles.warningText}>
-                  {latestVerificationRequest
-                    ? `Последняя заявка: ${VERIFICATION_STATUS_LABELS[latestVerificationRequest.status]} (${new Date(latestVerificationRequest.createdAt).toLocaleString("ru-RU")})`
-                    : "Заявок на верификацию пока не было"}
-                </Text>
-                <AppButton
-                  title="Пройти верификацию"
-                  onPress={() => {
-                    setVerificationContact("");
-                    setIsVerificationModalOpen(true);
-                  }}
-                  style={styles.actionButton}
-                />
-              </View>
-            </>
-          ) : null}
-
-          <View style={styles.settingsCard}>
-            <Text style={typography.h4_white_85}>
-              Управление черными спискам
-            </Text>
-            <AppButton
-              title="Открыть управление"
-              onPress={() => {
-                setBlacklistSearch("");
-                setIsBlacklistModalOpen(true);
-              }}
-              style={styles.actionButton}
-            />
-          </View>
-
-          <View style={styles.settingsCard}>
-            <Text style={typography.h4_white_85}>
-              Просмотр действий сообщества
-            </Text>
-            <AppButton
-              title="Открыть журнал"
-              onPress={() => {
-                setIsActionLogModalOpen(true);
-                void actionLogQuery.refetch();
-              }}
-              style={styles.actionButton}
-            />
-          </View>
-
-          {isOwner ? (
-            <>
-              <View style={styles.settingsCard}>
-                <Text style={typography.h4_white_85}>Передача владения</Text>
-                <AppButton
-                  title="Передать владение"
-                  onPress={() => {
-                    setTransferOwnershipSearch("");
-                    setIsTransferOwnershipModalOpen(true);
-                  }}
-                  style={styles.actionButton}
-                />
-              </View>
-
-              <View style={styles.settingsCard}>
-                <Text style={typography.h4_white_85}>Опасная зона</Text>
-                <AppButton
-                  title={
-                    deleteCommunity.isPending
-                      ? "Удаляем сообщество..."
-                      : "Удалить сообщество"
-                  }
-                  onPress={handleDeleteCommunity}
-                  disabled={deleteCommunity.isPending}
-                  style={styles.dangerButton}
-                  TextStyle={styles.dangerButtonText}
-                />
-              </View>
-            </>
-          ) : null}
-        </ScrollView>
-
-        <Modal
-          visible={isVerificationModalOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setIsVerificationModalOpen(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Запрос верификации</Text>
-                <TouchableOpacity
-                  onPress={() => setIsVerificationModalOpen(false)}
-                >
-                  <Text style={styles.closeText}>Закрыть</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.modalScrollContent}>
-                <Text style={styles.warningText}>
-                  Укажите контакт для обратной связи.
-                </Text>
-                <TextInput
-                  placeholder="Email, Telegram или другой контакт"
-                  placeholderTextColor={COLORS.white25}
-                  value={verificationContact}
-                  onChangeText={setVerificationContact}
-                  maxLength={200}
-                  autoCapitalize="none"
-                  style={styles.searchInput}
-                />
-                <Text style={styles.logMeta}>
-                  {trimmedVerificationContact.length}/200
-                </Text>
-                <AppButton
-                  title={
-                    createCommunityVerificationRequest.isPending
-                      ? "Отправляем..."
-                      : "Отправить запрос"
-                  }
-                  onPress={handleSubmitVerificationRequest}
-                  disabled={
-                    createCommunityVerificationRequest.isPending ||
-                    isVerificationContactInvalid
-                  }
-                  style={styles.actionButton}
-                />
-              </View>
+      <Modal
+        visible={isModeratorsModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsModeratorsModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Настройка модераторов</Text>
+              <TouchableOpacity onPress={() => setIsModeratorsModalOpen(false)}>
+                <Text style={styles.closeText}>Закрыть</Text>
+              </TouchableOpacity>
             </View>
-          </View>
-        </Modal>
 
-        <Modal
-          visible={isModeratorsModalOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setIsModeratorsModalOpen(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Настройка модераторов</Text>
-                <TouchableOpacity
-                  onPress={() => setIsModeratorsModalOpen(false)}
-                >
-                  <Text style={styles.closeText}>Закрыть</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.modalScrollContent}>
-                {moderatorsListQuery.error ? (
-                  <Text style={styles.errorText}>
-                    {moderatorsListQuery.error.message}
-                  </Text>
-                ) : null}
-                {subscribersListQuery.error ? (
-                  <Text style={styles.errorText}>
-                    {subscribersListQuery.error.message}
-                  </Text>
-                ) : null}
-
-                <Text style={styles.sectionTitle}>Текущие модераторы</Text>
-
-                {isModeratorsInitialLoading ? (
-                  <View style={styles.modalLoadingWrap}>
-                    <ActivityIndicator color={COLORS.white85} />
-                  </View>
-                ) : moderators.length === 0 ? (
-                  <Text style={styles.emptyText}>Пока нет модераторов</Text>
-                ) : (
-                  <FlatList
-                    data={moderators}
-                    keyExtractor={(item) => item.id}
-                    showsVerticalScrollIndicator={false}
-                    style={styles.virtualList}
-                    onEndReachedThreshold={0.25}
-                    onEndReached={() => {
-                      if (
-                        !moderatorsListQuery.hasNextPage ||
-                        moderatorsListQuery.isFetchingNextPage
-                      ) {
-                        return;
-                      }
-                      void moderatorsListQuery.fetchNextPage();
-                    }}
-                    renderItem={({ item: moderator }) => (
-                      <View style={styles.userRow}>
-                        <View style={styles.userInfoWrap}>
-                          <Text style={styles.userName}>
-                            @{moderator.nickname}
-                          </Text>
-                          <Text style={styles.userCaption}>
-                            {moderator.name || "Без имени"}
-                          </Text>
-                        </View>
-
-                        <AppButton
-                          title={
-                            setCommunityModerator.isPending &&
-                            pendingModeratorUserId === moderator.id
-                              ? "Сохраняем..."
-                              : "Снять с поста"
-                          }
-                          onPress={() =>
-                            handleToggleModerator(moderator.id, false)
-                          }
-                          disabled={setCommunityModerator.isPending}
-                          style={styles.inlineDangerButton}
-                          TextStyle={styles.inlineDangerButtonText}
-                        />
-                      </View>
-                    )}
-                    ListFooterComponent={
-                      moderatorsListQuery.isFetchingNextPage ? (
-                        <View style={styles.listLoader}>
-                          <ActivityIndicator color={COLORS.white85} />
-                        </View>
-                      ) : null
-                    }
-                  />
-                )}
-
-                <View style={styles.divider} />
-
-                <Text style={styles.sectionTitle}>Подписчики сообщества</Text>
-
-                <TextInput
-                  placeholder="Поиск по никнейму"
-                  placeholderTextColor={COLORS.white25}
-                  value={moderatorSearch}
-                  onChangeText={setModeratorSearch}
-                  autoCapitalize="none"
-                  style={styles.searchInput}
-                />
-
-                {isModeratorsInitialLoading ? (
-                  <View style={styles.modalLoadingWrap}>
-                    <ActivityIndicator color={COLORS.white85} />
-                  </View>
-                ) : subscribers.length === 0 ? (
-                  <Text style={styles.emptyText}>
-                    {moderatorSearch.trim()
-                      ? "Подписчики не найдены"
-                      : "Нет подписчиков для назначения"}
-                  </Text>
-                ) : (
-                  <FlatList
-                    data={subscribers}
-                    keyExtractor={(item) => item.id}
-                    showsVerticalScrollIndicator={false}
-                    style={styles.virtualList}
-                    onEndReachedThreshold={0.25}
-                    onEndReached={() => {
-                      if (
-                        !subscribersListQuery.hasNextPage ||
-                        subscribersListQuery.isFetchingNextPage
-                      ) {
-                        return;
-                      }
-                      void subscribersListQuery.fetchNextPage();
-                    }}
-                    renderItem={({ item: subscriber }) => (
-                      <View style={styles.userRow}>
-                        <View style={styles.userInfoWrap}>
-                          <Text style={styles.userName}>
-                            @{subscriber.nickname}
-                          </Text>
-                          <Text style={styles.userCaption}>
-                            {subscriber.name || "Без имени"}
-                          </Text>
-                        </View>
-
-                        <AppButton
-                          title={
-                            setCommunityModerator.isPending &&
-                            pendingModeratorUserId === subscriber.id
-                              ? "Сохраняем..."
-                              : "Сделать модератором"
-                          }
-                          onPress={() =>
-                            handleToggleModerator(subscriber.id, true)
-                          }
-                          disabled={setCommunityModerator.isPending}
-                          style={styles.inlineActionButton}
-                          TextStyle={styles.inlineActionButtonText}
-                        />
-                      </View>
-                    )}
-                    ListFooterComponent={
-                      subscribersListQuery.isFetchingNextPage ? (
-                        <View style={styles.listLoader}>
-                          <ActivityIndicator color={COLORS.white85} />
-                        </View>
-                      ) : null
-                    }
-                  />
-                )}
-              </View>
-            </View>
-          </View>
-        </Modal>
-        <Modal
-          visible={isBlacklistModalOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setIsBlacklistModalOpen(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
-                  Управление черными спискам
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setIsBlacklistModalOpen(false)}
-                >
-                  <Text style={styles.closeText}>Закрыть</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.modalScrollContent}>
-                {blacklistSubscribersListQuery.error ? (
-                  <Text style={styles.errorText}>
-                    {blacklistSubscribersListQuery.error.message}
-                  </Text>
-                ) : null}
-                {blacklistUsersListQuery.error ? (
-                  <Text style={styles.errorText}>
-                    {blacklistUsersListQuery.error.message}
-                  </Text>
-                ) : null}
-
-                <Text style={styles.sectionTitle}>Длительность блокировки</Text>
-                <View style={styles.durationRow}>
-                  {BLACKLIST_DURATION_OPTIONS.map((option) => (
-                    <TouchableOpacity
-                      key={option.value}
-                      onPress={() => setBlacklistDuration(option.value)}
-                      style={[
-                        styles.durationChip,
-                        blacklistDuration === option.value
-                          ? styles.durationChipActive
-                          : null,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.durationChipText,
-                          blacklistDuration === option.value
-                            ? styles.durationChipTextActive
-                            : null,
-                        ]}
-                      >
-                        {option.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                <Text style={styles.sectionTitle}>Подписчики сообщества</Text>
-
-                <TextInput
-                  placeholder="Поиск по никнейму"
-                  placeholderTextColor={COLORS.white25}
-                  value={blacklistSearch}
-                  onChangeText={setBlacklistSearch}
-                  autoCapitalize="none"
-                  style={styles.searchInput}
-                />
-
-                {isBlacklistInitialLoading ? (
-                  <View style={styles.modalLoadingWrap}>
-                    <ActivityIndicator color={COLORS.white85} />
-                  </View>
-                ) : blacklistSubscribers.length === 0 ? (
-                  <Text style={styles.emptyText}>
-                    {blacklistSearch.trim()
-                      ? "Подписчики не найдены"
-                      : "Нет подписчиков для блокировки"}
-                  </Text>
-                ) : (
-                  <FlatList
-                    data={blacklistSubscribers}
-                    keyExtractor={(item) => item.id}
-                    showsVerticalScrollIndicator={false}
-                    style={styles.virtualList}
-                    onEndReachedThreshold={0.25}
-                    onEndReached={() => {
-                      if (
-                        !blacklistSubscribersListQuery.hasNextPage ||
-                        blacklistSubscribersListQuery.isFetchingNextPage
-                      ) {
-                        return;
-                      }
-                      void blacklistSubscribersListQuery.fetchNextPage();
-                    }}
-                    renderItem={({ item: subscriber }) => (
-                      <View style={styles.userRow}>
-                        <View style={styles.userInfoWrap}>
-                          <Text style={styles.userName}>
-                            @{subscriber.nickname}
-                          </Text>
-                          <Text style={styles.userCaption}>
-                            {subscriber.name || "Без имени"}
-                          </Text>
-                        </View>
-
-                        <AppButton
-                          title={
-                            setCommunityBlacklist.isPending &&
-                            pendingBlacklistUserId === subscriber.id
-                              ? "Сохраняем..."
-                              : "В черный список"
-                          }
-                          onPress={() =>
-                            handleToggleBlacklist(subscriber.id, true)
-                          }
-                          disabled={setCommunityBlacklist.isPending}
-                          style={styles.inlineDangerButton}
-                          TextStyle={styles.inlineDangerButtonText}
-                        />
-                      </View>
-                    )}
-                    ListFooterComponent={
-                      blacklistSubscribersListQuery.isFetchingNextPage ? (
-                        <View style={styles.listLoader}>
-                          <ActivityIndicator color={COLORS.white85} />
-                        </View>
-                      ) : null
-                    }
-                  />
-                )}
-
-                <View style={styles.divider} />
-
-                <Text style={styles.sectionTitle}>
-                  Пользователи в черном списке
-                </Text>
-
-                {isBlacklistInitialLoading ? (
-                  <View style={styles.modalLoadingWrap}>
-                    <ActivityIndicator color={COLORS.white85} />
-                  </View>
-                ) : blockedUsers.length === 0 ? (
-                  <Text style={styles.emptyText}>
-                    {blacklistSearch.trim()
-                      ? "Пользователи не найдены"
-                      : "Черный список пуст"}
-                  </Text>
-                ) : (
-                  <FlatList
-                    data={blockedUsers}
-                    keyExtractor={(item) => item.id}
-                    showsVerticalScrollIndicator={false}
-                    style={styles.virtualList}
-                    onEndReachedThreshold={0.25}
-                    onEndReached={() => {
-                      if (
-                        !blacklistUsersListQuery.hasNextPage ||
-                        blacklistUsersListQuery.isFetchingNextPage
-                      ) {
-                        return;
-                      }
-                      void blacklistUsersListQuery.fetchNextPage();
-                    }}
-                    renderItem={({ item: blockedUser }) => (
-                      <View style={styles.userRow}>
-                        <View style={styles.userInfoWrap}>
-                          <Text style={styles.userName}>
-                            @{blockedUser.nickname}
-                          </Text>
-                          <Text style={styles.userCaption}>
-                            {blockedUser.name || "Без имени"}
-                          </Text>
-                          <Text style={styles.userCaption}>
-                            {formatBlacklistExpiration(blockedUser.expiresAt)}
-                          </Text>
-                          <Text style={styles.userCaption}>
-                            Добавил(а): @{blockedUser.blockedBy.nickname}
-                          </Text>
-                        </View>
-
-                        <AppButton
-                          title={
-                            setCommunityBlacklist.isPending &&
-                            pendingBlacklistUserId === blockedUser.id
-                              ? "Сохраняем..."
-                              : "Разблокировать"
-                          }
-                          onPress={() =>
-                            handleToggleBlacklist(blockedUser.id, false)
-                          }
-                          disabled={setCommunityBlacklist.isPending}
-                          style={styles.inlineActionButton}
-                          TextStyle={styles.inlineActionButtonText}
-                        />
-                      </View>
-                    )}
-                    ListFooterComponent={
-                      blacklistUsersListQuery.isFetchingNextPage ? (
-                        <View style={styles.listLoader}>
-                          <ActivityIndicator color={COLORS.white85} />
-                        </View>
-                      ) : null
-                    }
-                  />
-                )}
-              </View>
-            </View>
-          </View>
-        </Modal>
-        <Modal
-          visible={isActionLogModalOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setIsActionLogModalOpen(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>События сообщества</Text>
-                <TouchableOpacity
-                  onPress={() => setIsActionLogModalOpen(false)}
-                >
-                  <Text style={styles.closeText}>Закрыть</Text>
-                </TouchableOpacity>
-              </View>
-
-              {actionLogQuery.error ? (
+            <View style={styles.modalScrollContent}>
+              {moderatorsListQuery.error ? (
                 <Text style={styles.errorText}>
-                  {actionLogQuery.error.message}
+                  {moderatorsListQuery.error.message}
+                </Text>
+              ) : null}
+              {subscribersListQuery.error ? (
+                <Text style={styles.errorText}>
+                  {subscribersListQuery.error.message}
                 </Text>
               ) : null}
 
-              {isActionLogInitialLoading ? (
+              <Text style={styles.sectionTitle}>Текущие модераторы</Text>
+
+              {isModeratorsInitialLoading ? (
                 <View style={styles.modalLoadingWrap}>
                   <ActivityIndicator color={COLORS.white85} />
                 </View>
-              ) : actionLogs.length === 0 ? (
-                <Text style={styles.emptyText}>Журнал действий пока пуст</Text>
+              ) : moderators.length === 0 ? (
+                <Text style={styles.emptyText}>Пока нет модераторов</Text>
               ) : (
                 <FlatList
-                  data={actionLogs}
+                  data={moderators}
                   keyExtractor={(item) => item.id}
                   showsVerticalScrollIndicator={false}
-                  style={styles.modalScroll}
-                  contentContainerStyle={styles.modalScrollContent}
+                  style={styles.virtualList}
                   onEndReachedThreshold={0.25}
                   onEndReached={() => {
                     if (
-                      !actionLogQuery.hasNextPage ||
-                      actionLogQuery.isFetchingNextPage
+                      !moderatorsListQuery.hasNextPage ||
+                      moderatorsListQuery.isFetchingNextPage
                     ) {
                       return;
                     }
-                    void actionLogQuery.fetchNextPage();
+                    void moderatorsListQuery.fetchNextPage();
                   }}
-                  renderItem={({ item: action }) => (
-                    <View style={styles.logRow}>
-                      <Text style={styles.logText}>
-                        {getActionText(action)}
-                      </Text>
-                      <Text style={styles.logMeta}>
-                        {new Date(action.createdAt).toLocaleString("ru-RU")}
-                      </Text>
+                  renderItem={({ item: moderator }) => (
+                    <View style={styles.userRow}>
+                      <View style={styles.userInfoWrap}>
+                        <Text style={styles.userName}>
+                          @{moderator.nickname}
+                        </Text>
+                        <Text style={styles.userCaption}>
+                          {moderator.name || "Без имени"}
+                        </Text>
+                      </View>
+
+                      <AppButton
+                        title={
+                          setCommunityModerator.isPending &&
+                          pendingModeratorUserId === moderator.id
+                            ? "Сохраняем..."
+                            : "Снять с поста"
+                        }
+                        onPress={() =>
+                          handleToggleModerator(moderator.id, false)
+                        }
+                        disabled={setCommunityModerator.isPending}
+                        style={styles.inlineDangerButton}
+                        TextStyle={styles.inlineDangerButtonText}
+                      />
                     </View>
                   )}
                   ListFooterComponent={
-                    actionLogQuery.isFetchingNextPage ? (
+                    moderatorsListQuery.isFetchingNextPage ? (
+                      <View style={styles.listLoader}>
+                        <ActivityIndicator color={COLORS.white85} />
+                      </View>
+                    ) : null
+                  }
+                />
+              )}
+
+              <View style={styles.divider} />
+
+              <Text style={styles.sectionTitle}>Подписчики сообщества</Text>
+
+              <TextInput
+                placeholder="Поиск по никнейму"
+                placeholderTextColor={COLORS.white25}
+                value={moderatorSearch}
+                onChangeText={setModeratorSearch}
+                autoCapitalize="none"
+                style={styles.searchInput}
+              />
+
+              {isModeratorsInitialLoading ? (
+                <View style={styles.modalLoadingWrap}>
+                  <ActivityIndicator color={COLORS.white85} />
+                </View>
+              ) : subscribers.length === 0 ? (
+                <Text style={styles.emptyText}>
+                  {moderatorSearch.trim()
+                    ? "Подписчики не найдены"
+                    : "Нет подписчиков для назначения"}
+                </Text>
+              ) : (
+                <FlatList
+                  data={subscribers}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  style={styles.virtualList}
+                  onEndReachedThreshold={0.25}
+                  onEndReached={() => {
+                    if (
+                      !subscribersListQuery.hasNextPage ||
+                      subscribersListQuery.isFetchingNextPage
+                    ) {
+                      return;
+                    }
+                    void subscribersListQuery.fetchNextPage();
+                  }}
+                  renderItem={({ item: subscriber }) => (
+                    <View style={styles.userRow}>
+                      <View style={styles.userInfoWrap}>
+                        <Text style={styles.userName}>
+                          @{subscriber.nickname}
+                        </Text>
+                        <Text style={styles.userCaption}>
+                          {subscriber.name || "Без имени"}
+                        </Text>
+                      </View>
+
+                      <AppButton
+                        title={
+                          setCommunityModerator.isPending &&
+                          pendingModeratorUserId === subscriber.id
+                            ? "Сохраняем..."
+                            : "Сделать модератором"
+                        }
+                        onPress={() =>
+                          handleToggleModerator(subscriber.id, true)
+                        }
+                        disabled={setCommunityModerator.isPending}
+                        style={styles.inlineActionButton}
+                        TextStyle={styles.inlineActionButtonText}
+                      />
+                    </View>
+                  )}
+                  ListFooterComponent={
+                    subscribersListQuery.isFetchingNextPage ? (
                       <View style={styles.listLoader}>
                         <ActivityIndicator color={COLORS.white85} />
                       </View>
@@ -1328,203 +1029,470 @@ export const UpdateCommunityScreen = () => {
               )}
             </View>
           </View>
-        </Modal>
-        <Modal
-          visible={isTransferOwnershipModalOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setIsTransferOwnershipModalOpen(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Передача владения</Text>
-                <TouchableOpacity
-                  onPress={() => setIsTransferOwnershipModalOpen(false)}
-                >
-                  <Text style={styles.closeText}>Закрыть</Text>
-                </TouchableOpacity>
-              </View>
+        </View>
+      </Modal>
+      <Modal
+        visible={isBlacklistModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsBlacklistModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Управление черными спискам</Text>
+              <TouchableOpacity onPress={() => setIsBlacklistModalOpen(false)}>
+                <Text style={styles.closeText}>Закрыть</Text>
+              </TouchableOpacity>
+            </View>
 
-              <View style={styles.modalScrollContent}>
-                <Text style={styles.warningText}>
-                  Выберите нового владельца. После передачи владения вы станете
-                  модератором.
+            <View style={styles.modalScrollContent}>
+              {blacklistSubscribersListQuery.error ? (
+                <Text style={styles.errorText}>
+                  {blacklistSubscribersListQuery.error.message}
                 </Text>
+              ) : null}
+              {blacklistUsersListQuery.error ? (
+                <Text style={styles.errorText}>
+                  {blacklistUsersListQuery.error.message}
+                </Text>
+              ) : null}
 
-                {transferModeratorsListQuery.error ? (
-                  <Text style={styles.errorText}>
-                    {transferModeratorsListQuery.error.message}
-                  </Text>
-                ) : null}
-                {transferSubscribersListQuery.error ? (
-                  <Text style={styles.errorText}>
-                    {transferSubscribersListQuery.error.message}
-                  </Text>
-                ) : null}
-
-                <TextInput
-                  placeholder="Поиск по никнейму"
-                  placeholderTextColor={COLORS.white25}
-                  value={transferOwnershipSearch}
-                  onChangeText={setTransferOwnershipSearch}
-                  autoCapitalize="none"
-                  style={styles.searchInput}
-                />
-
-                <Text style={styles.sectionTitle}>Текущие модераторы</Text>
-
-                {isTransferInitialLoading ? (
-                  <View style={styles.modalLoadingWrap}>
-                    <ActivityIndicator color={COLORS.white85} />
-                  </View>
-                ) : transferModerators.length === 0 ? (
-                  <Text style={styles.emptyText}>
-                    {transferOwnershipSearch.trim()
-                      ? "Модераторы не найдены"
-                      : "Пока нет модераторов"}
-                  </Text>
-                ) : (
-                  <FlatList
-                    data={transferModerators}
-                    keyExtractor={(item) => item.id}
-                    showsVerticalScrollIndicator={false}
-                    style={styles.virtualList}
-                    onEndReachedThreshold={0.25}
-                    onEndReached={() => {
-                      if (
-                        !transferModeratorsListQuery.hasNextPage ||
-                        transferModeratorsListQuery.isFetchingNextPage
-                      ) {
-                        return;
-                      }
-                      void transferModeratorsListQuery.fetchNextPage();
-                    }}
-                    renderItem={({ item: moderator }) => (
-                      <View style={styles.userRow}>
-                        <View style={styles.userInfoWrap}>
-                          <Text style={styles.userName}>
-                            @{moderator.nickname}
-                          </Text>
-                          <Text style={styles.userCaption}>
-                            {moderator.name || "Без имени"}
-                          </Text>
-                        </View>
-
-                        <AppButton
-                          title={
-                            transferCommunityOwnership.isPending &&
-                            pendingOwnershipUserId === moderator.id
-                              ? "Сохраняем..."
-                              : "Передать владение"
-                          }
-                          onPress={() =>
-                            handleTransferOwnership({
-                              userId: moderator.id,
-                              nickname: moderator.nickname,
-                            })
-                          }
-                          disabled={transferCommunityOwnership.isPending}
-                          style={styles.inlineDangerButton}
-                          TextStyle={styles.inlineDangerButtonText}
-                        />
-                      </View>
-                    )}
-                    ListFooterComponent={
-                      transferModeratorsListQuery.isFetchingNextPage ? (
-                        <View style={styles.listLoader}>
-                          <ActivityIndicator color={COLORS.white85} />
-                        </View>
-                      ) : null
-                    }
-                  />
-                )}
-
-                <View style={styles.divider} />
-
-                <Text style={styles.sectionTitle}>Подписчики сообщества</Text>
-
-                {isTransferInitialLoading ? (
-                  <View style={styles.modalLoadingWrap}>
-                    <ActivityIndicator color={COLORS.white85} />
-                  </View>
-                ) : transferSubscribers.length === 0 ? (
-                  <Text style={styles.emptyText}>
-                    {transferOwnershipSearch.trim()
-                      ? "Подписчики не найдены"
-                      : "Нет подписчиков для передачи владения"}
-                  </Text>
-                ) : (
-                  <FlatList
-                    data={transferSubscribers}
-                    keyExtractor={(item) => item.id}
-                    showsVerticalScrollIndicator={false}
-                    style={styles.virtualList}
-                    onEndReachedThreshold={0.25}
-                    onEndReached={() => {
-                      if (
-                        !transferSubscribersListQuery.hasNextPage ||
-                        transferSubscribersListQuery.isFetchingNextPage
-                      ) {
-                        return;
-                      }
-                      void transferSubscribersListQuery.fetchNextPage();
-                    }}
-                    renderItem={({ item: subscriber }) => (
-                      <View style={styles.userRow}>
-                        <View style={styles.userInfoWrap}>
-                          <Text style={styles.userName}>
-                            @{subscriber.nickname}
-                          </Text>
-                          <Text style={styles.userCaption}>
-                            {subscriber.name || "Без имени"}
-                          </Text>
-                        </View>
-
-                        <AppButton
-                          title={
-                            transferCommunityOwnership.isPending &&
-                            pendingOwnershipUserId === subscriber.id
-                              ? "Сохраняем..."
-                              : "Передать владение"
-                          }
-                          onPress={() =>
-                            handleTransferOwnership({
-                              userId: subscriber.id,
-                              nickname: subscriber.nickname,
-                            })
-                          }
-                          disabled={transferCommunityOwnership.isPending}
-                          style={styles.inlineDangerButton}
-                          TextStyle={styles.inlineDangerButtonText}
-                        />
-                      </View>
-                    )}
-                    ListFooterComponent={
-                      transferSubscribersListQuery.isFetchingNextPage ? (
-                        <View style={styles.listLoader}>
-                          <ActivityIndicator color={COLORS.white85} />
-                        </View>
-                      ) : null
-                    }
-                  />
-                )}
+              <Text style={styles.sectionTitle}>Длительность блокировки</Text>
+              <View style={styles.durationRow}>
+                {BLACKLIST_DURATION_OPTIONS.map((option) => (
+                  <TouchableOpacity
+                    key={option.value}
+                    onPress={() => setBlacklistDuration(option.value)}
+                    style={[
+                      styles.durationChip,
+                      blacklistDuration === option.value
+                        ? styles.durationChipActive
+                        : null,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.durationChipText,
+                        blacklistDuration === option.value
+                          ? styles.durationChipTextActive
+                          : null,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
+
+              <Text style={styles.sectionTitle}>Подписчики сообщества</Text>
+
+              <TextInput
+                placeholder="Поиск по никнейму"
+                placeholderTextColor={COLORS.white25}
+                value={blacklistSearch}
+                onChangeText={setBlacklistSearch}
+                autoCapitalize="none"
+                style={styles.searchInput}
+              />
+
+              {isBlacklistInitialLoading ? (
+                <View style={styles.modalLoadingWrap}>
+                  <ActivityIndicator color={COLORS.white85} />
+                </View>
+              ) : blacklistSubscribers.length === 0 ? (
+                <Text style={styles.emptyText}>
+                  {blacklistSearch.trim()
+                    ? "Подписчики не найдены"
+                    : "Нет подписчиков для блокировки"}
+                </Text>
+              ) : (
+                <FlatList
+                  data={blacklistSubscribers}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  style={styles.virtualList}
+                  onEndReachedThreshold={0.25}
+                  onEndReached={() => {
+                    if (
+                      !blacklistSubscribersListQuery.hasNextPage ||
+                      blacklistSubscribersListQuery.isFetchingNextPage
+                    ) {
+                      return;
+                    }
+                    void blacklistSubscribersListQuery.fetchNextPage();
+                  }}
+                  renderItem={({ item: subscriber }) => (
+                    <View style={styles.userRow}>
+                      <View style={styles.userInfoWrap}>
+                        <Text style={styles.userName}>
+                          @{subscriber.nickname}
+                        </Text>
+                        <Text style={styles.userCaption}>
+                          {subscriber.name || "Без имени"}
+                        </Text>
+                      </View>
+
+                      <AppButton
+                        title={
+                          setCommunityBlacklist.isPending &&
+                          pendingBlacklistUserId === subscriber.id
+                            ? "Сохраняем..."
+                            : "В черный список"
+                        }
+                        onPress={() =>
+                          handleToggleBlacklist(subscriber.id, true)
+                        }
+                        disabled={setCommunityBlacklist.isPending}
+                        style={styles.inlineDangerButton}
+                        TextStyle={styles.inlineDangerButtonText}
+                      />
+                    </View>
+                  )}
+                  ListFooterComponent={
+                    blacklistSubscribersListQuery.isFetchingNextPage ? (
+                      <View style={styles.listLoader}>
+                        <ActivityIndicator color={COLORS.white85} />
+                      </View>
+                    ) : null
+                  }
+                />
+              )}
+
+              <View style={styles.divider} />
+
+              <Text style={styles.sectionTitle}>
+                Пользователи в черном списке
+              </Text>
+
+              {isBlacklistInitialLoading ? (
+                <View style={styles.modalLoadingWrap}>
+                  <ActivityIndicator color={COLORS.white85} />
+                </View>
+              ) : blockedUsers.length === 0 ? (
+                <Text style={styles.emptyText}>
+                  {blacklistSearch.trim()
+                    ? "Пользователи не найдены"
+                    : "Черный список пуст"}
+                </Text>
+              ) : (
+                <FlatList
+                  data={blockedUsers}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  style={styles.virtualList}
+                  onEndReachedThreshold={0.25}
+                  onEndReached={() => {
+                    if (
+                      !blacklistUsersListQuery.hasNextPage ||
+                      blacklistUsersListQuery.isFetchingNextPage
+                    ) {
+                      return;
+                    }
+                    void blacklistUsersListQuery.fetchNextPage();
+                  }}
+                  renderItem={({ item: blockedUser }) => (
+                    <View style={styles.userRow}>
+                      <View style={styles.userInfoWrap}>
+                        <Text style={styles.userName}>
+                          @{blockedUser.nickname}
+                        </Text>
+                        <Text style={styles.userCaption}>
+                          {blockedUser.name || "Без имени"}
+                        </Text>
+                        <Text style={styles.userCaption}>
+                          {formatBlacklistExpiration(blockedUser.expiresAt)}
+                        </Text>
+                        <Text style={styles.userCaption}>
+                          Добавил(а): @{blockedUser.blockedBy.nickname}
+                        </Text>
+                      </View>
+
+                      <AppButton
+                        title={
+                          setCommunityBlacklist.isPending &&
+                          pendingBlacklistUserId === blockedUser.id
+                            ? "Сохраняем..."
+                            : "Разблокировать"
+                        }
+                        onPress={() =>
+                          handleToggleBlacklist(blockedUser.id, false)
+                        }
+                        disabled={setCommunityBlacklist.isPending}
+                        style={styles.inlineActionButton}
+                        TextStyle={styles.inlineActionButtonText}
+                      />
+                    </View>
+                  )}
+                  ListFooterComponent={
+                    blacklistUsersListQuery.isFetchingNextPage ? (
+                      <View style={styles.listLoader}>
+                        <ActivityIndicator color={COLORS.white85} />
+                      </View>
+                    ) : null
+                  }
+                />
+              )}
             </View>
           </View>
-        </Modal>
-        <StatusBar style="auto" />
-      </SafeAreaView>
-    </ImageBackground>
+        </View>
+      </Modal>
+      <Modal
+        visible={isActionLogModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsActionLogModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>События сообщества</Text>
+              <TouchableOpacity onPress={() => setIsActionLogModalOpen(false)}>
+                <Text style={styles.closeText}>Закрыть</Text>
+              </TouchableOpacity>
+            </View>
+
+            {actionLogQuery.error ? (
+              <Text style={styles.errorText}>
+                {actionLogQuery.error.message}
+              </Text>
+            ) : null}
+
+            {isActionLogInitialLoading ? (
+              <View style={styles.modalLoadingWrap}>
+                <ActivityIndicator color={COLORS.white85} />
+              </View>
+            ) : actionLogs.length === 0 ? (
+              <Text style={styles.emptyText}>Журнал действий пока пуст</Text>
+            ) : (
+              <FlatList
+                data={actionLogs}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                style={styles.modalScroll}
+                contentContainerStyle={styles.modalScrollContent}
+                onEndReachedThreshold={0.25}
+                onEndReached={() => {
+                  if (
+                    !actionLogQuery.hasNextPage ||
+                    actionLogQuery.isFetchingNextPage
+                  ) {
+                    return;
+                  }
+                  void actionLogQuery.fetchNextPage();
+                }}
+                renderItem={({ item: action }) => (
+                  <View style={styles.logRow}>
+                    <Text style={styles.logText}>{getActionText(action)}</Text>
+                    <Text style={styles.logMeta}>
+                      {new Date(action.createdAt).toLocaleString("ru-RU")}
+                    </Text>
+                  </View>
+                )}
+                ListFooterComponent={
+                  actionLogQuery.isFetchingNextPage ? (
+                    <View style={styles.listLoader}>
+                      <ActivityIndicator color={COLORS.white85} />
+                    </View>
+                  ) : null
+                }
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        visible={isTransferOwnershipModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsTransferOwnershipModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Передача владения</Text>
+              <TouchableOpacity
+                onPress={() => setIsTransferOwnershipModalOpen(false)}
+              >
+                <Text style={styles.closeText}>Закрыть</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalScrollContent}>
+              <Text style={styles.warningText}>
+                Выберите нового владельца. После передачи владения вы станете
+                модератором.
+              </Text>
+
+              {transferModeratorsListQuery.error ? (
+                <Text style={styles.errorText}>
+                  {transferModeratorsListQuery.error.message}
+                </Text>
+              ) : null}
+              {transferSubscribersListQuery.error ? (
+                <Text style={styles.errorText}>
+                  {transferSubscribersListQuery.error.message}
+                </Text>
+              ) : null}
+
+              <TextInput
+                placeholder="Поиск по никнейму"
+                placeholderTextColor={COLORS.white25}
+                value={transferOwnershipSearch}
+                onChangeText={setTransferOwnershipSearch}
+                autoCapitalize="none"
+                style={styles.searchInput}
+              />
+
+              <Text style={styles.sectionTitle}>Текущие модераторы</Text>
+
+              {isTransferInitialLoading ? (
+                <View style={styles.modalLoadingWrap}>
+                  <ActivityIndicator color={COLORS.white85} />
+                </View>
+              ) : transferModerators.length === 0 ? (
+                <Text style={styles.emptyText}>
+                  {transferOwnershipSearch.trim()
+                    ? "Модераторы не найдены"
+                    : "Пока нет модераторов"}
+                </Text>
+              ) : (
+                <FlatList
+                  data={transferModerators}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  style={styles.virtualList}
+                  onEndReachedThreshold={0.25}
+                  onEndReached={() => {
+                    if (
+                      !transferModeratorsListQuery.hasNextPage ||
+                      transferModeratorsListQuery.isFetchingNextPage
+                    ) {
+                      return;
+                    }
+                    void transferModeratorsListQuery.fetchNextPage();
+                  }}
+                  renderItem={({ item: moderator }) => (
+                    <View style={styles.userRow}>
+                      <View style={styles.userInfoWrap}>
+                        <Text style={styles.userName}>
+                          @{moderator.nickname}
+                        </Text>
+                        <Text style={styles.userCaption}>
+                          {moderator.name || "Без имени"}
+                        </Text>
+                      </View>
+
+                      <AppButton
+                        title={
+                          transferCommunityOwnership.isPending &&
+                          pendingOwnershipUserId === moderator.id
+                            ? "Сохраняем..."
+                            : "Передать владение"
+                        }
+                        onPress={() =>
+                          handleTransferOwnership({
+                            userId: moderator.id,
+                            nickname: moderator.nickname,
+                          })
+                        }
+                        disabled={transferCommunityOwnership.isPending}
+                        style={styles.inlineDangerButton}
+                        TextStyle={styles.inlineDangerButtonText}
+                      />
+                    </View>
+                  )}
+                  ListFooterComponent={
+                    transferModeratorsListQuery.isFetchingNextPage ? (
+                      <View style={styles.listLoader}>
+                        <ActivityIndicator color={COLORS.white85} />
+                      </View>
+                    ) : null
+                  }
+                />
+              )}
+
+              <View style={styles.divider} />
+
+              <Text style={styles.sectionTitle}>Подписчики сообщества</Text>
+
+              {isTransferInitialLoading ? (
+                <View style={styles.modalLoadingWrap}>
+                  <ActivityIndicator color={COLORS.white85} />
+                </View>
+              ) : transferSubscribers.length === 0 ? (
+                <Text style={styles.emptyText}>
+                  {transferOwnershipSearch.trim()
+                    ? "Подписчики не найдены"
+                    : "Нет подписчиков для передачи владения"}
+                </Text>
+              ) : (
+                <FlatList
+                  data={transferSubscribers}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  style={styles.virtualList}
+                  onEndReachedThreshold={0.25}
+                  onEndReached={() => {
+                    if (
+                      !transferSubscribersListQuery.hasNextPage ||
+                      transferSubscribersListQuery.isFetchingNextPage
+                    ) {
+                      return;
+                    }
+                    void transferSubscribersListQuery.fetchNextPage();
+                  }}
+                  renderItem={({ item: subscriber }) => (
+                    <View style={styles.userRow}>
+                      <View style={styles.userInfoWrap}>
+                        <Text style={styles.userName}>
+                          @{subscriber.nickname}
+                        </Text>
+                        <Text style={styles.userCaption}>
+                          {subscriber.name || "Без имени"}
+                        </Text>
+                      </View>
+
+                      <AppButton
+                        title={
+                          transferCommunityOwnership.isPending &&
+                          pendingOwnershipUserId === subscriber.id
+                            ? "Сохраняем..."
+                            : "Передать владение"
+                        }
+                        onPress={() =>
+                          handleTransferOwnership({
+                            userId: subscriber.id,
+                            nickname: subscriber.nickname,
+                          })
+                        }
+                        disabled={transferCommunityOwnership.isPending}
+                        style={styles.inlineDangerButton}
+                        TextStyle={styles.inlineDangerButtonText}
+                      />
+                    </View>
+                  )}
+                  ListFooterComponent={
+                    transferSubscribersListQuery.isFetchingNextPage ? (
+                      <View style={styles.listLoader}>
+                        <ActivityIndicator color={COLORS.white85} />
+                      </View>
+                    ) : null
+                  }
+                />
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
+      <StatusBar style="auto" />
+    </AppScreen>
   );
 };
 
 const styles = StyleSheet.create({
   actionButton: {
     height: 40,
-  },
-  backgroundImage: {
-    flex: 1,
   },
   centered: {
     alignItems: "center",

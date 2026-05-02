@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 import { Ionicons } from "@expo/vector-icons";
 import {
   useFocusEffect,
@@ -9,15 +8,14 @@ import { StatusBar } from "expo-status-bar";
 import { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
-  ImageBackground,
   RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AppScreen } from "../../components/layout/AppScreen";
 import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { useMe } from "../../lib/ctx";
@@ -336,58 +334,49 @@ export const AllPostsScreen = () => {
   }
 
   return (
-    <ImageBackground
-      source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.BackgroundImage}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
-        <FlatList
-          data={activePosts}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          ListHeaderComponent={renderHeader}
-          ListEmptyComponent={renderEmpty}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor="#ffffff"
-            />
+    <AppScreen contentStyle={styles.safeArea}>
+      <FlatList
+        data={activePosts}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={renderEmpty}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#ffffff"
+          />
+        }
+        onEndReached={() => {
+          if (!activeHasNextPage || activeIsFetchingNextPage) {
+            return;
           }
-          onEndReached={() => {
-            if (!activeHasNextPage || activeIsFetchingNextPage) {
-              return;
-            }
 
-            if (isFeedTab) {
-              feedQuery.fetchNextPage();
-              return;
-            }
-
-            subscribedQuery.fetchNextPage();
-          }}
-          onEndReachedThreshold={0.15}
-        />
-        <PostImageViewerModal
-          visible={imageViewerState.isOpen}
-          imagePublicIds={imageViewerState.images}
-          initialIndex={imageViewerState.index}
-          onClose={() =>
-            setImageViewerState((prev) => ({ ...prev, isOpen: false }))
+          if (isFeedTab) {
+            feedQuery.fetchNextPage();
+            return;
           }
-        />
-      </SafeAreaView>
-    </ImageBackground>
+
+          subscribedQuery.fetchNextPage();
+        }}
+        onEndReachedThreshold={0.15}
+      />
+      <PostImageViewerModal
+        visible={imageViewerState.isOpen}
+        imagePublicIds={imageViewerState.images}
+        initialIndex={imageViewerState.index}
+        onClose={() =>
+          setImageViewerState((prev) => ({ ...prev, isOpen: false }))
+        }
+      />
+    </AppScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  BackgroundImage: {
-    flex: 1,
-  },
-
   centered: {
     alignItems: "center",
     flex: 1,

@@ -8,15 +8,14 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  ImageBackground,
   RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AppScreen } from "../../components/layout/AppScreen";
 import ScreenName from "../../constants/ScreenName";
 import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
@@ -347,36 +346,31 @@ export const ReportsScreen = () => {
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/backgrounds/application-bg.png")}
-      style={styles.backgroundImage}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
-        <FlatList
-          data={reports}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          ListHeaderComponent={renderHeader}
-          ListFooterComponent={renderFooter}
-          ListEmptyComponent={renderEmpty}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing || isRefetching}
-              onRefresh={onRefresh}
-              tintColor="#ffffff"
-            />
-          }
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.6}
-          windowSize={7}
-          initialNumToRender={6}
-          maxToRenderPerBatch={8}
-          removeClippedSubviews
-        />
-      </SafeAreaView>
-    </ImageBackground>
+    <AppScreen contentStyle={styles.safeArea}>
+      <FlatList
+        data={reports}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={renderEmpty}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing || isRefetching}
+            onRefresh={onRefresh}
+            tintColor="#ffffff"
+          />
+        }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.6}
+        windowSize={7}
+        initialNumToRender={6}
+        maxToRenderPerBatch={8}
+        removeClippedSubviews
+      />
+    </AppScreen>
   );
 };
 
@@ -400,7 +394,6 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 12,
   },
-  backgroundImage: { flex: 1 },
   card: {
     backgroundColor: COLORS.postsCardBackground,
     borderRadius: 28,

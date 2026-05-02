@@ -1,14 +1,8 @@
 import { useNavigation } from "@react-navigation/native";
-import {
-  ImageBackground,
-  StyleSheet,
-  Text,
-  View,
-  Pressable,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { SignInForm } from "../../components/forms/SignInForm";
+import { AppScreen } from "../../components/layout/AppScreen";
 import ScreenName from "../../constants/ScreenName";
 import { typography } from "../../theme/typography";
 
@@ -24,36 +18,27 @@ export const SignInScreen = () => {
   const navigation = useNavigation<OnboardingScreenNavigationProp>();
 
   return (
-    <ImageBackground
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      source={require("../../assets/backgrounds/onboarding-auth.png")}
-      style={styles.BackgroundImage}
-    >
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
-        <View style={styles.header}>
-          <Text style={typography.h2_white100}>С возвращением</Text>
-          <Text style={typography.h2_white100}>в Универ</Text>
-        </View>
-        <View style={styles.form}>
-          <SignInForm />
-        </View>
-        <View style={styles.bottomRow}>
-          <Text style={typography.caption_white85}>Еще нет аккаунта?</Text>
-          <Pressable onPress={() => navigation.navigate(ScreenName.SignUp)}>
-            <Text style={typography.caption_link_underline}>
-              Зарегистрироваться
-            </Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    </ImageBackground>
+    <AppScreen background="auth" contentStyle={styles.container}>
+      <View style={styles.header}>
+        <Text style={typography.h2_white100}>С возвращением</Text>
+        <Text style={typography.h2_white100}>в Универ</Text>
+      </View>
+      <View style={styles.form}>
+        <SignInForm />
+      </View>
+      <View style={styles.bottomRow}>
+        <Text style={typography.caption_white85}>Еще нет аккаунта?</Text>
+        <Pressable onPress={() => navigation.navigate(ScreenName.SignUp)}>
+          <Text style={typography.caption_link_underline}>
+            Зарегистрироваться
+          </Text>
+        </Pressable>
+      </View>
+    </AppScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  BackgroundImage: {
-    flex: 1,
-  },
   bottomRow: {
     alignItems: "center",
     flexDirection: "row",
