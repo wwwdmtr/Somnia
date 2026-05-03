@@ -9,7 +9,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { isUserAdmin } from "@somnia/shared/src/utils/can";
 import { useFonts } from "expo-font";
 import React from "react";
-import { Text } from "react-native";
+import { Text, useWindowDimensions } from "react-native";
 
 import ScreenName from "../constants/ScreenName";
 import TabName from "../constants/TabName";
@@ -274,10 +274,11 @@ const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AdminStack = createNativeStackNavigator<AdminStackParamList>();
 
 const TAB_ICON_SIZE = 24;
+const TAB_BAR_HORIZONTAL_INSET = 13;
+const TAB_BAR_MAX_WIDTH = 500;
 
 export const BASE_TAB_BAR_STYLE = {
   position: "absolute",
-  marginHorizontal: 13,
   bottom: 20,
   height: 60,
 
@@ -304,8 +305,15 @@ const HIDE_TABBAR_SCREENS: Array<ScreenName | TabName> = [
 
 function getTabBarStyleForRoute(
   route: RouteProp<RootTabParamList, keyof RootTabParamList>,
+  tabBarWidth: number,
 ): BottomTabNavigationOptions["tabBarStyle"] {
   const focusedRouteName = getFocusedRouteNameFromRoute(route) ?? route.name;
+  const centeredTabBarStyle = {
+    ...BASE_TAB_BAR_STYLE,
+    left: "50%",
+    transform: [{ translateX: -tabBarWidth / 2 }],
+    width: tabBarWidth,
+  } satisfies BottomTabNavigationOptions["tabBarStyle"];
 
   const shouldHide = HIDE_TABBAR_SCREENS.includes(
     focusedRouteName as ScreenName,
@@ -313,17 +321,23 @@ function getTabBarStyleForRoute(
 
   if (shouldHide) {
     return {
-      ...BASE_TAB_BAR_STYLE,
+      ...centeredTabBarStyle,
       opacity: 0,
-      transform: [{ translateY: 80 }],
+      transform: [{ translateX: -tabBarWidth / 2 }, { translateY: 80 }],
       pointerEvents: "none",
     };
   }
 
-  return BASE_TAB_BAR_STYLE;
+  return centeredTabBarStyle;
 }
 
 export function AppNav() {
+  const { width } = useWindowDimensions();
+  const tabBarWidth = Math.min(
+    Math.max(width - TAB_BAR_HORIZONTAL_INSET * 2, 0),
+    TAB_BAR_MAX_WIDTH,
+  );
+
   return (
     <Tab.Navigator
       initialRouteName={TabName.FeedTab}
@@ -332,7 +346,7 @@ export function AppNav() {
         return {
           headerShown: false,
           tabBarShowLabel: false,
-          tabBarStyle: getTabBarStyleForRoute(route),
+          tabBarStyle: getTabBarStyleForRoute(route, tabBarWidth),
           tabBarItemStyle: {
             flex: 1,
             justifyContent: "center",

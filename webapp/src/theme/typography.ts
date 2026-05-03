@@ -48,6 +48,7 @@ export const COLORS = {
   modalOverlay: "rgba(2, 12, 24, 0.58)",
   mediaOverlay: "rgba(2, 12, 24, 0.5)",
   mediaOverlayStrong: "rgba(2, 12, 24, 0.62)",
+  bottomEdgeBlurFallback: "rgba(6, 23, 42, 0.14)",
   imageEmptyFieldsBackground: "rgba(234, 247, 255, 0.08)",
   imageFullScreenBackground: "rgba(0,0,0,0.95)",
 };

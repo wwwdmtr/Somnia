@@ -135,7 +135,7 @@ export const UpdatePostScreen = () => {
 
   if (!data.post.canEditByMe) {
     return (
-      <AppScreen contentStyle={styles.safeArea}>
+      <AppScreen contentStyle={styles.safeArea} withBottomEdgeBlur>
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -155,7 +155,7 @@ export const UpdatePostScreen = () => {
   }
 
   return (
-    <AppScreen contentStyle={styles.safeArea}>
+    <AppScreen contentStyle={styles.safeArea} withBottomEdgeBlur>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <TouchableOpacity

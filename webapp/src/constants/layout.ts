@@ -1,3 +1,4 @@
+export const WEB_APP_SHELL_MAX_WIDTH = 1224;
 export const WEB_SHELL_WIDTH = 440;
 export const WEB_SHELL_HEIGHT = 852;
 export const SCREEN_HORIZONTAL_PADDING = 14;

@@ -334,7 +334,7 @@ export const AllPostsScreen = () => {
   }
 
   return (
-    <AppScreen contentStyle={styles.safeArea}>
+    <AppScreen contentStyle={styles.safeArea} withBottomEdgeBlur>
       <FlatList
         data={activePosts}
         keyExtractor={(item) => item.id}
@@ -397,13 +397,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 6,
   },
-  headerContainer: {
-    marginBottom: 20,
-  },
+  headerContainer: {},
 
   listContent: {
     padding: 14,
-    paddingBottom: 70,
+    paddingBottom: 90,
   },
 
   notificationsButton: {
@@ -418,7 +416,6 @@ const styles = StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    marginBottom: 20,
   },
   segmentActive: {
     backgroundColor: COLORS.buttonBackground,

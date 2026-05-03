@@ -346,7 +346,7 @@ export const ReportsScreen = () => {
   };
 
   return (
-    <AppScreen contentStyle={styles.safeArea}>
+    <AppScreen contentStyle={styles.safeArea} withBottomEdgeBlur>
       <FlatList
         data={reports}
         keyExtractor={(item) => item.id}
@@ -451,7 +451,6 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    marginBottom: 20,
     marginHorizontal: 14,
   },
 });

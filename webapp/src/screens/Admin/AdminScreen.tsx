@@ -120,7 +120,7 @@ export const AdminScreen = () => {
 
   if (!isUserAdmin(me)) {
     return (
-      <AppScreen contentStyle={styles.safeArea}>
+      <AppScreen contentStyle={styles.safeArea} withBottomEdgeBlur>
         <View style={styles.headerContainer}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -138,7 +138,7 @@ export const AdminScreen = () => {
   }
 
   return (
-    <AppScreen contentStyle={styles.safeArea}>
+    <AppScreen contentStyle={styles.safeArea} withBottomEdgeBlur>
       <View style={styles.headerContainer}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -467,7 +467,6 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    marginBottom: 20,
     marginHorizontal: 14,
   },
   searchInput: {

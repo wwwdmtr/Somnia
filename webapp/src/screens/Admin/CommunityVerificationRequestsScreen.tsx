@@ -323,7 +323,7 @@ export const CommunityVerificationRequestsScreen = () => {
   };
 
   return (
-    <AppScreen contentStyle={styles.safeArea}>
+    <AppScreen contentStyle={styles.safeArea} withBottomEdgeBlur>
       <FlatList
         data={requests}
         keyExtractor={(item) => item.id}
@@ -428,7 +428,6 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    marginBottom: 20,
     marginHorizontal: 14,
   },
 });

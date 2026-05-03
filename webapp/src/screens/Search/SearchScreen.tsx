@@ -523,7 +523,7 @@ export const SearchScreen = () => {
   };
 
   return (
-    <AppScreen contentStyle={styles.safeArea}>
+    <AppScreen contentStyle={styles.safeArea} withBottomEdgeBlur>
       {isInitialLoading ? (
         <View style={styles.centered}>
           <Text style={typography.body_white85}>Загрузка...</Text>
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
 
-  safeArea: { flex: 1, marginBottom: 20 },
+  safeArea: { flex: 1 },
 
   searchBox: {
     alignItems: "center",

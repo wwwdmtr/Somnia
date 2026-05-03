@@ -279,7 +279,7 @@ export const NotificationsScreen = () => {
   }
 
   return (
-    <AppScreen contentStyle={styles.safeArea}>
+    <AppScreen contentStyle={styles.safeArea} withBottomEdgeBlur>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleGoBack} style={styles.iconButton}>
           <Ionicons name="chevron-back" size={20} color={COLORS.white85} />

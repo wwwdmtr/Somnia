@@ -21,8 +21,9 @@ import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { ReportModal } from "../../components/ui/ReportModal";
 import ScreenName from "../../constants/ScreenName";
-import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
+import { WEB_APP_SHELL_MAX_WIDTH } from "../../constants/layout";
 import { getAvatarSource } from "../../lib/avatar";
+import { copyCurrentPageUrlToClipboard } from "../../lib/clipboard";
 import { useMe } from "../../lib/ctx";
 import {
   applyOptimisticLikeToPosts,
@@ -41,7 +42,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 const MAX_INFINITE_PAGES = 10;
 const SIDE_MENU_OVERLAY_BACKGROUND = COLORS.modalOverlay;
-const FLAG_ACTION_ICON_COLOR = COLORS.mutedIcon;
+const ACTION_MENU_ICON_COLOR = COLORS.mutedIcon;
 const ACTION_MENU_TOP_OFFSET = 14;
 const ACTION_MENU_CARD_WIDTH = 236;
 
@@ -235,6 +236,21 @@ export const CommunityScreen = () => {
       !isManagedCommunity,
   );
 
+  const handleShareCurrentPage = async () => {
+    try {
+      await copyCurrentPageUrlToClipboard();
+      setIsActionsMenuOpen(false);
+      Alert.alert("Готово", "Ссылка скопирована");
+    } catch (error) {
+      Alert.alert(
+        "Ошибка",
+        error instanceof Error
+          ? error.message
+          : "Не удалось скопировать ссылку",
+      );
+    }
+  };
+
   const handleToggleCommunityBlock = async () => {
     if (!community.id || !me?.id || isManagedCommunity) {
       return;
@@ -323,9 +339,9 @@ export const CommunityScreen = () => {
             style={styles.settingsButton}
           >
             <Ionicons
-              name="flag-outline"
-              size={19}
-              color={FLAG_ACTION_ICON_COLOR}
+              name="ellipsis-vertical"
+              size={22}
+              color={ACTION_MENU_ICON_COLOR}
             />
           </TouchableOpacity>
         ) : null}
@@ -407,7 +423,7 @@ export const CommunityScreen = () => {
   };
 
   return (
-    <AppScreen contentStyle={styles.container}>
+    <AppScreen contentStyle={styles.container} withBottomEdgeBlur>
       <FlatList
         data={posts}
         keyExtractor={(item) => item.id}
@@ -466,6 +482,15 @@ export const CommunityScreen = () => {
           />
           <View style={styles.sideMenuShell}>
             <View style={styles.sideMenuContent}>
+              <TouchableOpacity
+                style={styles.sideMenuButton}
+                onPress={() => {
+                  void handleShareCurrentPage();
+                }}
+              >
+                <Text style={typography.body_white85}>Скопировать URL</Text>
+              </TouchableOpacity>
+
               <TouchableOpacity
                 style={styles.sideMenuButton}
                 disabled={setUserContentBlock.isPending}
@@ -573,10 +598,12 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   postsTitle: {
+    alignSelf: "center",
     color: COLORS.white85,
     fontFamily: "SFProText-Semibold",
     fontSize: 20,
     lineHeight: 28,
+    marginBottom: 20,
     marginTop: 16,
   },
   settingsButton: {
@@ -606,12 +633,12 @@ const styles = StyleSheet.create({
     backgroundColor: SIDE_MENU_OVERLAY_BACKGROUND,
     flex: 1,
     justifyContent: "flex-start",
-    paddingHorizontal: 14,
   },
   sideMenuShell: {
     alignItems: "flex-end",
     marginTop: ACTION_MENU_TOP_OFFSET,
-    maxWidth: SHELL_CONTENT_WIDTH,
+    maxWidth: WEB_APP_SHELL_MAX_WIDTH,
+    paddingHorizontal: 14,
     width: "100%",
   },
   subscribeButton: {

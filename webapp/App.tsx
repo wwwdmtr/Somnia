@@ -2,9 +2,10 @@
 import "react-native-gesture-handler";
 import { NavigationContainer } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { WEB_APP_SHELL_MAX_WIDTH } from "./src/constants/layout";
 import { SentryUser } from "./src/lib/SentryUser";
 import { AppContextProvider } from "./src/lib/ctx";
 import { MixpanelUser } from "./src/lib/mixpanel";
@@ -15,7 +16,8 @@ import { COLORS } from "./src/theme/typography";
 
 const WEB_TEXTAREA_SCROLLBAR_STYLE_ID = "somnia-hide-textarea-scrollbar";
 const MOBILE_STANDALONE_SCREEN_WIDTH_LIMIT = 480;
-const WEB_SHELL_MAX_WIDTH = 1224;
+const WEB_SHELL_BORDER_RADIUS_BREAKPOINT = 650;
+const WEB_SHELL_BORDER_RADIUS = 20;
 
 function isStandaloneWebApp() {
   const maybeWindow = (globalThis as { window?: Window }).window;
@@ -60,9 +62,14 @@ function getWebViewportHeight() {
 
 export default function App() {
   const isWeb = Platform.OS === "web";
+  const { width: windowWidth } = useWindowDimensions();
   const [webViewportHeight, setWebViewportHeight] = useState<number>(() =>
     isWeb ? getWebViewportHeight() : 0,
   );
+  const webShellBorderRadius =
+    windowWidth >= WEB_SHELL_BORDER_RADIUS_BREAKPOINT
+      ? WEB_SHELL_BORDER_RADIUS
+      : 0;
 
   useEffect(() => {
     if (!isWeb) {
@@ -151,6 +158,7 @@ export default function App() {
             <View
               style={[
                 styles.webShell,
+                { borderRadius: webShellBorderRadius },
                 webViewportHeight > 0
                   ? { height: webViewportHeight, maxHeight: webViewportHeight }
                   : null,
@@ -179,12 +187,11 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   webShell: {
-    borderRadius: 28,
     height: "100%",
     marginBottom: 0,
     marginTop: 0,
     maxHeight: "100%",
-    maxWidth: WEB_SHELL_MAX_WIDTH,
+    maxWidth: WEB_APP_SHELL_MAX_WIDTH,
     overflow: "hidden",
     paddingBottom: 0,
     paddingTop: 0,

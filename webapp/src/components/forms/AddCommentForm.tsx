@@ -213,7 +213,7 @@ const styles = {
     alignItems: "center" as const,
     backgroundColor: COLORS.buttonBackground,
     borderRadius: 999,
-    bottom: 6,
+    bottom: 9,
     height: SEND_BUTTON_SIZE,
     justifyContent: "center" as const,
     position: "absolute" as const,

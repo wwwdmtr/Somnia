@@ -32,8 +32,9 @@ import { AppScreen } from "../../components/layout/AppScreen";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { ReportModal } from "../../components/ui/ReportModal";
 import ScreenName from "../../constants/ScreenName";
-import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
+import { WEB_APP_SHELL_MAX_WIDTH } from "../../constants/layout";
 import { getAvatarSource } from "../../lib/avatar";
+import { copyCurrentPageUrlToClipboard } from "../../lib/clipboard";
 import { useMe } from "../../lib/ctx";
 import { usePostLikeMutation } from "../../lib/postLikeMutation";
 import { trpc } from "../../lib/trpc";
@@ -63,7 +64,7 @@ const imageAspectRatioCache = new Map<string, number>();
 const MEDIA_COUNTER_BACKGROUND = COLORS.mediaOverlayStrong;
 const MEDIA_ARROW_BACKGROUND = COLORS.mediaOverlay;
 const SIDE_MENU_OVERLAY_BACKGROUND = COLORS.modalOverlay;
-const FLAG_ACTION_ICON_COLOR = COLORS.mutedIcon;
+const ACTION_MENU_ICON_COLOR = COLORS.mutedIcon;
 const ACTION_MENU_TOP_OFFSET = 14;
 const ACTION_MENU_CARD_WIDTH = 236;
 
@@ -544,6 +545,21 @@ export const PostScreen = () => {
     setIsReportModalOpen(true);
   }, []);
 
+  const handleShareCurrentPage = useCallback(async () => {
+    try {
+      await copyCurrentPageUrlToClipboard();
+      setIsActionsMenuOpen(false);
+      Alert.alert("Готово", "Ссылка скопирована");
+    } catch (error) {
+      Alert.alert(
+        "Ошибка",
+        error instanceof Error
+          ? error.message
+          : "Не удалось скопировать ссылку",
+      );
+    }
+  }, []);
+
   const handleSubmitPostReport = useCallback(
     async (description: string) => {
       if (!data?.post?.id) {
@@ -972,8 +988,6 @@ export const PostScreen = () => {
       post.canBlockCommunityByMe,
   );
   const hasReportAction = Boolean(me?.id && post.canReportByMe);
-  const canOpenActionsMenu =
-    hasUserBlockAction || hasCommunityBlockAction || hasReportAction;
 
   const onUndoDeletePress = () => {
     const postId = String(post.id);
@@ -1028,7 +1042,7 @@ export const PostScreen = () => {
   };
 
   return (
-    <AppScreen contentStyle={styles.safeArea}>
+    <AppScreen contentStyle={styles.safeArea} withBottomEdgeBlur>
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -1039,15 +1053,13 @@ export const PostScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.headerActions}>
-          {canOpenActionsMenu ? (
-            <TouchableOpacity onPress={() => setIsActionsMenuOpen(true)}>
-              <Ionicons
-                name="flag-outline"
-                size={20}
-                color={FLAG_ACTION_ICON_COLOR}
-              />
-            </TouchableOpacity>
-          ) : null}
+          <TouchableOpacity onPress={() => setIsActionsMenuOpen(true)}>
+            <Ionicons
+              name="ellipsis-vertical"
+              size={22}
+              color={ACTION_MENU_ICON_COLOR}
+            />
+          </TouchableOpacity>
 
           {post.canEditByMe ? (
             <TouchableOpacity
@@ -1133,6 +1145,15 @@ export const PostScreen = () => {
           />
           <View style={styles.sideMenuShell}>
             <View style={styles.sideMenuContent}>
+              <TouchableOpacity
+                style={styles.sideMenuButton}
+                onPress={() => {
+                  void handleShareCurrentPage();
+                }}
+              >
+                <Text style={typography.body_white85}>Скопировать URL</Text>
+              </TouchableOpacity>
+
               {hasUserBlockAction ? (
                 <TouchableOpacity
                   style={styles.sideMenuButton}
@@ -1254,10 +1275,10 @@ const styles = StyleSheet.create({
   commentFormWrapper: {
     backgroundColor: COLORS.navBarBackground,
     borderRadius: 24,
-    bottom: 28,
+    bottom: 20,
     left: 13,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+
     position: "absolute",
     right: 13,
   },
@@ -1409,7 +1430,6 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingBottom: 120,
   },
   sideMenuBackdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -1432,12 +1452,12 @@ const styles = StyleSheet.create({
     backgroundColor: SIDE_MENU_OVERLAY_BACKGROUND,
     flex: 1,
     justifyContent: "flex-start",
-    paddingHorizontal: 14,
   },
   sideMenuShell: {
     alignItems: "flex-end",
     marginTop: ACTION_MENU_TOP_OFFSET,
-    maxWidth: SHELL_CONTENT_WIDTH,
+    maxWidth: WEB_APP_SHELL_MAX_WIDTH,
+    paddingHorizontal: 14,
     width: "100%",
   },
 });
