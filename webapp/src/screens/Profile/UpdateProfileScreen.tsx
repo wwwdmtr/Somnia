@@ -369,6 +369,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 14,
+    paddingTop: 14,
   },
   emptyText: {
     color: COLORS.white25,
