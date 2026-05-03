@@ -26,6 +26,7 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AddCommentForm } from "../../components/forms/AddCommentForm";
 import { AppScreen } from "../../components/layout/AppScreen";
@@ -129,6 +130,7 @@ export const PostScreen = () => {
   const navigation = useNavigation<PostScreenNavProp>();
   const utils = trpc.useUtils();
   const me = useMe();
+  const insets = useSafeAreaInsets();
   const [expandedComments, setExpandedComments] = useState<Set<string>>(
     new Set(),
   );
@@ -211,6 +213,13 @@ export const PostScreen = () => {
   const currentPostImageIndex =
     postImageCursor.postId === currentPostId ? postImageCursor.index : 0;
   const hasMultiplePostImages = (data?.post?.images.length ?? 0) > 1;
+  const actionMenuShellStyle = useMemo(
+    () => [
+      styles.sideMenuShell,
+      { marginTop: insets.top + ACTION_MENU_TOP_OFFSET },
+    ],
+    [insets.top],
+  );
   const postImageWidthBase =
     postImageContainerWidth || DEFAULT_POST_IMAGE_WIDTH;
   const usablePostImageContainerWidth = Math.max(1, postImageWidthBase);
@@ -1143,7 +1152,7 @@ export const PostScreen = () => {
             style={styles.sideMenuBackdrop}
             onPress={() => setIsActionsMenuOpen(false)}
           />
-          <View style={styles.sideMenuShell}>
+          <View style={actionMenuShellStyle}>
             <View style={styles.sideMenuContent}>
               <TouchableOpacity
                 style={styles.sideMenuButton}
@@ -1455,7 +1464,6 @@ const styles = StyleSheet.create({
   },
   sideMenuShell: {
     alignItems: "flex-end",
-    marginTop: ACTION_MENU_TOP_OFFSET,
     maxWidth: WEB_APP_SHELL_MAX_WIDTH,
     paddingHorizontal: 14,
     width: "100%",

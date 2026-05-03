@@ -22,6 +22,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppScreen } from "../../components/layout/AppScreen";
 import { PostCard } from "../../components/post/PostCard";
@@ -30,6 +31,7 @@ import { ReportModal } from "../../components/ui/ReportModal";
 import ScreenName from "../../constants/ScreenName";
 import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
 import { getAvatarSource } from "../../lib/avatar";
+import { copyCurrentPageUrlToClipboard } from "../../lib/clipboard";
 import { useAppContext } from "../../lib/ctx";
 import {
   applyOptimisticLikeToPosts,
@@ -69,7 +71,7 @@ type ProfileScreenNavigationProp = CompositeNavigationProp<
 const PROFILE_POSTS_LIMIT = 15;
 const MAX_INFINITE_PAGES = 10;
 const SIDE_MENU_OVERLAY_BACKGROUND = COLORS.modalOverlay;
-const FLAG_ACTION_ICON_COLOR = COLORS.mutedIcon;
+const ACTION_MENU_ICON_COLOR = COLORS.mutedIcon;
 const ADMIN_PANEL_BUTTON_BACKGROUND = COLORS.notificationUnreadBackground;
 const ADMIN_PANEL_BUTTON_BORDER = COLORS.notificationUnreadBorder;
 const ACTION_MENU_TOP_OFFSET = 24;
@@ -80,6 +82,7 @@ export const ProfileScreen = () => {
   const { me, isLoading: isMeLoading } = useAppContext();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const utils = trpc.useUtils();
+  const insets = useSafeAreaInsets();
 
   const [refreshing, setRefreshing] = useState(false);
   const [imageViewerState, setImageViewerState] = useState<{
@@ -245,6 +248,21 @@ export const ProfileScreen = () => {
     }
   };
 
+  const handleShareCurrentPage = async () => {
+    try {
+      await copyCurrentPageUrlToClipboard();
+      setIsActionsMenuOpen(false);
+      Alert.alert("Готово", "Ссылка скопирована");
+    } catch (error) {
+      Alert.alert(
+        "Ошибка",
+        error instanceof Error
+          ? error.message
+          : "Не удалось скопировать ссылку",
+      );
+    }
+  };
+
   const handleSubmitUserReport = async (description: string) => {
     if (!profileQuery.data?.profile || profileQuery.data.profile.isMe) {
       return;
@@ -290,6 +308,13 @@ export const ProfileScreen = () => {
     () => postsQuery.data?.pages.flatMap((page) => page.posts) ?? [],
     [postsQuery.data],
   );
+  const actionMenuShellStyle = useMemo(
+    () => [
+      styles.sideMenuShell,
+      { marginTop: insets.top + ACTION_MENU_TOP_OFFSET },
+    ],
+    [insets.top],
+  );
 
   if (
     isMeLoading ||
@@ -333,9 +358,9 @@ export const ProfileScreen = () => {
           {canOpenActionsMenu ? (
             <TouchableOpacity onPress={() => setIsActionsMenuOpen(true)}>
               <Ionicons
-                name="flag-outline"
-                size={20}
-                color={FLAG_ACTION_ICON_COLOR}
+                name="ellipsis-vertical"
+                size={22}
+                color={ACTION_MENU_ICON_COLOR}
               />
             </TouchableOpacity>
           ) : null}
@@ -507,8 +532,17 @@ export const ProfileScreen = () => {
             style={styles.sideMenuBackdrop}
             onPress={() => setIsActionsMenuOpen(false)}
           />
-          <View style={styles.sideMenuShell}>
+          <View style={actionMenuShellStyle}>
             <View style={styles.sideMenuContent}>
+              <TouchableOpacity
+                style={styles.sideMenuButton}
+                onPress={() => {
+                  void handleShareCurrentPage();
+                }}
+              >
+                <Text style={typography.body_white85}>Скопировать URL</Text>
+              </TouchableOpacity>
+
               {!profile.isMe ? (
                 <TouchableOpacity
                   style={styles.sideMenuButton}
@@ -676,7 +710,6 @@ const styles = StyleSheet.create({
   },
   sideMenuShell: {
     alignItems: "flex-end",
-    marginTop: ACTION_MENU_TOP_OFFSET,
     maxWidth: SHELL_CONTENT_WIDTH,
     width: "100%",
   },

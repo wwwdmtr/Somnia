@@ -16,7 +16,7 @@ import { COLORS } from "./src/theme/typography";
 
 const WEB_TEXTAREA_SCROLLBAR_STYLE_ID = "somnia-hide-textarea-scrollbar";
 const MOBILE_STANDALONE_SCREEN_WIDTH_LIMIT = 480;
-const WEB_SHELL_BORDER_RADIUS_BREAKPOINT = 650;
+const WEB_SHELL_BORDER_RADIUS_BREAKPOINT = 1250;
 const WEB_SHELL_BORDER_RADIUS = 20;
 
 function isStandaloneWebApp() {

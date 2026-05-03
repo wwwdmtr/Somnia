@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppScreen } from "../../components/layout/AppScreen";
 import { PostCard } from "../../components/post/PostCard";
@@ -67,6 +68,7 @@ export const CommunityScreen = () => {
   const navigation = useNavigation<CommunityNavProp>();
   const utils = trpc.useUtils();
   const me = useMe();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -158,6 +160,13 @@ export const CommunityScreen = () => {
   const posts = useMemo(
     () => postsQuery.data?.pages.flatMap((page) => page.posts) ?? [],
     [postsQuery.data],
+  );
+  const actionMenuShellStyle = useMemo(
+    () => [
+      styles.sideMenuShell,
+      { marginTop: insets.top + ACTION_MENU_TOP_OFFSET },
+    ],
+    [insets.top],
   );
 
   const onRefresh = async () => {
@@ -480,7 +489,7 @@ export const CommunityScreen = () => {
             style={styles.sideMenuBackdrop}
             onPress={() => setIsActionsMenuOpen(false)}
           />
-          <View style={styles.sideMenuShell}>
+          <View style={actionMenuShellStyle}>
             <View style={styles.sideMenuContent}>
               <TouchableOpacity
                 style={styles.sideMenuButton}
@@ -636,7 +645,6 @@ const styles = StyleSheet.create({
   },
   sideMenuShell: {
     alignItems: "flex-end",
-    marginTop: ACTION_MENU_TOP_OFFSET,
     maxWidth: WEB_APP_SHELL_MAX_WIDTH,
     paddingHorizontal: 14,
     width: "100%",
