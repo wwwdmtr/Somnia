@@ -120,7 +120,9 @@ export const AddPostScreen = () => {
       </View>
 
       <View style={styles.addDreamHeader}>
-        <Text style={typography.h2_white85}>{screenTitle}</Text>
+        <Text style={[typography.h2_white85, styles.screenTitle]}>
+          {screenTitle}
+        </Text>
 
         <TouchableOpacity
           style={styles.publisherSwitch}
@@ -390,6 +392,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.postsCardBackground,
     borderRadius: 99,
     flexDirection: "row",
+    flexShrink: 0,
     gap: 8,
     maxWidth: "62%",
     minHeight: 36,
@@ -401,5 +404,11 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontSize: 14,
     lineHeight: 20,
+  },
+  screenTitle: {
+    flex: 1,
+    flexShrink: 1,
+    marginRight: 12,
+    minWidth: 0,
   },
 });

@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 14,
+    paddingHorizontal: 14,
   },
   emptyText: {
     color: COLORS.white25,
@@ -465,6 +465,7 @@ const styles = StyleSheet.create({
   },
   signOutButton: {
     height: 40,
+    marginBottom: 32,
     width: "auto",
   },
   userCaption: {
