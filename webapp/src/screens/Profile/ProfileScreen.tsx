@@ -357,9 +357,10 @@ export const ProfileScreen = () => {
           <TouchableOpacity
             onPress={() => navigation.navigate(ScreenName.UpdateProfile)}
           >
-            <Image
-              source={require("../../assets/Icons/decorIcons/edit-outline.png")}
-              style={styles.editUserName}
+            <Ionicons
+              name="settings-outline"
+              size={24}
+              color={COLORS.white85}
             />
           </TouchableOpacity>
         ) : null}
@@ -593,10 +594,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 16,
-  },
-  editUserName: {
-    height: 24,
-    width: 24,
   },
   emptyState: {
     alignItems: "center",
