@@ -11,7 +11,12 @@ import {
   type StyleProp,
   type ViewStyle,
 } from "react-native";
-import { SafeAreaView, type Edge } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  type Edge,
+  type EdgeMode,
+  type Edges,
+} from "react-native-safe-area-context";
 
 import { COLORS } from "../../theme/typography";
 
@@ -26,7 +31,7 @@ type AppScreenProps = {
   resizeMode?: "cover" | "contain" | "stretch" | "repeat" | "center";
   children?: React.ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
-  edges?: Edge[];
+  edges?: Edges;
   imageStyle?: StyleProp<ImageStyle>;
   statusBarStyle?: "auto" | "inverted" | "light" | "dark";
   style?: StyleProp<ViewStyle>;
@@ -36,6 +41,7 @@ type AppScreenProps = {
 
 const AUTH_BACKGROUND_BLUR_RADIUS = 4;
 const BOTTOM_EDGE_BLUR_HEIGHT = 70;
+const DEFAULT_SAFE_AREA_EDGES: readonly Edge[] = ["top", "left", "right"];
 const WEB_BOTTOM_EDGE_BLUR_STYLE = {
   backgroundImage:
     "linear-gradient(to bottom, rgba(6, 23, 42, 0) 0%, rgba(6, 23, 42, 0.08) 45%, rgba(6, 23, 42, 0.58) 100%)",
@@ -62,12 +68,32 @@ const BACKGROUNDS: Record<AppScreenBackground, ResponsiveBackground> = {
   },
 };
 
+function normalizeSafeAreaEdges(edges: Edges): Record<Edge, EdgeMode> {
+  if (Array.isArray(edges)) {
+    return {
+      top: edges.includes("top") ? "additive" : "off",
+      right: edges.includes("right") ? "additive" : "off",
+      bottom: edges.includes("bottom") ? "additive" : "off",
+      left: edges.includes("left") ? "additive" : "off",
+    };
+  }
+
+  const edgeRecord = edges as Partial<Record<Edge, EdgeMode>>;
+
+  return {
+    top: edgeRecord.top ?? "off",
+    right: edgeRecord.right ?? "off",
+    bottom: edgeRecord.bottom ?? "off",
+    left: edgeRecord.left ?? "off",
+  };
+}
+
 export function AppScreen({
   background = "app",
   resizeMode = "cover",
   children,
   contentStyle,
-  edges = ["top", "left", "right"],
+  edges = DEFAULT_SAFE_AREA_EDGES,
   imageStyle,
   statusBarStyle = "light",
   style,
@@ -76,6 +102,9 @@ export function AppScreen({
 }: AppScreenProps) {
   const Content = withSafeArea ? SafeAreaView : View;
   const { height, width } = useWindowDimensions();
+  const safeAreaEdges = withSafeArea
+    ? normalizeSafeAreaEdges(edges)
+    : undefined;
   const source =
     width > height
       ? BACKGROUNDS[background].landscape
@@ -92,10 +121,7 @@ export function AppScreen({
       imageStyle={imageStyle}
     >
       <StatusBar style={statusBarStyle} />
-      <Content
-        edges={withSafeArea ? edges : undefined}
-        style={[styles.content, contentStyle]}
-      >
+      <Content edges={safeAreaEdges} style={[styles.content, contentStyle]}>
         {children}
       </Content>
       {withBottomEdgeBlur ? (
