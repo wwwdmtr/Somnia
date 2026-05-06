@@ -22,7 +22,7 @@ export const OnboardingScreen = () => {
       <View style={styles.spacer} />
       <View style={styles.logo}>
         <Text style={typography.h1_white100}>Универ</Text>
-        <Text style={typography.body_white85}>Пожалуй лучшая соцсеть</Text>
+        <Text style={typography.body_white85}>Место для обсуждений</Text>
       </View>
 
       <AppButton
