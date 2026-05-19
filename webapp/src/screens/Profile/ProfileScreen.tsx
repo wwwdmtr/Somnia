@@ -34,6 +34,10 @@ import { getAvatarSource } from "../../lib/avatar";
 import { copyCurrentPageUrlToClipboard } from "../../lib/clipboard";
 import { useAppContext } from "../../lib/ctx";
 import {
+  mixpanelTrackPostOpened,
+  mixpanelTrackUserFollowToggled,
+} from "../../lib/mixpanel";
+import {
   applyOptimisticLikeToPosts,
   applyServerLikeToPosts,
   usePostLikeMutation,
@@ -123,7 +127,14 @@ export const ProfileScreen = () => {
   });
 
   const setUserFollow = trpc.setUserFollow.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
+      if (variables) {
+        mixpanelTrackUserFollowToggled({
+          action: variables.isFollowing ? "follow" : "unfollow",
+          source: "profile",
+          targetUserId: variables.userId,
+        });
+      }
       await Promise.all([
         utils.getUserProfile.invalidate({ userId: targetUserId }),
         me?.id
@@ -289,6 +300,10 @@ export const ProfileScreen = () => {
   };
 
   const handleOpenPost = (id: string) => {
+    mixpanelTrackPostOpened({
+      id,
+      source: "profile",
+    });
     navigation.navigate(ScreenName.Post, { id });
   };
 

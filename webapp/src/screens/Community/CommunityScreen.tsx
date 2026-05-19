@@ -27,6 +27,10 @@ import { getAvatarSource } from "../../lib/avatar";
 import { copyCurrentPageUrlToClipboard } from "../../lib/clipboard";
 import { useMe } from "../../lib/ctx";
 import {
+  mixpanelTrackCommunitySubscriptionToggled,
+  mixpanelTrackPostOpened,
+} from "../../lib/mixpanel";
+import {
   applyOptimisticLikeToPosts,
   applyServerLikeToPosts,
   usePostLikeMutation,
@@ -95,7 +99,16 @@ export const CommunityScreen = () => {
     maxPages: MAX_INFINITE_PAGES,
   });
   const setCommunitySubscription = trpc.setCommunitySubscription.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
+      if (variables) {
+        mixpanelTrackCommunitySubscriptionToggled({
+          action: variables.isSubscribed ? "subscribe" : "unsubscribe",
+          communityId: variables.communityId,
+          isVerified: communityQuery.data?.community?.isVerified,
+          membersCount: communityQuery.data?.community?.membersCount,
+          source: "community",
+        });
+      }
       await Promise.all([
         utils.getCommunity.invalidate({ id: communityId }),
         utils.getSubscribedPosts.invalidate(),
@@ -179,6 +192,10 @@ export const CommunityScreen = () => {
   };
 
   const handleOpenPost = (id: string) => {
+    mixpanelTrackPostOpened({
+      id,
+      source: "community",
+    });
     navigation.navigate(ScreenName.Post, { id });
   };
 

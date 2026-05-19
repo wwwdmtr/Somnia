@@ -17,6 +17,7 @@ import { AppScreen } from "../../components/layout/AppScreen";
 import ScreenName from "../../constants/ScreenName";
 import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
+import { mixpanelTrackUserFollowToggled } from "../../lib/mixpanel";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
 
@@ -70,7 +71,14 @@ export const UserConnectionsScreen = () => {
   });
 
   const setUserFollow = trpc.setUserFollow.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
+      if (variables) {
+        mixpanelTrackUserFollowToggled({
+          action: variables.isFollowing ? "follow" : "unfollow",
+          source: "user_connections",
+          targetUserId: variables.userId,
+        });
+      }
       await Promise.all([
         utils.getUserFollows.invalidate(followsQueryKey),
         utils.getUserProfile.invalidate({ userId }),

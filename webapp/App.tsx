@@ -1,23 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import "react-native-gesture-handler";
-import { NavigationContainer } from "@react-navigation/native";
-import React, { useEffect, useState } from "react";
+import {
+  createNavigationContainerRef,
+  NavigationContainer,
+} from "@react-navigation/native";
+import React, { useEffect, useRef, useState } from "react";
 import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { WEB_APP_SHELL_MAX_WIDTH } from "./src/constants/layout";
 import { SentryUser } from "./src/lib/SentryUser";
 import { AppContextProvider } from "./src/lib/ctx";
-import { MixpanelUser } from "./src/lib/mixpanel";
+import { MixpanelUser, mixpanelTrackScreenViewed } from "./src/lib/mixpanel";
 import { TrpcProvider } from "./src/lib/trpc";
 import { linking } from "./src/navigation/linking";
 import { RootNavigation } from "./src/navigation/navigation";
 import { COLORS } from "./src/theme/typography";
 
+import type { ParamListBase } from "@react-navigation/native";
+
 const WEB_TEXTAREA_SCROLLBAR_STYLE_ID = "somnia-hide-textarea-scrollbar";
 const MOBILE_STANDALONE_SCREEN_WIDTH_LIMIT = 480;
 const WEB_SHELL_BORDER_RADIUS_BREAKPOINT = 1250;
 const WEB_SHELL_BORDER_RADIUS = 20;
+const navigationRef = createNavigationContainerRef<ParamListBase>();
 
 function isStandaloneWebApp() {
   const maybeWindow = (globalThis as { window?: Window }).window;
@@ -62,6 +68,7 @@ function getWebViewportHeight() {
 
 export default function App() {
   const isWeb = Platform.OS === "web";
+  const previousScreenNameRef = useRef<string | undefined>(undefined);
   const { width: windowWidth } = useWindowDimensions();
   const [webViewportHeight, setWebViewportHeight] = useState<number>(() =>
     isWeb ? getWebViewportHeight() : 0,
@@ -136,7 +143,36 @@ export default function App() {
 
   const content = (
     <SafeAreaProvider>
-      <NavigationContainer linking={linking}>
+      <NavigationContainer
+        ref={navigationRef}
+        linking={linking}
+        onReady={() => {
+          const currentScreenName = navigationRef.getCurrentRoute()?.name;
+
+          if (!currentScreenName) {
+            return;
+          }
+
+          previousScreenNameRef.current = currentScreenName;
+          mixpanelTrackScreenViewed({
+            name: currentScreenName,
+          });
+        }}
+        onStateChange={() => {
+          const previousScreenName = previousScreenNameRef.current;
+          const currentScreenName = navigationRef.getCurrentRoute()?.name;
+
+          if (!currentScreenName || currentScreenName === previousScreenName) {
+            return;
+          }
+
+          previousScreenNameRef.current = currentScreenName;
+          mixpanelTrackScreenViewed({
+            name: currentScreenName,
+            previousName: previousScreenName,
+          });
+        }}
+      >
         <RootNavigation />
       </NavigationContainer>
     </SafeAreaProvider>

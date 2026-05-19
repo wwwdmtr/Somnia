@@ -16,6 +16,10 @@ import {
 
 import { AppScreen } from "../../components/layout/AppScreen";
 import ScreenName from "../../constants/ScreenName";
+import {
+  mixpanelTrackNotificationOpened,
+  mixpanelTrackPostOpened,
+} from "../../lib/mixpanel";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
 
@@ -142,6 +146,30 @@ const getNotificationText = (notification: NotificationItem) => {
   return `@${notification.actor.nickname} ответил(а) на ваш комментарий`;
 };
 
+const getNotificationDestination = (notification: NotificationItem) => {
+  if (notification.type === "USER_FOLLOWED") {
+    return "profile";
+  }
+
+  if (notification.type === "COMMUNITY_BLACKLISTED") {
+    return "none";
+  }
+
+  if (notification.type === "COMMUNITY_UNBLACKLISTED") {
+    return notification.community?.id ? "community" : "none";
+  }
+
+  if (notification.type === "ADMIN_NEW_REPORT") {
+    return "admin_reports";
+  }
+
+  if (notification.type === "ADMIN_NEW_COMMUNITY_VERIFICATION_REQUEST") {
+    return "admin_community_verification_requests";
+  }
+
+  return notification.postId ? "post" : "none";
+};
+
 export const NotificationsScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const utils = trpc.useUtils();
@@ -206,6 +234,14 @@ export const NotificationsScreen = () => {
   }, [unreadNotifications.length, markAllNotificationsRead, utils]);
 
   const handleOpenNotification = async (notification: NotificationItem) => {
+    const destination = getNotificationDestination(notification);
+    mixpanelTrackNotificationOpened({
+      destination,
+      id: notification.id,
+      type: notification.type,
+      wasUnread: !notification.readAt,
+    });
+
     await markAllRead();
 
     if (notification.type === "USER_FOLLOWED") {
@@ -239,6 +275,10 @@ export const NotificationsScreen = () => {
     }
 
     if (notification.postId) {
+      mixpanelTrackPostOpened({
+        id: notification.postId,
+        source: "notification",
+      });
       navigation.navigate("Post", { id: notification.postId });
     }
   };

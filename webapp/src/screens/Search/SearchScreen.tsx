@@ -6,7 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import { zGetRatedPostsTrpcInput } from "@somnia/shared/src/router/getRatedPosts/input";
 import { StatusBar } from "expo-status-bar";
 import { useFormik } from "formik";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -25,6 +25,10 @@ import { AppScreen } from "../../components/layout/AppScreen";
 import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { getAvatarSource } from "../../lib/avatar";
+import {
+  mixpanelTrackPostOpened,
+  mixpanelTrackSearchPerformed,
+} from "../../lib/mixpanel";
 import {
   applyOptimisticLikeToPosts,
   applyServerLikeToPosts,
@@ -79,6 +83,7 @@ type PostsInfiniteData = NonNullable<
 export const SearchScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const utils = trpc.useUtils();
+  const lastTrackedSearchRef = useRef<string | null>(null);
 
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>("all");
@@ -153,6 +158,11 @@ export const SearchScreen = () => {
   );
   const users = usersQuery.data?.users ?? [];
   const communities = communitiesQuery.data?.communities ?? [];
+  const searchResultsCount = isPostsTarget
+    ? posts.length
+    : isUsersTarget
+      ? users.length
+      : communities.length;
 
   const isInitialLoading = isPostsTarget
     ? postsQuery.isLoading && !postsQuery.data
@@ -171,6 +181,44 @@ export const SearchScreen = () => {
     : isUsersTarget
       ? usersQuery.error
       : communitiesQuery.error;
+  const activeSearchQuerySettled = isPostsTarget
+    ? postsQuery.isSuccess && !postsQuery.isFetching
+    : isUsersTarget
+      ? usersQuery.isSuccess && !usersQuery.isFetching
+      : communitiesQuery.isSuccess && !communitiesQuery.isFetching;
+
+  useEffect(() => {
+    if (!isSearchMode || !activeSearchQuerySettled || activeError) {
+      return;
+    }
+
+    const trackingKey = [
+      selectedSearchTarget,
+      isPostsTarget ? selectedPeriod : "none",
+      search,
+    ].join(":");
+
+    if (lastTrackedSearchRef.current === trackingKey) {
+      return;
+    }
+
+    lastTrackedSearchRef.current = trackingKey;
+    mixpanelTrackSearchPerformed({
+      period: isPostsTarget ? selectedPeriod : undefined,
+      queryLength: search.length,
+      resultsCount: searchResultsCount,
+      target: selectedSearchTarget,
+    });
+  }, [
+    activeError,
+    activeSearchQuerySettled,
+    isPostsTarget,
+    isSearchMode,
+    search,
+    searchResultsCount,
+    selectedPeriod,
+    selectedSearchTarget,
+  ]);
 
   const setPostLike = usePostLikeMutation<PostsInfiniteData>({
     applyOptimistic: (old, variables) => {
@@ -226,6 +274,10 @@ export const SearchScreen = () => {
   };
 
   const handleOpenPost = (id: string) => {
+    mixpanelTrackPostOpened({
+      id,
+      source: isSearchMode ? "search" : "popular_posts",
+    });
     navigation.navigate("Post", { id });
   };
 

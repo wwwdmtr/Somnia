@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { mixpanelTrackCommentCreated } from "../../lib/mixpanel";
 import { trpc } from "../../lib/trpc";
 import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS, typography } from "../../theme/typography";
@@ -64,6 +65,11 @@ export const AddCommentForm = ({
         postId,
         content: values.content,
         parentId: parentId ?? undefined,
+      });
+      mixpanelTrackCommentCreated({
+        commentType: parentId ? "reply" : "comment",
+        contentLength: values.content.trim().length,
+        postId,
       });
       resetForm();
     },

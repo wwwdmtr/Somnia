@@ -6,6 +6,7 @@ import { View, TextInput, Text, Platform } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { mixpanelTrackPostCreated } from "../../lib/mixpanel";
 import {
   addPendingPostImagePublicIds,
   getPendingPostImagePublicIds,
@@ -132,12 +133,21 @@ export const AddPostForm = ({
             await addPendingPostImagePublicIds([publicId]);
           },
         });
-        await createPost.mutateAsync({
+        const post = await createPost.mutateAsync({
           title: normalizedTitle,
           description: normalizedDescription,
           text: normalizedText,
           images: [...currentImages, ...uploadedImages],
           ...(communityId ? { communityId } : {}),
+        });
+        mixpanelTrackPostCreated({
+          communityId: communityId ?? null,
+          id: post.id,
+          imagesCount: currentImages.length + uploadedImages.length,
+          publisherType: communityId ? "community" : "user",
+          source: communityId ? "community_composer" : "post_composer",
+          textLength: normalizedText.length,
+          titleLength: normalizedTitle.length,
         });
         setPendingImages([]);
         resetForm();

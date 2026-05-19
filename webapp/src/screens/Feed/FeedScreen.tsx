@@ -19,6 +19,7 @@ import { AppScreen } from "../../components/layout/AppScreen";
 import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { useMe } from "../../lib/ctx";
+import { mixpanelTrackPostOpened } from "../../lib/mixpanel";
 import {
   applyOptimisticLikeToPosts,
   applyServerLikeToPosts,
@@ -199,6 +200,10 @@ export const AllPostsScreen = () => {
   );
 
   const handleOpenPost = (id: string) => {
+    mixpanelTrackPostOpened({
+      id,
+      source: isFeedTab ? "feed" : "subscribed_feed",
+    });
     navigation.navigate("Post", { id });
   };
 
