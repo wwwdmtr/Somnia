@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { getCloudinaryUploadUrl } from "@somnia/shared/src/cloudinary/cloudinary";
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   FlatList,
   Image,
@@ -21,7 +21,15 @@ type PostImageViewerModalProps = {
   onClose: () => void;
 };
 
-export const PostImageViewerModal = ({
+export const PostImageViewerModal = (props: PostImageViewerModalProps) => {
+  if (!props.visible) {
+    return null;
+  }
+
+  return <VisiblePostImageViewerModal {...props} />;
+};
+
+const VisiblePostImageViewerModal = ({
   visible,
   imagePublicIds,
   initialIndex = 0,
@@ -34,6 +42,46 @@ export const PostImageViewerModal = ({
     Math.min(initialIndex, Math.max(imagePublicIds.length - 1, 0)),
   );
   const [currentIndex, setCurrentIndex] = useState(safeInitialIndex);
+  const hasMultipleImages = imagePublicIds.length > 1;
+  const currentSafeIndex = Math.max(
+    0,
+    Math.min(currentIndex, Math.max(imagePublicIds.length - 1, 0)),
+  );
+
+  const scrollToImageIndex = useCallback(
+    (targetIndex: number, animated = true) => {
+      if (imagePublicIds.length === 0) {
+        return;
+      }
+
+      const clampedIndex = Math.max(
+        0,
+        Math.min(targetIndex, imagePublicIds.length - 1),
+      );
+      setCurrentIndex(clampedIndex);
+      requestAnimationFrame(() => {
+        flatListRef.current?.scrollToIndex({
+          index: clampedIndex,
+          animated,
+        });
+      });
+    },
+    [imagePublicIds.length],
+  );
+  const updateCurrentIndexFromOffset = useCallback(
+    (offsetX: number) => {
+      if (width <= 0 || imagePublicIds.length === 0) {
+        return;
+      }
+
+      const nextIndex = Math.max(
+        0,
+        Math.min(Math.round(offsetX / width), imagePublicIds.length - 1),
+      );
+      setCurrentIndex((prev) => (prev === nextIndex ? prev : nextIndex));
+    },
+    [imagePublicIds.length, width],
+  );
 
   return (
     <Modal
@@ -42,19 +90,13 @@ export const PostImageViewerModal = ({
       animationType="fade"
       onRequestClose={onClose}
       onShow={() => {
-        setCurrentIndex(safeInitialIndex);
-        requestAnimationFrame(() => {
-          flatListRef.current?.scrollToIndex({
-            index: safeInitialIndex,
-            animated: false,
-          });
-        });
+        scrollToImageIndex(safeInitialIndex, false);
       }}
     >
       <View style={styles.overlay}>
         <View style={styles.header}>
           <Text style={typography.body_white85}>
-            {imagePublicIds.length > 0 ? currentIndex + 1 : 0}/
+            {imagePublicIds.length > 0 ? currentSafeIndex + 1 : 0}/
             {imagePublicIds.length}
           </Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -77,11 +119,15 @@ export const PostImageViewerModal = ({
             length: width,
             offset: width * index,
           })}
+          onScroll={(event) => {
+            updateCurrentIndexFromOffset(event.nativeEvent.contentOffset.x);
+          }}
           onMomentumScrollEnd={(event) => {
-            const nextIndex = Math.round(
-              event.nativeEvent.contentOffset.x / width,
-            );
-            setCurrentIndex(nextIndex);
+            updateCurrentIndexFromOffset(event.nativeEvent.contentOffset.x);
+          }}
+          scrollEventThrottle={16}
+          onScrollToIndexFailed={() => {
+            scrollToImageIndex(safeInitialIndex, false);
           }}
           renderItem={({ item }) => (
             <View style={[styles.slide, { width, height: height * 0.82 }]}>
@@ -93,6 +139,30 @@ export const PostImageViewerModal = ({
             </View>
           )}
         />
+
+        {hasMultipleImages && currentSafeIndex > 0 ? (
+          <TouchableOpacity
+            accessibilityLabel="Предыдущее изображение"
+            onPress={() => scrollToImageIndex(currentSafeIndex - 1)}
+            style={[styles.navButton, styles.navButtonLeft]}
+          >
+            <Ionicons name="chevron-back" size={34} color={COLORS.white100} />
+          </TouchableOpacity>
+        ) : null}
+
+        {hasMultipleImages && currentSafeIndex < imagePublicIds.length - 1 ? (
+          <TouchableOpacity
+            accessibilityLabel="Следующее изображение"
+            onPress={() => scrollToImageIndex(currentSafeIndex + 1)}
+            style={[styles.navButton, styles.navButtonRight]}
+          >
+            <Ionicons
+              name="chevron-forward"
+              size={34}
+              color={COLORS.white100}
+            />
+          </TouchableOpacity>
+        ) : null}
       </View>
     </Modal>
   );
@@ -116,6 +186,23 @@ const styles = StyleSheet.create({
   image: {
     height: "100%",
     width: "100%",
+  },
+  navButton: {
+    alignItems: "center",
+    backgroundColor: COLORS.mediaOverlay,
+    borderRadius: 24,
+    height: 48,
+    justifyContent: "center",
+    position: "absolute",
+    top: "50%",
+    transform: [{ translateY: -24 }],
+    width: 48,
+  },
+  navButtonLeft: {
+    left: 18,
+  },
+  navButtonRight: {
+    right: 18,
   },
   overlay: {
     backgroundColor: COLORS.imageFullScreenBackground,

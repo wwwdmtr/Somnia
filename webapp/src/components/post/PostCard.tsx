@@ -69,6 +69,8 @@ type PostCardProps = {
 
 const DEFAULT_MAX_IMAGE_HEIGHT = 650;
 const DEFAULT_IMAGE_WIDTH = 260;
+const WIDE_CONTENT_MIN_WIDTH = 720;
+const WIDE_MAX_IMAGE_HEIGHT = 540;
 const PREVIEW_TEXT_LINE_HEIGHT = 24;
 const FALLBACK_IMAGE_ASPECT_RATIO = 4 / 3;
 const imageAspectRatioCache = new Map<string, number>();
@@ -129,6 +131,7 @@ export const PostCard = ({
   const createdAt = format(new Date(post.createdAt), "dd.MM.yyyy");
   const [previewTextHeight, setPreviewTextHeight] = useState(0);
   const [fullTextHeight, setFullTextHeight] = useState(0);
+  const [cardWidth, setCardWidth] = useState(0);
   const [mediaContainerWidth, setMediaContainerWidth] = useState(0);
   const [mediaCursor, setMediaCursor] = useState<{
     index: number;
@@ -142,7 +145,11 @@ export const PostCard = ({
     ratio: number;
     url: string;
   } | null>(null);
-  const shouldMeasureTruncation = showReadMore && showReadMoreOnlyWhenTruncated;
+  const hasTitle = post.title.trim().length > 0;
+  const hasBodyText = post.text.trim().length > 0;
+  const hasTextContent = hasTitle || hasBodyText;
+  const shouldMeasureTruncation =
+    hasBodyText && showReadMore && showReadMoreOnlyWhenTruncated;
   const primaryImagePublicId = post.images[0];
   const primaryImageUrl = primaryImagePublicId
     ? getCloudinaryUploadUrl(primaryImagePublicId, "image", "large")
@@ -158,9 +165,16 @@ export const PostCard = ({
   const currentMediaIndex =
     mediaCursor.postId === post.id ? mediaCursor.index : 0;
   const hasMultipleImages = post.images.length > 1;
+  const shouldUseWideMediaLimit =
+    post.images.length > 0 && cardWidth >= WIDE_CONTENT_MIN_WIDTH;
   const maxImageHeight = Math.max(
     1,
-    Math.min(imageHeight, DEFAULT_MAX_IMAGE_HEIGHT),
+    Math.min(
+      imageHeight,
+      shouldUseWideMediaLimit
+        ? WIDE_MAX_IMAGE_HEIGHT
+        : DEFAULT_MAX_IMAGE_HEIGHT,
+    ),
   );
   const usableContainerWidth = Math.max(1, mediaContainerWidth || imageWidth);
   const mediaSize = useMemo(
@@ -228,25 +242,34 @@ export const PostCard = ({
     };
   }, [primaryImageUrl]);
 
-  const handleMediaScrollEnd = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+  const updateMediaIndexFromOffset = useCallback(
+    (offsetX: number) => {
       if (!hasMultipleImages || mediaSize.width <= 0) {
         return;
       }
 
-      const nextIndex = Math.round(
-        event.nativeEvent.contentOffset.x / mediaSize.width,
-      );
+      const nextIndex = Math.round(offsetX / mediaSize.width);
       const clampedIndex = Math.max(
         0,
         Math.min(nextIndex, post.images.length - 1),
       );
-      setMediaCursor({
-        index: clampedIndex,
-        postId: post.id,
-      });
+      setMediaCursor((prev) =>
+        prev.postId === post.id && prev.index === clampedIndex
+          ? prev
+          : {
+              index: clampedIndex,
+              postId: post.id,
+            },
+      );
     },
     [hasMultipleImages, mediaSize.width, post.id, post.images.length],
+  );
+
+  const handleMediaScrollEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      updateMediaIndexFromOffset(event.nativeEvent.contentOffset.x);
+    },
+    [updateMediaIndexFromOffset],
   );
 
   const scrollToMediaIndex = useCallback(
@@ -282,35 +305,43 @@ export const PostCard = ({
   }, []);
 
   const renderTextBlock = () => {
+    if (!hasTextContent) {
+      return null;
+    }
+
     const text = (
       <View style={styles.textContainer}>
-        <Text style={typography.h4_white_85}>{post.title}</Text>
-        <View style={styles.bodyTextWrapper}>
-          {shouldMeasureTruncation ? (
-            <Text
-              style={[typography.body_white100, styles.measurementText]}
-              onLayout={handleFullTextLayout}
-              accessible={false}
+        {hasTitle ? (
+          <Text style={typography.h4_white_85}>{post.title}</Text>
+        ) : null}
+        {hasBodyText ? (
+          <View style={styles.bodyTextWrapper}>
+            {shouldMeasureTruncation ? (
+              <Text
+                style={[typography.body_white100, styles.measurementText]}
+                onLayout={handleFullTextLayout}
+                accessible={false}
+              >
+                {post.text}
+              </Text>
+            ) : null}
+            <View
+              style={[
+                styles.previewTextContainer,
+                {
+                  maxHeight: textNumberOfLines * PREVIEW_TEXT_LINE_HEIGHT,
+                },
+              ]}
+              onLayout={
+                shouldMeasureTruncation ? handlePreviewTextLayout : undefined
+              }
             >
-              {post.text}
-            </Text>
-          ) : null}
-          <View
-            style={[
-              styles.previewTextContainer,
-              {
-                maxHeight: textNumberOfLines * PREVIEW_TEXT_LINE_HEIGHT,
-              },
-            ]}
-            onLayout={
-              shouldMeasureTruncation ? handlePreviewTextLayout : undefined
-            }
-          >
-            <Text style={[typography.body_white100, styles.previewText]}>
-              {post.text}
-            </Text>
+              <Text style={[typography.body_white100, styles.previewText]}>
+                {post.text}
+              </Text>
+            </View>
           </View>
-        </View>
+        ) : null}
       </View>
     );
 
@@ -364,7 +395,11 @@ export const PostCard = ({
               length: mediaSize.width,
               offset: mediaSize.width * index,
             })}
+            onScroll={(event) => {
+              updateMediaIndexFromOffset(event.nativeEvent.contentOffset.x);
+            }}
             onMomentumScrollEnd={handleMediaScrollEnd}
+            scrollEventThrottle={16}
             onScrollToIndexFailed={() => {
               // no-op
             }}
@@ -435,10 +470,48 @@ export const PostCard = ({
     previewTextHeight > 0 &&
     fullTextHeight > previewTextHeight + 1;
   const shouldShowReadMore =
-    showReadMore && (!showReadMoreOnlyWhenTruncated || isTextTruncated);
+    hasBodyText &&
+    showReadMore &&
+    (!showReadMoreOnlyWhenTruncated || isTextTruncated);
+  const renderContent = () => {
+    if (!hasTextContent) {
+      return renderMedia();
+    }
+
+    return (
+      <>
+        {contentOrder === "textFirst" ? (
+          <>
+            {renderTextBlock()}
+            {renderMedia()}
+          </>
+        ) : (
+          <>
+            {renderMedia()}
+            {renderTextBlock()}
+          </>
+        )}
+
+        {shouldShowReadMore ? (
+          <TouchableOpacity
+            onPress={() => onOpenPost(post.id)}
+            style={styles.readMore}
+          >
+            <Text style={typography.caption_link}>{readMoreLabel}</Text>
+          </TouchableOpacity>
+        ) : null}
+      </>
+    );
+  };
 
   return (
-    <View style={styles.card}>
+    <View
+      style={styles.card}
+      onLayout={(event) => {
+        const nextWidth = Math.ceil(event.nativeEvent.layout.width);
+        setCardWidth((prev) => (prev === nextWidth ? prev : nextWidth));
+      }}
+    >
       {badgeLabel ? (
         <View
           style={[
@@ -497,26 +570,7 @@ export const PostCard = ({
         </View>
       )}
 
-      {contentOrder === "textFirst" ? (
-        <>
-          {renderTextBlock()}
-          {renderMedia()}
-        </>
-      ) : (
-        <>
-          {renderMedia()}
-          {renderTextBlock()}
-        </>
-      )}
-
-      {shouldShowReadMore ? (
-        <TouchableOpacity
-          onPress={() => onOpenPost(post.id)}
-          style={styles.readMore}
-        >
-          <Text style={typography.caption_link}>{readMoreLabel}</Text>
-        </TouchableOpacity>
-      ) : null}
+      {renderContent()}
 
       <View style={styles.actions}>
         <View style={styles.action}>

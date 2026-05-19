@@ -119,15 +119,31 @@ export const AvatarUploader = () => {
     );
   }
 
-  const setMeCache = (updatedMe: typeof me) => {
+  const syncMeCache = async (updatedMe: NonNullable<typeof me>) => {
     trpcUtils.getMe.setData(undefined, { me: updatedMe });
+    trpcUtils.getUserProfile.setData({ userId: updatedMe.id }, (old) => {
+      if (!old) {
+        return old;
+      }
+
+      return {
+        ...old,
+        profile: {
+          ...old.profile,
+          avatar: updatedMe.avatar,
+          name: updatedMe.name,
+          nickname: updatedMe.nickname,
+        },
+      };
+    });
+    await trpcUtils.getUserProfile.invalidate({ userId: updatedMe.id });
   };
 
   const handleRemoveAvatar = async () => {
     setErrorMessage("");
     try {
       const updatedMe = await setMyAvatar.mutateAsync({ avatar: null });
-      setMeCache(updatedMe);
+      await syncMeCache(updatedMe);
     } catch (error) {
       if (!(error instanceof TRPCClientError)) {
         sentryCaptureException(error);
@@ -198,7 +214,7 @@ export const AvatarUploader = () => {
       const updatedMe = await setMyAvatar.mutateAsync({
         avatar: uploadResult.public_id,
       });
-      setMeCache(updatedMe);
+      await syncMeCache(updatedMe);
     } catch (error) {
       if (!(error instanceof TRPCClientError)) {
         sentryCaptureException(error);

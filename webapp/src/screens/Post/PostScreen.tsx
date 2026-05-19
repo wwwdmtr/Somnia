@@ -60,6 +60,8 @@ type PostScreenNavProp = NativeStackNavigationProp<
 const MAX_INFINITE_PAGES = 10;
 const MAX_POST_IMAGE_HEIGHT = 650;
 const DEFAULT_POST_IMAGE_WIDTH = 280;
+const WIDE_POST_CONTENT_MIN_WIDTH = 720;
+const WIDE_POST_IMAGE_MAX_HEIGHT = 540;
 const FALLBACK_IMAGE_ASPECT_RATIO = 4 / 3;
 const imageAspectRatioCache = new Map<string, number>();
 const MEDIA_COUNTER_BACKGROUND = COLORS.mediaOverlayStrong;
@@ -148,6 +150,7 @@ export const PostScreen = () => {
     index: 0,
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [postCardWidth, setPostCardWidth] = useState(0);
   const [postImageContainerWidth, setPostImageContainerWidth] = useState(0);
   const [postImageCursor, setPostImageCursor] = useState<{
     index: number;
@@ -213,6 +216,12 @@ export const PostScreen = () => {
   const currentPostImageIndex =
     postImageCursor.postId === currentPostId ? postImageCursor.index : 0;
   const hasMultiplePostImages = (data?.post?.images.length ?? 0) > 1;
+  const hasPostTitle = (data?.post?.title ?? "").trim().length > 0;
+  const hasPostBodyText = (data?.post?.text ?? "").trim().length > 0;
+  const hasPostTextContent = hasPostTitle || hasPostBodyText;
+  const shouldUseWidePostMediaLimit =
+    (data?.post?.images.length ?? 0) > 0 &&
+    postCardWidth >= WIDE_POST_CONTENT_MIN_WIDTH;
   const actionMenuShellStyle = useMemo(
     () => [
       styles.sideMenuShell,
@@ -228,9 +237,15 @@ export const PostScreen = () => {
       getContainedImageSize({
         containerWidth: usablePostImageContainerWidth,
         aspectRatio: currentPostImageAspectRatio,
-        maxHeight: MAX_POST_IMAGE_HEIGHT,
+        maxHeight: shouldUseWidePostMediaLimit
+          ? WIDE_POST_IMAGE_MAX_HEIGHT
+          : MAX_POST_IMAGE_HEIGHT,
       }),
-    [usablePostImageContainerWidth, currentPostImageAspectRatio],
+    [
+      usablePostImageContainerWidth,
+      currentPostImageAspectRatio,
+      shouldUseWidePostMediaLimit,
+    ],
   );
 
   useEffect(() => {
@@ -272,8 +287,8 @@ export const PostScreen = () => {
     };
   }, [primaryPostImageUrl]);
 
-  const handlePostImageScrollEnd = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+  const updatePostImageIndexFromOffset = useCallback(
+    (offsetX: number) => {
       if (!hasMultiplePostImages || postImageSize.width <= 0) {
         return;
       }
@@ -283,14 +298,16 @@ export const PostScreen = () => {
         return;
       }
 
-      const nextIndex = Math.round(
-        event.nativeEvent.contentOffset.x / postImageSize.width,
-      );
+      const nextIndex = Math.round(offsetX / postImageSize.width);
       const clampedIndex = Math.max(0, Math.min(nextIndex, totalImages - 1));
-      setPostImageCursor({
-        index: clampedIndex,
-        postId: currentPostId,
-      });
+      setPostImageCursor((prev) =>
+        prev.postId === currentPostId && prev.index === clampedIndex
+          ? prev
+          : {
+              index: clampedIndex,
+              postId: currentPostId,
+            },
+      );
     },
     [
       currentPostId,
@@ -298,6 +315,13 @@ export const PostScreen = () => {
       hasMultiplePostImages,
       postImageSize.width,
     ],
+  );
+
+  const handlePostImageScrollEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      updatePostImageIndexFromOffset(event.nativeEvent.contentOffset.x);
+    },
+    [updatePostImageIndexFromOffset],
   );
 
   const scrollToPostImage = useCallback(
@@ -778,10 +802,150 @@ export const PostScreen = () => {
       isCommunityPost && post.publisherCommunity
         ? post.publisherCommunity.avatar
         : post.author?.avatar;
+    const renderPostImages = () => {
+      if (post.images.length === 0) {
+        return null;
+      }
+
+      return (
+        <View
+          style={styles.postImagesWrapper}
+          onLayout={(event) => {
+            const nextWidth = Math.ceil(event.nativeEvent.layout.width);
+            setPostImageContainerWidth((prev) =>
+              prev === nextWidth ? prev : nextWidth,
+            );
+          }}
+        >
+          <View
+            style={[
+              styles.postImageFrame,
+              {
+                height: postImageSize.height,
+                width: postImageSize.width,
+              },
+            ]}
+          >
+            <FlatList
+              ref={postImageCarouselRef}
+              key={post.id}
+              horizontal
+              pagingEnabled
+              bounces={false}
+              scrollEnabled={hasMultiplePostImages}
+              data={post.images}
+              keyExtractor={(item, index) => `${item}-${index}`}
+              showsHorizontalScrollIndicator={false}
+              getItemLayout={(_, index) => ({
+                index,
+                length: postImageSize.width,
+                offset: postImageSize.width * index,
+              })}
+              onScroll={(event) => {
+                updatePostImageIndexFromOffset(
+                  event.nativeEvent.contentOffset.x,
+                );
+              }}
+              onMomentumScrollEnd={handlePostImageScrollEnd}
+              scrollEventThrottle={16}
+              onScrollToIndexFailed={() => {
+                // no-op
+              }}
+              renderItem={({ item, index }) => (
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => openImageViewer(post.images, index)}
+                >
+                  <Image
+                    source={{
+                      uri: getCloudinaryUploadUrl(item, "image", "large"),
+                    }}
+                    style={[
+                      styles.postImageMain,
+                      {
+                        height: postImageSize.height,
+                        width: postImageSize.width,
+                      },
+                    ]}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+              )}
+            />
+            {hasMultiplePostImages ? (
+              <View style={styles.mediaCounter}>
+                <Text style={styles.mediaCounterText}>
+                  {currentPostImageIndex + 1}/{post.images.length}
+                </Text>
+              </View>
+            ) : null}
+            {hasMultiplePostImages && currentPostImageIndex > 0 ? (
+              <TouchableOpacity
+                style={[styles.mediaArrow, styles.mediaArrowLeft]}
+                onPress={() => scrollToPostImage(currentPostImageIndex - 1)}
+              >
+                <Ionicons
+                  name="chevron-back"
+                  size={18}
+                  color={COLORS.white100}
+                />
+              </TouchableOpacity>
+            ) : null}
+            {hasMultiplePostImages &&
+            currentPostImageIndex < post.images.length - 1 ? (
+              <TouchableOpacity
+                style={[styles.mediaArrow, styles.mediaArrowRight]}
+                onPress={() => scrollToPostImage(currentPostImageIndex + 1)}
+              >
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={COLORS.white100}
+                />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </View>
+      );
+    };
+    const renderPostText = () => {
+      if (!hasPostTextContent) {
+        return null;
+      }
+
+      return (
+        <View style={styles.dream_info}>
+          {hasPostTitle ? (
+            <Text style={typography.h4_white_85}>{post.title}</Text>
+          ) : null}
+          {hasPostBodyText ? (
+            <Text style={typography.body_white100}>{post.text}</Text>
+          ) : null}
+        </View>
+      );
+    };
+    const renderPostContent = () => {
+      if (!hasPostTextContent) {
+        return renderPostImages();
+      }
+
+      return (
+        <>
+          {renderPostImages()}
+          {renderPostText()}
+        </>
+      );
+    };
 
     return (
       <View>
-        <View style={styles.card}>
+        <View
+          style={styles.card}
+          onLayout={(event) => {
+            const nextWidth = Math.ceil(event.nativeEvent.layout.width);
+            setPostCardWidth((prev) => (prev === nextWidth ? prev : nextWidth));
+          }}
+        >
           <TouchableOpacity
             style={styles.postHeader}
             disabled={
@@ -819,105 +983,7 @@ export const PostScreen = () => {
             </View>
           </TouchableOpacity>
 
-          {post.images.length > 0 ? (
-            <View
-              style={styles.postImagesWrapper}
-              onLayout={(event) => {
-                const nextWidth = Math.ceil(event.nativeEvent.layout.width);
-                setPostImageContainerWidth((prev) =>
-                  prev === nextWidth ? prev : nextWidth,
-                );
-              }}
-            >
-              <View
-                style={[
-                  styles.postImageFrame,
-                  {
-                    height: postImageSize.height,
-                    width: postImageSize.width,
-                  },
-                ]}
-              >
-                <FlatList
-                  ref={postImageCarouselRef}
-                  key={post.id}
-                  horizontal
-                  pagingEnabled
-                  bounces={false}
-                  scrollEnabled={hasMultiplePostImages}
-                  data={post.images}
-                  keyExtractor={(item, index) => `${item}-${index}`}
-                  showsHorizontalScrollIndicator={false}
-                  getItemLayout={(_, index) => ({
-                    index,
-                    length: postImageSize.width,
-                    offset: postImageSize.width * index,
-                  })}
-                  onMomentumScrollEnd={handlePostImageScrollEnd}
-                  onScrollToIndexFailed={() => {
-                    // no-op
-                  }}
-                  renderItem={({ item, index }) => (
-                    <TouchableOpacity
-                      activeOpacity={0.9}
-                      onPress={() => openImageViewer(post.images, index)}
-                    >
-                      <Image
-                        source={{
-                          uri: getCloudinaryUploadUrl(item, "image", "large"),
-                        }}
-                        style={[
-                          styles.postImageMain,
-                          {
-                            height: postImageSize.height,
-                            width: postImageSize.width,
-                          },
-                        ]}
-                        resizeMode="contain"
-                      />
-                    </TouchableOpacity>
-                  )}
-                />
-                {hasMultiplePostImages ? (
-                  <View style={styles.mediaCounter}>
-                    <Text style={styles.mediaCounterText}>
-                      {currentPostImageIndex + 1}/{post.images.length}
-                    </Text>
-                  </View>
-                ) : null}
-                {hasMultiplePostImages && currentPostImageIndex > 0 ? (
-                  <TouchableOpacity
-                    style={[styles.mediaArrow, styles.mediaArrowLeft]}
-                    onPress={() => scrollToPostImage(currentPostImageIndex - 1)}
-                  >
-                    <Ionicons
-                      name="chevron-back"
-                      size={18}
-                      color={COLORS.white100}
-                    />
-                  </TouchableOpacity>
-                ) : null}
-                {hasMultiplePostImages &&
-                currentPostImageIndex < post.images.length - 1 ? (
-                  <TouchableOpacity
-                    style={[styles.mediaArrow, styles.mediaArrowRight]}
-                    onPress={() => scrollToPostImage(currentPostImageIndex + 1)}
-                  >
-                    <Ionicons
-                      name="chevron-forward"
-                      size={18}
-                      color={COLORS.white100}
-                    />
-                  </TouchableOpacity>
-                ) : null}
-              </View>
-            </View>
-          ) : null}
-
-          <View style={styles.dream_info}>
-            <Text style={typography.h4_white_85}>{post.title}</Text>
-            <Text style={typography.body_white100}>{post.text}</Text>
-          </View>
+          {renderPostContent()}
 
           <View style={styles.actions}>
             <View style={styles.action}>
@@ -955,6 +1021,9 @@ export const PostScreen = () => {
     handleOpenCommunity,
     handleOpenProfile,
     handlePostImageScrollEnd,
+    hasPostBodyText,
+    hasPostTextContent,
+    hasPostTitle,
     hasMultiplePostImages,
     currentPostImageIndex,
     openImageViewer,
@@ -963,6 +1032,7 @@ export const PostScreen = () => {
     scrollToPostImage,
     toggleLike,
     totalCommentsCount,
+    updatePostImageIndexFromOffset,
   ]);
 
   if (isLoading) {
