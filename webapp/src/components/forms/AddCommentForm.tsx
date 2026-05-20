@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { getErrorMessage, useAppFeedback } from "../../lib/appFeedback";
 import { mixpanelTrackCommentCreated } from "../../lib/mixpanel";
 import { trpc } from "../../lib/trpc";
 import { webInputFocusReset } from "../../theme/inputFocus";
@@ -44,6 +45,7 @@ export const AddCommentForm = ({
   onCancelReply,
 }: AddCommentFormProps) => {
   const utils = trpc.useUtils();
+  const feedback = useAppFeedback();
   const [measuredTextHeight, setMeasuredTextHeight] = useState(0);
 
   const createComment = trpc.createComment.useMutation({
@@ -61,17 +63,25 @@ export const AddCommentForm = ({
       zCreateCommentTrpcInput.pick({ content: true }),
     ),
     onSubmit: async (values, { resetForm }) => {
-      await createComment.mutateAsync({
-        postId,
-        content: values.content,
-        parentId: parentId ?? undefined,
-      });
-      mixpanelTrackCommentCreated({
-        commentType: parentId ? "reply" : "comment",
-        contentLength: values.content.trim().length,
-        postId,
-      });
-      resetForm();
+      try {
+        await createComment.mutateAsync({
+          postId,
+          content: values.content,
+          parentId: parentId ?? undefined,
+        });
+        mixpanelTrackCommentCreated({
+          commentType: parentId ? "reply" : "comment",
+          contentLength: values.content.trim().length,
+          postId,
+        });
+        resetForm();
+      } catch (error) {
+        feedback.showError(
+          getErrorMessage(error, "Не удалось отправить комментарий"),
+          "Ошибка отправки",
+        );
+        throw error;
+      }
     },
   });
 

@@ -6,6 +6,7 @@ import { View, TextInput, Text, Platform } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { getErrorMessage, useAppFeedback } from "../../lib/appFeedback";
 import { mixpanelTrackPostCreated } from "../../lib/mixpanel";
 import {
   addPendingPostImagePublicIds,
@@ -62,6 +63,7 @@ export const AddPostForm = ({
   onSuccess,
 }: AddPostFormProps) => {
   const utils = trpc.useUtils();
+  const feedback = useAppFeedback();
   const navigation = useNavigation<AddPostNavProp>();
   const prepareCloudinaryUpload = trpc.prepareCloudinaryUpload.useMutation();
   const cleanupPostImages = trpc.cleanupPostImages.useMutation();
@@ -99,11 +101,15 @@ export const AddPostForm = ({
 
       if (!hasAnyContent) {
         setSubmitError(EMPTY_POST_ERROR);
+        feedback.showError(EMPTY_POST_ERROR, "Пост пустой");
         return;
       }
 
       setSubmitError(null);
       setIsUploadingImages(true);
+      feedback.showLoading(
+        pendingImages.length > 0 ? "Загружаем изображения..." : "Публикуем...",
+      );
       const newlyUploadedImagePublicIds: string[] = [];
 
       try {
@@ -149,6 +155,7 @@ export const AddPostForm = ({
           textLength: normalizedText.length,
           titleLength: normalizedTitle.length,
         });
+        feedback.showSuccess("Пост опубликован");
         setPendingImages([]);
         resetForm();
         if (onSuccess) {
@@ -175,6 +182,10 @@ export const AddPostForm = ({
         } else {
           setSubmitError("Не удалось создать пост");
         }
+        feedback.showError(
+          getErrorMessage(error, "Не удалось создать пост"),
+          "Ошибка публикации",
+        );
       } finally {
         setIsUploadingImages(false);
       }
@@ -290,6 +301,7 @@ export const AddPostForm = ({
         onPress={() => {
           if (!hasAnyContent) {
             setSubmitError(EMPTY_POST_ERROR);
+            feedback.showError(EMPTY_POST_ERROR, "Пост пустой");
             return;
           }
           formik.handleSubmit();

@@ -6,6 +6,7 @@ import { View, TextInput, Text, Platform } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { useAppFeedback } from "../../lib/appFeedback";
 import { useMe } from "../../lib/ctx";
 import { sentryCaptureException } from "../../lib/sentrySDK";
 import { trpc } from "../../lib/trpc";
@@ -17,6 +18,7 @@ type UpdatePorfileFormValues = z.infer<typeof zUpadteProfileTrpcInput>;
 
 export const UpdateProfileForm = () => {
   const trpcUtils = trpc.useUtils();
+  const feedback = useAppFeedback();
   const me = useMe();
   const updateProfile = trpc.updateProfile.useMutation();
   const formik = useFormik<UpdatePorfileFormValues>({
@@ -27,12 +29,14 @@ export const UpdateProfileForm = () => {
     enableReinitialize: true,
     validationSchema: toFormikValidationSchema(zUpadteProfileTrpcInput),
     onSubmit: async (values, { setFieldError }) => {
+      feedback.showLoading("Сохраняем профиль...");
       try {
         const updatedMe = await updateProfile.mutateAsync(values);
         trpcUtils.getMe.setData(undefined, { me: updatedMe });
         await trpcUtils.getUserProfile.invalidate({
           userId: updatedMe.id,
         });
+        feedback.showSuccess("Профиль обновлен");
       } catch (err) {
         if (!(err instanceof TRPCClientError)) {
           sentryCaptureException(err);
@@ -42,8 +46,13 @@ export const UpdateProfileForm = () => {
 
         if (msg.includes("already exists")) {
           setFieldError("nickname", "Такой никнейм уже занят");
+          feedback.showError("Такой никнейм уже занят", "Ошибка сохранения");
         } else {
           setFieldError("nickname", "Ошибка обновления профиля");
+          feedback.showError(
+            "Не удалось обновить профиль",
+            "Ошибка сохранения",
+          );
         }
       }
     },

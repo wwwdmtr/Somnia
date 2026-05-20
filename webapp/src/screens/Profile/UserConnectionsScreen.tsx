@@ -15,6 +15,7 @@ import {
 
 import { AppScreen } from "../../components/layout/AppScreen";
 import ScreenName from "../../constants/ScreenName";
+import { useFeedbackOnError } from "../../lib/appFeedback";
 import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
 import { mixpanelTrackUserFollowToggled } from "../../lib/mixpanel";
@@ -93,6 +94,7 @@ export const UserConnectionsScreen = () => {
     () => followsQuery.data?.pages.flatMap((page) => page.users) ?? [],
     [followsQuery.data],
   );
+  useFeedbackOnError(followsQuery.error, "Ошибка загрузки списка");
 
   const title = type === "followers" ? "Подписчики" : "Подписки";
 

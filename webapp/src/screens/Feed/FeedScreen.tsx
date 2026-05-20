@@ -18,6 +18,7 @@ import {
 import { AppScreen } from "../../components/layout/AppScreen";
 import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
+import { useFeedbackOnError } from "../../lib/appFeedback";
 import { useMe } from "../../lib/ctx";
 import { mixpanelTrackPostOpened } from "../../lib/mixpanel";
 import {
@@ -163,6 +164,7 @@ export const AllPostsScreen = () => {
   const activeIsFetchingNextPage = isFeedTab
     ? feedQuery.isFetchingNextPage
     : subscribedQuery.isFetchingNextPage;
+  useFeedbackOnError(activeError, "Ошибка загрузки ленты");
 
   const { data: unreadNotificationsData, refetch: refetchUnreadNotifications } =
     trpc.getUnreadNotificationsCount.useQuery(

@@ -18,6 +18,7 @@ import {
 import { UpdatePostForms } from "../../components/forms/UpdatePostForm";
 import { AppScreen } from "../../components/layout/AppScreen";
 import ScreenName from "../../constants/ScreenName";
+import { useFeedbackOnError } from "../../lib/appFeedback";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
 
@@ -41,6 +42,7 @@ export const UpdatePostScreen = () => {
   const { data, isLoading, error } = trpc.getPost.useQuery({
     id: String(route.params.id),
   });
+  useFeedbackOnError(error, "Ошибка загрузки поста");
   const deletePost = trpc.deletePost.useMutation({
     onSuccess: async () => {
       await Promise.all([

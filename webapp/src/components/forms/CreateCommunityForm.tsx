@@ -5,6 +5,7 @@ import { Image, Text, TextInput, View, Platform } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { getErrorMessage, useAppFeedback } from "../../lib/appFeedback";
 import { getAvatarSource } from "../../lib/avatar";
 import {
   pickPostImageFiles,
@@ -40,6 +41,7 @@ export const CreateCommunityForm = ({
   onCreated,
 }: CreateCommunityFormProps) => {
   const utils = trpc.useUtils();
+  const feedback = useAppFeedback();
   const prepareCloudinaryUpload = trpc.prepareCloudinaryUpload.useMutation();
   const createCommunity = trpc.createCommunity.useMutation();
 
@@ -57,6 +59,9 @@ export const CreateCommunityForm = ({
     onSubmit: async (values, { resetForm }) => {
       setSubmitError(null);
       setIsUploadingAvatar(true);
+      feedback.showLoading(
+        pendingAvatar ? "Загружаем аватарку..." : "Создаем сообщество...",
+      );
 
       try {
         let avatarPublicId: string | null = null;
@@ -87,12 +92,17 @@ export const CreateCommunityForm = ({
           name: community.name,
           avatar: community.avatar ?? null,
         });
+        feedback.showSuccess("Сообщество создано");
       } catch (error) {
         if (error instanceof Error) {
           setSubmitError(error.message);
         } else {
           setSubmitError("Не удалось создать сообщество");
         }
+        feedback.showError(
+          getErrorMessage(error, "Не удалось создать сообщество"),
+          "Ошибка создания",
+        );
       } finally {
         setIsUploadingAvatar(false);
       }
@@ -112,6 +122,7 @@ export const CreateCommunityForm = ({
       const errorText = validatePostImageFiles([nextAvatar]);
       if (errorText) {
         setSubmitError(errorText);
+        feedback.showError(errorText, "Ошибка аватарки");
         return;
       }
 
@@ -119,10 +130,16 @@ export const CreateCommunityForm = ({
     } catch (error) {
       if (error instanceof Error && error.message.includes("permission")) {
         setSubmitError("Нужен доступ к галерее для выбора аватарки");
+        feedback.showError(
+          "Нужен доступ к галерее для выбора аватарки",
+          "Нет доступа",
+        );
       } else if (error instanceof Error) {
         setSubmitError(error.message);
+        feedback.showError(error.message, "Ошибка аватарки");
       } else {
         setSubmitError("Не удалось выбрать аватарку");
+        feedback.showError("Не удалось выбрать аватарку", "Ошибка аватарки");
       }
     }
   };

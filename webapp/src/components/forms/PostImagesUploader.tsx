@@ -2,6 +2,7 @@ import { getCloudinaryUploadUrl } from "@somnia/shared/src/cloudinary/cloudinary
 import React, { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+import { useAppFeedback } from "../../lib/appFeedback";
 import {
   MAX_POST_IMAGES_COUNT,
   pickPostImageFiles,
@@ -26,6 +27,7 @@ export const PostImagesUploader = ({
   onUploadedImagesChange,
   onPendingImagesChange,
 }: PostImagesUploaderProps) => {
+  const feedback = useAppFeedback();
   const [errorMessage, setErrorMessage] = useState("");
   const [isPicking, setIsPicking] = useState(false);
 
@@ -44,6 +46,10 @@ export const PostImagesUploader = ({
       }
       if (!canAddMore) {
         setErrorMessage("Можно прикрепить не больше 10 изображений");
+        feedback.showError(
+          "Можно прикрепить не больше 10 изображений",
+          "Ошибка изображений",
+        );
         return;
       }
 
@@ -51,20 +57,34 @@ export const PostImagesUploader = ({
       const validationError = validatePostImageFiles(filesToAdd);
       if (validationError) {
         setErrorMessage(validationError);
+        feedback.showError(validationError, "Ошибка изображений");
         return;
       }
 
       onPendingImagesChange([...pendingImages, ...filesToAdd]);
       if (files.length > filesToAdd.length) {
         setErrorMessage("Лимит 10 изображений, лишние файлы пропущены");
+        feedback.showError(
+          "Лимит 10 изображений, лишние файлы пропущены",
+          "Часть файлов пропущена",
+        );
       }
     } catch (error) {
       if (error instanceof Error && error.message.includes("permission")) {
         setErrorMessage("Нужен доступ к галерее для выбора изображений");
+        feedback.showError(
+          "Нужен доступ к галерее для выбора изображений",
+          "Нет доступа",
+        );
       } else if (error instanceof Error) {
         setErrorMessage(error.message);
+        feedback.showError(error.message, "Ошибка изображений");
       } else {
         setErrorMessage("Не удалось выбрать изображения");
+        feedback.showError(
+          "Не удалось выбрать изображения",
+          "Ошибка изображений",
+        );
       }
     } finally {
       setIsPicking(false);

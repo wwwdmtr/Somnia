@@ -30,6 +30,7 @@ import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { ReportModal } from "../../components/ui/ReportModal";
 import ScreenName from "../../constants/ScreenName";
 import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
+import { useFeedbackOnError } from "../../lib/appFeedback";
 import { getAvatarSource } from "../../lib/avatar";
 import { copyCurrentPageUrlToClipboard } from "../../lib/clipboard";
 import { useAppContext } from "../../lib/ctx";
@@ -125,6 +126,10 @@ export const ProfileScreen = () => {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     maxPages: MAX_INFINITE_PAGES,
   });
+  useFeedbackOnError(
+    profileQuery.error ?? postsQuery.error,
+    "Ошибка загрузки профиля",
+  );
 
   const setUserFollow = trpc.setUserFollow.useMutation({
     onSuccess: async (_data, variables) => {

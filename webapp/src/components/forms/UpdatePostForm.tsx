@@ -5,6 +5,7 @@ import { View, TextInput, Text, Platform } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { getErrorMessage, useAppFeedback } from "../../lib/appFeedback";
 import {
   addPendingPostImagePublicIds,
   getPendingPostImagePublicIds,
@@ -57,6 +58,7 @@ const normalizeImageIds = (value: unknown): string[] =>
 
 export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
   const utils = trpc.useUtils();
+  const feedback = useAppFeedback();
   const prepareCloudinaryUpload = trpc.prepareCloudinaryUpload.useMutation();
   const cleanupPostImages = trpc.cleanupPostImages.useMutation();
   const [isUploadingImages, setIsUploadingImages] = useState(false);
@@ -101,11 +103,15 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
 
       if (!hasAnyContent) {
         setSubmitError(EMPTY_POST_ERROR);
+        feedback.showError(EMPTY_POST_ERROR, "Пост пустой");
         return;
       }
 
       setSubmitError(null);
       setIsUploadingImages(true);
+      feedback.showLoading(
+        pendingImages.length > 0 ? "Загружаем изображения..." : "Сохраняем...",
+      );
       const newlyUploadedImagePublicIds: string[] = [];
 
       try {
@@ -144,6 +150,7 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
         });
         setPendingImages([]);
         resetForm();
+        feedback.showSuccess("Пост обновлен");
         await removePendingPostImagePublicIds(uploadedImages);
       } catch (error) {
         if (newlyUploadedImagePublicIds.length > 0) {
@@ -162,6 +169,10 @@ export const UpdatePostForms = ({ post, onSuccess }: UpdatePostFormsProps) => {
         } else {
           setSubmitError("Не удалось обновить пост");
         }
+        feedback.showError(
+          getErrorMessage(error, "Не удалось обновить пост"),
+          "Ошибка сохранения",
+        );
       } finally {
         setIsUploadingImages(false);
       }

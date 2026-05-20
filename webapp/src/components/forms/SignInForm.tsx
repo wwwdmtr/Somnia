@@ -7,6 +7,7 @@ import { StyleSheet } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { getErrorMessage, useAppFeedback } from "../../lib/appFeedback";
 import { mixpanelTrackSignIn } from "../../lib/mixpanel";
 import { setToken } from "../../lib/tokenStorage";
 import { trpc } from "../../lib/trpc";
@@ -18,6 +19,7 @@ type SignInFormValues = z.infer<typeof zSignInTrpcInput>;
 
 export const SignInForm = () => {
   const trpcUtils = trpc.useUtils();
+  const feedback = useAppFeedback();
 
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
@@ -38,16 +40,26 @@ export const SignInForm = () => {
     },
     validationSchema: toFormikValidationSchema(zSignInTrpcInput),
     onSubmit: async (values, { resetForm }) => {
-      const { nickname, password } = values;
-      const normalizedNickname = nickname.toLowerCase();
-      const { token } = await signIn.mutateAsync({
-        nickname: normalizedNickname,
-        password,
-      });
-      await setToken(token);
-      mixpanelTrackSignIn();
-      trpcUtils.invalidate();
-      resetForm();
+      feedback.showLoading("Входим...");
+      try {
+        const { nickname, password } = values;
+        const normalizedNickname = nickname.toLowerCase();
+        const { token } = await signIn.mutateAsync({
+          nickname: normalizedNickname,
+          password,
+        });
+        await setToken(token);
+        mixpanelTrackSignIn();
+        trpcUtils.invalidate();
+        resetForm();
+        feedback.hideFeedback();
+      } catch (error) {
+        feedback.showError(
+          getErrorMessage(error, "Не удалось войти"),
+          "Ошибка входа",
+        );
+        throw error;
+      }
     },
   });
 

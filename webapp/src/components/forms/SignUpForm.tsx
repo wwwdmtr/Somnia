@@ -7,6 +7,7 @@ import { StyleSheet } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { getErrorMessage, useAppFeedback } from "../../lib/appFeedback";
 import { mixpanelTrackSignUp } from "../../lib/mixpanel";
 import { setToken } from "../../lib/tokenStorage";
 import { trpc } from "../../lib/trpc";
@@ -29,6 +30,7 @@ type SignUpFormValues = z.infer<typeof signUpFormSchema>;
 
 export const SignUpForm = () => {
   const trpcUtils = trpc.useUtils();
+  const feedback = useAppFeedback();
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
   const [isRepeatPasswordVisible, setIsRepeatPasswordVisible] =
@@ -52,19 +54,29 @@ export const SignUpForm = () => {
     },
     validationSchema: toFormikValidationSchema(signUpFormSchema),
     onSubmit: async (values, { resetForm }) => {
-      const { nickname, email, password } = values;
-      const normalizedNickname = nickname.toLowerCase();
-      const normalizedEmail = email.trim().toLowerCase();
-      const { token } = await signUp.mutateAsync({
-        nickname: normalizedNickname,
-        email: normalizedEmail,
-        password,
-      });
-      await setToken(token);
-      mixpanelTrackSignUp();
+      feedback.showLoading("Создаем аккаунт...");
+      try {
+        const { nickname, email, password } = values;
+        const normalizedNickname = nickname.toLowerCase();
+        const normalizedEmail = email.trim().toLowerCase();
+        const { token } = await signUp.mutateAsync({
+          nickname: normalizedNickname,
+          email: normalizedEmail,
+          password,
+        });
+        await setToken(token);
+        mixpanelTrackSignUp();
 
-      void trpcUtils.invalidate();
-      resetForm();
+        void trpcUtils.invalidate();
+        resetForm();
+        feedback.hideFeedback();
+      } catch (error) {
+        feedback.showError(
+          getErrorMessage(error, "Не удалось зарегистрироваться"),
+          "Ошибка регистрации",
+        );
+        throw error;
+      }
     },
   });
 

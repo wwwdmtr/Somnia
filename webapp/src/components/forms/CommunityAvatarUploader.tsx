@@ -3,6 +3,7 @@ import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import { Image, Platform, StyleSheet, Text, View } from "react-native";
 
+import { getErrorMessage, useAppFeedback } from "../../lib/appFeedback";
 import { getAvatarSource } from "../../lib/avatar";
 import { sentryCaptureException } from "../../lib/sentrySDK";
 import { trpc } from "../../lib/trpc";
@@ -114,6 +115,7 @@ export const CommunityAvatarUploader = ({
   communityId,
   onUpdated,
 }: CommunityAvatarUploaderProps) => {
+  const feedback = useAppFeedback();
   const prepareCloudinaryUpload = trpc.prepareCloudinaryUpload.useMutation();
   const setCommunityAvatar = trpc.setCommunityAvatar.useMutation();
 
@@ -127,6 +129,7 @@ export const CommunityAvatarUploader = ({
 
   const handleRemoveAvatar = async () => {
     setErrorMessage("");
+    feedback.showLoading("Удаляем аватарку...");
 
     try {
       const { community } = await setCommunityAvatar.mutateAsync({
@@ -134,34 +137,48 @@ export const CommunityAvatarUploader = ({
         avatar: null,
       });
       onUpdated(community);
+      feedback.showSuccess("Аватарка удалена");
     } catch (error) {
       if (!(error instanceof TRPCClientError)) {
         sentryCaptureException(error);
       }
 
       setErrorMessage("Не удалось удалить аватарку сообщества");
+      feedback.showError(
+        "Не удалось удалить аватарку сообщества",
+        "Ошибка аватарки",
+      );
     }
   };
 
   const handleUploadAvatar = async () => {
     setErrorMessage("");
 
-    const file = await pickAvatarFile();
-    if (!file) {
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      setErrorMessage("Можно загрузить только изображение");
-      return;
-    }
-
-    if ((file.size ?? 0) > MAX_AVATAR_SIZE_BYTES) {
-      setErrorMessage("Размер аватарки должен быть не больше 5MB");
-      return;
-    }
-
     try {
+      const file = await pickAvatarFile();
+      if (!file) {
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        setErrorMessage("Можно загрузить только изображение");
+        feedback.showError(
+          "Можно загрузить только изображение",
+          "Ошибка файла",
+        );
+        return;
+      }
+
+      if ((file.size ?? 0) > MAX_AVATAR_SIZE_BYTES) {
+        setErrorMessage("Размер аватарки должен быть не больше 5MB");
+        feedback.showError(
+          "Размер аватарки должен быть не больше 5MB",
+          "Ошибка файла",
+        );
+        return;
+      }
+
+      feedback.showLoading("Загружаем аватарку...");
       const { preparedData } = await prepareCloudinaryUpload.mutateAsync({
         type: "avatar",
       });
@@ -211,6 +228,7 @@ export const CommunityAvatarUploader = ({
         avatar: uploadResult.public_id,
       });
       onUpdated(community);
+      feedback.showSuccess("Аватарка обновлена");
     } catch (error) {
       if (!(error instanceof TRPCClientError)) {
         sentryCaptureException(error);
@@ -218,10 +236,19 @@ export const CommunityAvatarUploader = ({
 
       if (error instanceof Error && error.message.includes("permission")) {
         setErrorMessage("Нужен доступ к галерее для выбора аватарки");
+        feedback.showError(
+          "Нужен доступ к галерее для выбора аватарки",
+          "Нет доступа",
+        );
       } else if (error instanceof Error) {
         setErrorMessage(error.message);
+        feedback.showError(error.message, "Ошибка аватарки");
       } else {
         setErrorMessage("Не удалось обновить аватарку сообщества");
+        feedback.showError(
+          getErrorMessage(error, "Не удалось обновить аватарку сообщества"),
+          "Ошибка аватарки",
+        );
       }
     } finally {
       setIsUploadingToCloudinary(false);

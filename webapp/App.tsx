@@ -10,6 +10,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { WEB_APP_SHELL_MAX_WIDTH } from "./src/constants/layout";
 import { SentryUser } from "./src/lib/SentryUser";
+import { AppFeedbackProvider } from "./src/lib/appFeedback";
 import { AppContextProvider } from "./src/lib/ctx";
 import { MixpanelUser, mixpanelTrackScreenViewed } from "./src/lib/mixpanel";
 import { TrpcProvider } from "./src/lib/trpc";
@@ -180,32 +181,37 @@ export default function App() {
   return (
     <TrpcProvider>
       <AppContextProvider>
-        <MixpanelUser />
-        <SentryUser />
-        {isWeb ? (
-          <View
-            style={[
-              styles.webRoot,
-              webViewportHeight > 0
-                ? { height: webViewportHeight, minHeight: webViewportHeight }
-                : null,
-            ]}
-          >
+        <AppFeedbackProvider>
+          <MixpanelUser />
+          <SentryUser />
+          {isWeb ? (
             <View
               style={[
-                styles.webShell,
-                { borderRadius: webShellBorderRadius },
+                styles.webRoot,
                 webViewportHeight > 0
-                  ? { height: webViewportHeight, maxHeight: webViewportHeight }
+                  ? { height: webViewportHeight, minHeight: webViewportHeight }
                   : null,
               ]}
             >
-              {content}
+              <View
+                style={[
+                  styles.webShell,
+                  { borderRadius: webShellBorderRadius },
+                  webViewportHeight > 0
+                    ? {
+                        height: webViewportHeight,
+                        maxHeight: webViewportHeight,
+                      }
+                    : null,
+                ]}
+              >
+                {content}
+              </View>
             </View>
-          </View>
-        ) : (
-          content
-        )}
+          ) : (
+            content
+          )}
+        </AppFeedbackProvider>
       </AppContextProvider>
     </TrpcProvider>
   );

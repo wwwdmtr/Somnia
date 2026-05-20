@@ -7,6 +7,7 @@ import { StyleSheet } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { getErrorMessage, useAppFeedback } from "../../lib/appFeedback";
 import { trpc } from "../../lib/trpc";
 import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS } from "../../theme/typography";
@@ -29,6 +30,7 @@ const updatePasswordFormSchema = zUpdatePasswordTrpcInput
 type UpdatePasswordFormValues = z.infer<typeof updatePasswordFormSchema>;
 
 export const UpdatePasswordForm = () => {
+  const feedback = useAppFeedback();
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] =
     React.useState(false);
@@ -53,8 +55,18 @@ export const UpdatePasswordForm = () => {
     },
     validationSchema: toFormikValidationSchema(updatePasswordFormSchema),
     onSubmit: async ({ newPassword, currentPassword }, { resetForm }) => {
-      await updatePassword.mutateAsync({ newPassword, currentPassword });
-      resetForm();
+      feedback.showLoading("Сохраняем пароль...");
+      try {
+        await updatePassword.mutateAsync({ newPassword, currentPassword });
+        resetForm();
+        feedback.showSuccess("Пароль изменен");
+      } catch (error) {
+        feedback.showError(
+          getErrorMessage(error, "Не удалось изменить пароль"),
+          "Ошибка сохранения",
+        );
+        throw error;
+      }
     },
   });
 

@@ -13,6 +13,7 @@ import { Text, useWindowDimensions } from "react-native";
 
 import ScreenName from "../constants/ScreenName";
 import TabName from "../constants/TabName";
+import { useFeedbackOnError } from "../lib/appFeedback";
 import { useAppContext } from "../lib/ctx";
 import { AddPostScreen } from "../screens/AddPost/AddYourPost";
 import { AdminScreen } from "../screens/Admin/AdminScreen";
@@ -420,7 +421,8 @@ function AuthStackNav() {
 }
 
 export function RootNavigation() {
-  const { me, isLoading } = useAppContext();
+  const { me, isLoading, error } = useAppContext();
+  useFeedbackOnError(error, "Ошибка загрузки профиля");
 
   const [fontsLoaded] = useFonts({
     "SFProText-Regular": require("../assets/fonts/SFProText-Regular.ttf"),

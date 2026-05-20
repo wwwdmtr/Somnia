@@ -19,6 +19,7 @@ import { AddPostForm } from "../../components/forms/AddPostForm";
 import { CreateCommunityForm } from "../../components/forms/CreateCommunityForm";
 import { AppScreen } from "../../components/layout/AppScreen";
 import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
+import { useFeedbackOnError } from "../../lib/appFeedback";
 import { getAvatarSource } from "../../lib/avatar";
 import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
@@ -62,6 +63,7 @@ export const AddPostScreen = () => {
 
   const { data, isLoading, error, refetch } =
     trpc.getMyPublishingIdentities.useQuery();
+  useFeedbackOnError(error, "Ошибка загрузки профилей публикации");
 
   const managedCommunities = data?.communities ?? EMPTY_COMMUNITIES;
   const selectedCommunity = useMemo(() => {

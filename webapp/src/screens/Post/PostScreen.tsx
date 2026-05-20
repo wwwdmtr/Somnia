@@ -34,6 +34,7 @@ import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { ReportModal } from "../../components/ui/ReportModal";
 import ScreenName from "../../constants/ScreenName";
 import { WEB_APP_SHELL_MAX_WIDTH } from "../../constants/layout";
+import { useFeedbackOnError } from "../../lib/appFeedback";
 import { getAvatarSource } from "../../lib/avatar";
 import { copyCurrentPageUrlToClipboard } from "../../lib/clipboard";
 import { useMe } from "../../lib/ctx";
@@ -178,6 +179,7 @@ export const PostScreen = () => {
   } = trpc.getPost.useQuery({
     id: route.params.id,
   });
+  useFeedbackOnError(error, "Ошибка загрузки поста");
 
   const {
     data: commentsData,

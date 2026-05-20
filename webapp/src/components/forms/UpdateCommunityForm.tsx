@@ -6,6 +6,7 @@ import { Platform, Text, TextInput, View } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import { getErrorMessage, useAppFeedback } from "../../lib/appFeedback";
 import { sentryCaptureException } from "../../lib/sentrySDK";
 import { trpc } from "../../lib/trpc";
 import { webInputFocusReset } from "../../theme/inputFocus";
@@ -39,6 +40,7 @@ export const UpdateCommunityForm = ({
   name,
   onUpdated,
 }: UpdateCommunityFormProps) => {
+  const feedback = useAppFeedback();
   const updateCommunity = trpc.updateCommunity.useMutation();
 
   const formik = useFormik<UpdateCommunityFormValues>({
@@ -49,6 +51,7 @@ export const UpdateCommunityForm = ({
     enableReinitialize: true,
     validationSchema: toFormikValidationSchema(zUpdateCommunityFormSchema),
     onSubmit: async (values, { setFieldError }) => {
+      feedback.showLoading("Сохраняем сообщество...");
       try {
         const { community } = await updateCommunity.mutateAsync({
           communityId,
@@ -57,6 +60,7 @@ export const UpdateCommunityForm = ({
         });
 
         onUpdated(community);
+        feedback.showSuccess("Сообщество обновлено");
       } catch (error) {
         if (!(error instanceof TRPCClientError)) {
           sentryCaptureException(error);
@@ -65,10 +69,18 @@ export const UpdateCommunityForm = ({
         const message = error instanceof Error ? error.message : "";
         if (message.includes("уже существует")) {
           setFieldError("name", "Сообщество с таким именем уже существует");
+          feedback.showError(
+            "Сообщество с таким именем уже существует",
+            "Ошибка сохранения",
+          );
           return;
         }
 
         setFieldError("name", "Не удалось обновить сообщество");
+        feedback.showError(
+          getErrorMessage(error, "Не удалось обновить сообщество"),
+          "Ошибка сохранения",
+        );
       }
     },
   });

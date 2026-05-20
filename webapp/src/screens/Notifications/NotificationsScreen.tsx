@@ -16,6 +16,7 @@ import {
 
 import { AppScreen } from "../../components/layout/AppScreen";
 import ScreenName from "../../constants/ScreenName";
+import { useFeedbackOnError } from "../../lib/appFeedback";
 import {
   mixpanelTrackNotificationOpened,
   mixpanelTrackPostOpened,
@@ -190,6 +191,7 @@ export const NotificationsScreen = () => {
       maxPages: MAX_INFINITE_PAGES,
     },
   );
+  useFeedbackOnError(error, "Ошибка загрузки уведомлений");
 
   const markAllNotificationsRead = trpc.markAllNotificationsRead.useMutation();
 
