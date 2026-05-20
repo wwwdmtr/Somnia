@@ -25,6 +25,7 @@ import { AppScreen } from "../../components/layout/AppScreen";
 import { PostCard } from "../../components/post/PostCard";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { getAvatarSource } from "../../lib/avatar";
+import { useMe } from "../../lib/ctx";
 import {
   mixpanelTrackPostOpened,
   mixpanelTrackSearchPerformed,
@@ -36,6 +37,7 @@ import {
 } from "../../lib/postLikeMutation";
 import { trpc } from "../../lib/trpc";
 import { useDebouncedValue } from "../../lib/useDebouncedValue";
+import { useOpenAuthScreen } from "../../lib/useOpenAuthScreen";
 import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS, typography } from "../../theme/typography";
 
@@ -83,6 +85,8 @@ type PostsInfiniteData = NonNullable<
 export const SearchScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const utils = trpc.useUtils();
+  const me = useMe();
+  const openAuthScreen = useOpenAuthScreen();
   const lastTrackedSearchRef = useRef<string | null>(null);
 
   const [refreshing, setRefreshing] = useState(false);
@@ -290,6 +294,11 @@ export const SearchScreen = () => {
   };
 
   const toggleLike = (postId: string, currentLikeState: boolean) => {
+    if (!me?.id) {
+      openAuthScreen();
+      return;
+    }
+
     setPostLike.mutate({
       postId,
       isLikedByMe: !currentLikeState,

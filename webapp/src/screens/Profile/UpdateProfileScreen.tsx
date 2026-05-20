@@ -22,8 +22,10 @@ import { UpdatePasswordForm } from "../../components/forms/UpdatePasswordForm";
 import { UpdateProfileForm } from "../../components/forms/UpdateProfileForm";
 import { AppScreen } from "../../components/layout/AppScreen";
 import { AppButton } from "../../components/ui/AppButton";
+import { GuestModeNotice } from "../../components/ui/GuestModeNotice";
 import ScreenName from "../../constants/ScreenName";
 import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
+import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
 import { useDebouncedValue } from "../../lib/useDebouncedValue";
 import { ProfileStackParamList } from "../../navigation/ProfileStackParamList";
@@ -42,6 +44,7 @@ const MAX_INFINITE_PAGES = 10;
 export const UpdateProfileScreen = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const utils = trpc.useUtils();
+  const me = useMe();
   const [isBlockedModalOpen, setIsBlockedModalOpen] = useState(false);
   const [blockedSearch, setBlockedSearch] = useState("");
   const [pendingBlockedUserId, setPendingBlockedUserId] = useState<
@@ -61,7 +64,7 @@ export const UpdateProfileScreen = () => {
       search: blockedSearchTerm || undefined,
     },
     {
-      enabled: isBlockedModalOpen,
+      enabled: isBlockedModalOpen && Boolean(me?.id),
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       maxPages: MAX_INFINITE_PAGES,
       placeholderData: (prev) => prev,
@@ -73,7 +76,7 @@ export const UpdateProfileScreen = () => {
       search: blockedSearchTerm || undefined,
     },
     {
-      enabled: isBlockedModalOpen,
+      enabled: isBlockedModalOpen && Boolean(me?.id),
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       maxPages: MAX_INFINITE_PAGES,
       placeholderData: (prev) => prev,
@@ -129,6 +132,17 @@ export const UpdateProfileScreen = () => {
       setPendingBlockedCommunityId(null);
     }
   };
+
+  if (!me?.id) {
+    return (
+      <AppScreen contentStyle={styles.guestContainer}>
+        <GuestModeNotice
+          message="Настройки профиля доступны после входа."
+          title="Настройки закрыты"
+        />
+      </AppScreen>
+    );
+  }
 
   return (
     <AppScreen contentStyle={styles.container}>
@@ -386,6 +400,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: 8,
+  },
+  guestContainer: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 14,
   },
   header: {
     alignItems: "center",

@@ -15,8 +15,10 @@ import {
 } from "react-native";
 
 import { AppScreen } from "../../components/layout/AppScreen";
+import { GuestModeNotice } from "../../components/ui/GuestModeNotice";
 import ScreenName from "../../constants/ScreenName";
 import { useFeedbackOnError } from "../../lib/appFeedback";
+import { useMe } from "../../lib/ctx";
 import {
   mixpanelTrackNotificationOpened,
   mixpanelTrackPostOpened,
@@ -174,6 +176,7 @@ const getNotificationDestination = (notification: NotificationItem) => {
 export const NotificationsScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const utils = trpc.useUtils();
+  const me = useMe();
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
 
   const {
@@ -187,6 +190,7 @@ export const NotificationsScreen = () => {
   } = trpc.getMyNotifications.useInfiniteQuery(
     { limit: 20 },
     {
+      enabled: Boolean(me?.id),
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       maxPages: MAX_INFINITE_PAGES,
     },
@@ -301,6 +305,17 @@ export const NotificationsScreen = () => {
       setIsPullRefreshing(false);
     }
   }, [refetch, utils]);
+
+  if (!me?.id) {
+    return (
+      <AppScreen contentStyle={styles.guestContainer}>
+        <GuestModeNotice
+          message="Уведомления доступны после входа."
+          title="Уведомления закрыты"
+        />
+      </AppScreen>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -434,6 +449,11 @@ const styles = StyleSheet.create({
   },
   footerLoader: {
     paddingVertical: 12,
+  },
+  guestContainer: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 14,
   },
   header: {
     alignItems: "center",

@@ -9,9 +9,7 @@ import { zGetUserPostsTrpcInput } from "./input";
 export const getUserPostsTrpcRoute = trpcLoggedProcedure
   .input(zGetUserPostsTrpcInput)
   .query(async ({ ctx, input }) => {
-    if (!ctx.me) {
-      throw new Error("Unauthorized");
-    }
+    const meId = ctx.me?.id;
 
     const user = await ctx.prisma.user.findUnique({
       where: {
@@ -26,10 +24,10 @@ export const getUserPostsTrpcRoute = trpcLoggedProcedure
       throw new ExpectedError("Пользователь не найден");
     }
 
-    if (ctx.me.id !== input.userId) {
+    if (meId && meId !== input.userId) {
       const blocked = await hasUserBlockRelation({
         prisma: ctx.prisma,
-        firstUserId: ctx.me.id,
+        firstUserId: meId,
         secondUserId: input.userId,
       });
 
@@ -76,14 +74,16 @@ export const getUserPostsTrpcRoute = trpcLoggedProcedure
             avatar: true,
           },
         },
-        postLikes: {
-          where: {
-            userId: ctx.me.id,
-          },
-          select: {
-            id: true,
-          },
-        },
+        postLikes: meId
+          ? {
+              where: {
+                userId: meId,
+              },
+              select: {
+                id: true,
+              },
+            }
+          : false,
         _count: {
           select: {
             postLikes: true,
@@ -105,7 +105,7 @@ export const getUserPostsTrpcRoute = trpcLoggedProcedure
       ..._.omit(post, ["_count", "postLikes"]),
       commentsCount: post._count.comments,
       likesCount: post._count.postLikes,
-      isLikedByMe: post.postLikes.length > 0,
+      isLikedByMe: meId ? post.postLikes.length > 0 : false,
     }));
 
     return { posts, nextCursor };

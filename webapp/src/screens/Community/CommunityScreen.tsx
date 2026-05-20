@@ -36,6 +36,7 @@ import {
   usePostLikeMutation,
 } from "../../lib/postLikeMutation";
 import { trpc } from "../../lib/trpc";
+import { useOpenAuthScreen } from "../../lib/useOpenAuthScreen";
 import { COLORS, typography } from "../../theme/typography";
 
 import type { AdminStackParamList } from "../../navigation/AdminStackParamList";
@@ -72,6 +73,7 @@ export const CommunityScreen = () => {
   const navigation = useNavigation<CommunityNavProp>();
   const utils = trpc.useUtils();
   const me = useMe();
+  const openAuthScreen = useOpenAuthScreen();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
@@ -200,6 +202,11 @@ export const CommunityScreen = () => {
   };
 
   const toggleLike = (postId: string, currentLikeState: boolean) => {
+    if (!me?.id) {
+      openAuthScreen();
+      return;
+    }
+
     setPostLike.mutate({
       postId,
       isLikedByMe: !currentLikeState,
@@ -251,9 +258,11 @@ export const CommunityScreen = () => {
     ? community.myRole === "OWNER"
       ? "Вы владелец"
       : "Вы модератор"
-    : community.isSubscribedByMe
-      ? "Отписаться"
-      : "Подписаться";
+    : !me?.id
+      ? "Войти, чтобы подписаться"
+      : community.isSubscribedByMe
+        ? "Отписаться"
+        : "Подписаться";
   const canOpenActionsMenu = Boolean(me?.id && !isManagedCommunity);
   const canReportCommunity = Boolean(
     me?.id &&
@@ -412,6 +421,11 @@ export const CommunityScreen = () => {
           ]}
           disabled={isManagedCommunity || setCommunitySubscription.isPending}
           onPress={() => {
+            if (!me?.id) {
+              openAuthScreen();
+              return;
+            }
+
             setCommunitySubscription.mutate({
               communityId: community.id,
               isSubscribed: !community.isSubscribedByMe,

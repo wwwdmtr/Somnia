@@ -17,8 +17,10 @@ import {
 
 import { UpdatePostForms } from "../../components/forms/UpdatePostForm";
 import { AppScreen } from "../../components/layout/AppScreen";
+import { GuestModeNotice } from "../../components/ui/GuestModeNotice";
 import ScreenName from "../../constants/ScreenName";
 import { useFeedbackOnError } from "../../lib/appFeedback";
+import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
 import { COLORS, typography } from "../../theme/typography";
 
@@ -38,6 +40,7 @@ export const UpdatePostScreen = () => {
   const route = useRoute<EditPostRouteProp>();
   const navigation = useNavigation<EditPostNavProp>();
   const utils = trpc.useUtils();
+  const me = useMe();
 
   const { data, isLoading, error } = trpc.getPost.useQuery({
     id: String(route.params.id),
@@ -147,11 +150,19 @@ export const UpdatePostScreen = () => {
             <Text style={typography.body_white85}>Назад</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.content}>
-          <Text style={typography.body_white85}>
-            У вас нет прав на редактирование этого поста.
-          </Text>
-        </View>
+        {!me?.id ? (
+          <GuestModeNotice
+            message="Редактирование постов доступно после входа."
+            style={styles.guestNotice}
+            title="Редактирование закрыто"
+          />
+        ) : (
+          <View style={styles.content}>
+            <Text style={typography.body_white85}>
+              У вас нет прав на редактирование этого поста.
+            </Text>
+          </View>
+        )}
       </AppScreen>
     );
   }
@@ -218,6 +229,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: 8,
+  },
+  guestNotice: {
+    marginHorizontal: 14,
+    marginTop: 24,
   },
   header: {
     alignItems: "center",

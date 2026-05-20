@@ -6,10 +6,7 @@ import { zGetUserFollowsTrpcInput } from "./input";
 export const getUserFollowsTrpcRoute = trpcLoggedProcedure
   .input(zGetUserFollowsTrpcInput)
   .query(async ({ ctx, input }) => {
-    if (!ctx.me) {
-      throw new Error("Unauthorized");
-    }
-    const meId = ctx.me.id;
+    const meId = ctx.me?.id ?? null;
 
     const targetUser = await ctx.prisma.user.findUnique({
       where: {
@@ -83,10 +80,10 @@ export const getUserFollowsTrpcRoute = trpcLoggedProcedure
 
     const userIds = users
       .map((user) => user.id)
-      .filter((userId) => userId !== meId);
+      .filter((userId) => meId && userId !== meId);
 
     const followsByMe =
-      userIds.length > 0
+      meId && userIds.length > 0
         ? await ctx.prisma.userFollow.findMany({
             where: {
               followerId: meId,

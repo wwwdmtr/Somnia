@@ -23,6 +23,7 @@ import { ReportsScreen } from "../screens/Admin/ReportsScreen";
 import { CommunityScreen } from "../screens/Community/CommunityScreen";
 import { UpdateCommunityScreen } from "../screens/Community/UpdateCommunityScreen";
 import { AllPostsScreen } from "../screens/Feed/FeedScreen";
+import { GreetingsScreen } from "../screens/Greetings/GreetingsScreen";
 import { NotificationsScreen } from "../screens/Notifications/NotificationsScreen";
 import { OnboardingScreen } from "../screens/Onboarding/OnboardingScreen";
 import { SignInScreen } from "../screens/Onboarding/SignInScreen";
@@ -38,7 +39,6 @@ import { COLORS } from "../theme/typography";
 
 import { AddPostStackParamList } from "./AddPostStackParamList";
 import { AdminStackParamList } from "./AdminStackParamList";
-import { AuthStackParamList } from "./AuthStackParamList";
 import { FeedStackParamList } from "./FeedStackParamList";
 import { ProfileStackParamList } from "./ProfileStackParamList";
 import { RootStackParamList } from "./RootStackParamList";
@@ -396,30 +396,6 @@ export function AppNav() {
   );
 }
 
-const AuthStack = createNativeStackNavigator<AuthStackParamList>();
-
-function AuthStackNav() {
-  return (
-    <AuthStack.Navigator>
-      <AuthStack.Screen
-        name={ScreenName.Onboarding}
-        component={OnboardingScreen}
-        options={{ headerShown: false }}
-      />
-      <AuthStack.Screen
-        name={ScreenName.SignIn}
-        component={SignInScreen}
-        options={{ headerShown: false }}
-      />
-      <AuthStack.Screen
-        name={ScreenName.SignUp}
-        component={SignUpScreen}
-        options={{ headerShown: false }}
-      />
-    </AuthStack.Navigator>
-  );
-}
-
 export function RootNavigation() {
   const { me, isLoading, error } = useAppContext();
   useFeedbackOnError(error, "Ошибка загрузки профиля");
@@ -439,11 +415,7 @@ export function RootNavigation() {
     return null;
   }
 
-  return me ? (
-    <RootStackNav canOpenAdmin={isUserAdmin(me)} />
-  ) : (
-    <AuthStackNav />
-  );
+  return <RootStackNav canOpenAdmin={isUserAdmin(me)} />;
 }
 
 function RootStackNav({ canOpenAdmin }: { canOpenAdmin: boolean }) {
@@ -461,6 +433,26 @@ function RootStackNav({ canOpenAdmin }: { canOpenAdmin: boolean }) {
           options={{ headerShown: false }}
         />
       ) : null}
+      <RootStack.Screen
+        name={ScreenName.Greetings}
+        component={GreetingsScreen}
+        options={{ headerShown: false }}
+      />
+      <RootStack.Screen
+        name={ScreenName.Onboarding}
+        component={OnboardingScreen}
+        options={{ headerShown: false }}
+      />
+      <RootStack.Screen
+        name={ScreenName.SignIn}
+        component={SignInScreen}
+        options={{ headerShown: false }}
+      />
+      <RootStack.Screen
+        name={ScreenName.SignUp}
+        component={SignUpScreen}
+        options={{ headerShown: false }}
+      />
     </RootStack.Navigator>
   );
 }

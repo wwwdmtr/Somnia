@@ -21,9 +21,11 @@ import { CommunityAvatarUploader } from "../../components/forms/CommunityAvatarU
 import { UpdateCommunityForm } from "../../components/forms/UpdateCommunityForm";
 import { AppScreen } from "../../components/layout/AppScreen";
 import { AppButton } from "../../components/ui/AppButton";
+import { GuestModeNotice } from "../../components/ui/GuestModeNotice";
 import ScreenName from "../../constants/ScreenName";
 import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
 import { getAvatarSource } from "../../lib/avatar";
+import { useMe } from "../../lib/ctx";
 import { trpc } from "../../lib/trpc";
 import { useDebouncedValue } from "../../lib/useDebouncedValue";
 import { webInputFocusReset } from "../../theme/inputFocus";
@@ -110,6 +112,7 @@ export const UpdateCommunityScreen = () => {
   const route = useRoute<UpdateCommunityRouteProp>();
   const navigation = useNavigation<UpdateCommunityNavProp>();
   const utils = trpc.useUtils();
+  const me = useMe();
 
   const [isModeratorsModalOpen, setIsModeratorsModalOpen] = useState(false);
   const [isBlacklistModalOpen, setIsBlacklistModalOpen] = useState(false);
@@ -149,9 +152,14 @@ export const UpdateCommunityScreen = () => {
   ).trim();
 
   const communityId = route.params.id;
-  const communityQuery = trpc.getCommunity.useQuery({
-    id: communityId,
-  });
+  const communityQuery = trpc.getCommunity.useQuery(
+    {
+      id: communityId,
+    },
+    {
+      enabled: Boolean(me?.id),
+    },
+  );
 
   const moderatorsListQuery = trpc.getCommunityModerationList.useInfiniteQuery(
     {
@@ -593,6 +601,28 @@ export const UpdateCommunityScreen = () => {
       { cancelable: true },
     );
   };
+
+  if (!me?.id) {
+    return (
+      <AppScreen contentStyle={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.goBackWrapper}
+          >
+            <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
+            <Text style={typography.body_white85}>Назад</Text>
+          </TouchableOpacity>
+        </View>
+
+        <GuestModeNotice
+          message="Управление сообществом доступно после входа."
+          style={styles.guestNotice}
+          title="Управление закрыто"
+        />
+      </AppScreen>
+    );
+  }
 
   if (communityQuery.isLoading) {
     return (
@@ -1579,6 +1609,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: 8,
+  },
+  guestNotice: {
+    marginTop: 24,
   },
   header: {
     alignItems: "center",

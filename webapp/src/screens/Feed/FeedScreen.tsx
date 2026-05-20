@@ -17,6 +17,7 @@ import {
 
 import { AppScreen } from "../../components/layout/AppScreen";
 import { PostCard } from "../../components/post/PostCard";
+import { GuestModeNotice } from "../../components/ui/GuestModeNotice";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { useFeedbackOnError } from "../../lib/appFeedback";
 import { useMe } from "../../lib/ctx";
@@ -27,6 +28,7 @@ import {
   usePostLikeMutation,
 } from "../../lib/postLikeMutation";
 import { trpc } from "../../lib/trpc";
+import { useOpenAuthScreen } from "../../lib/useOpenAuthScreen";
 import { COLORS, typography } from "../../theme/typography";
 
 import type { FeedStackParamList } from "../../navigation/FeedStackParamList";
@@ -40,6 +42,7 @@ export const AllPostsScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const utils = trpc.useUtils();
   const me = useMe();
+  const openAuthScreen = useOpenAuthScreen();
   const isFeedFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState<"feed" | "subs">("feed");
   const [refreshing, setRefreshing] = useState(false);
@@ -185,12 +188,18 @@ export const AllPostsScreen = () => {
     try {
       await Promise.all([
         isFeedTab ? feedQuery.refetch() : subscribedQuery.refetch(),
-        refetchUnreadNotifications(),
+        isAuthorized ? refetchUnreadNotifications() : Promise.resolve(),
       ]);
     } finally {
       setRefreshing(false);
     }
-  }, [feedQuery, isFeedTab, refetchUnreadNotifications, subscribedQuery]);
+  }, [
+    feedQuery,
+    isAuthorized,
+    isFeedTab,
+    refetchUnreadNotifications,
+    subscribedQuery,
+  ]);
 
   useFocusEffect(
     useCallback(() => {
@@ -217,10 +226,20 @@ export const AllPostsScreen = () => {
   };
 
   const handleOpenNotifications = () => {
+    if (!isAuthorized) {
+      openAuthScreen();
+      return;
+    }
+
     navigation.navigate("Notifications");
   };
 
   const toggleLike = (postId: string, currentLikeState: boolean) => {
+    if (!isAuthorized) {
+      openAuthScreen();
+      return;
+    }
+
     const input = {
       postId,
       isLikedByMe: !currentLikeState,
@@ -245,7 +264,9 @@ export const AllPostsScreen = () => {
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <View style={styles.topRow}>
-        <Text style={typography.h4_white_85}>{me.nickname}</Text>
+        <Text style={typography.h4_white_85}>
+          {me?.nickname ?? "Гостевой режим"}
+        </Text>
         <TouchableOpacity
           onPress={handleOpenNotifications}
           style={styles.notificationsButton}
@@ -304,6 +325,16 @@ export const AllPostsScreen = () => {
 
   const renderEmpty = () => {
     if (!isFeedTab) {
+      if (!isAuthorized) {
+        return (
+          <GuestModeNotice
+            message="Лента подписок доступна после входа."
+            style={styles.guestNotice}
+            title="Подписки закрыты"
+          />
+        );
+      }
+
       return (
         <View style={styles.emptyContainer}>
           <Text style={typography.body_white85}>
@@ -394,6 +425,9 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
 
+  guestNotice: {
+    marginTop: 32,
+  },
   header: {
     alignItems: "center",
     backgroundColor: COLORS.navBarBackground,

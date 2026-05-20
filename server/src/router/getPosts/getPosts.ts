@@ -197,7 +197,7 @@ export const getPostsTrpcRoute = trpcLoggedProcedure
           ...(canSeeCommunityAuthor ? { author: post.author } : {}),
           likesCount: post._count.postLikes,
           commentsCount: post._count.comments,
-          isLikedByMe: post.postLikes.length > 0,
+          isLikedByMe: userId ? post.postLikes.length > 0 : false,
         };
       });
 

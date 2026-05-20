@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { zSignUpTrpcInput } from "@somnia/shared/src/router/signUp/input";
 import { useFormik } from "formik";
 import React from "react";
@@ -7,6 +8,8 @@ import { StyleSheet } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import ScreenName from "../../constants/ScreenName";
+import TabName from "../../constants/TabName";
 import { getErrorMessage, useAppFeedback } from "../../lib/appFeedback";
 import { mixpanelTrackSignUp } from "../../lib/mixpanel";
 import { setToken } from "../../lib/tokenStorage";
@@ -14,6 +17,9 @@ import { trpc } from "../../lib/trpc";
 import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS, typography } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
+
+import type { RootStackParamList } from "../../navigation/RootStackParamList";
+import type { NavigationProp } from "@react-navigation/native";
 
 const signUpFormSchema = zSignUpTrpcInput
   .extend({
@@ -29,6 +35,7 @@ const signUpFormSchema = zSignUpTrpcInput
 type SignUpFormValues = z.infer<typeof signUpFormSchema>;
 
 export const SignUpForm = () => {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const trpcUtils = trpc.useUtils();
   const feedback = useAppFeedback();
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -70,6 +77,9 @@ export const SignUpForm = () => {
         void trpcUtils.invalidate();
         resetForm();
         feedback.hideFeedback();
+        navigation.navigate(ScreenName.RootTabs, {
+          screen: TabName.FeedTab,
+        });
       } catch (error) {
         feedback.showError(
           getErrorMessage(error, "Не удалось зарегистрироваться"),

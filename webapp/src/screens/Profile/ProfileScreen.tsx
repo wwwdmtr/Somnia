@@ -26,6 +26,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppScreen } from "../../components/layout/AppScreen";
 import { PostCard } from "../../components/post/PostCard";
+import { GuestModeNotice } from "../../components/ui/GuestModeNotice";
 import { PostImageViewerModal } from "../../components/ui/PostImageViewerModal";
 import { ReportModal } from "../../components/ui/ReportModal";
 import ScreenName from "../../constants/ScreenName";
@@ -44,6 +45,7 @@ import {
   usePostLikeMutation,
 } from "../../lib/postLikeMutation";
 import { trpc } from "../../lib/trpc";
+import { useOpenAuthScreen } from "../../lib/useOpenAuthScreen";
 import { COLORS, typography } from "../../theme/typography";
 
 import type { AdminStackParamList } from "../../navigation/AdminStackParamList";
@@ -87,6 +89,7 @@ export const ProfileScreen = () => {
   const { me, isLoading: isMeLoading } = useAppContext();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const utils = trpc.useUtils();
+  const openAuthScreen = useOpenAuthScreen();
   const insets = useSafeAreaInsets();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -102,12 +105,12 @@ export const ProfileScreen = () => {
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
-  const targetUserId = route.params?.userId ?? me?.id ?? "";
+  const targetUserId = route.params?.userId ?? me?.id ?? null;
   const shouldShowBackButton = Boolean(route.params?.userId);
 
   const profileQuery = trpc.getUserProfile.useQuery(
     {
-      userId: targetUserId,
+      userId: targetUserId ?? "",
     },
     {
       enabled: Boolean(targetUserId),
@@ -116,7 +119,7 @@ export const ProfileScreen = () => {
 
   const postsQueryKey = useMemo(
     () => ({
-      userId: targetUserId,
+      userId: targetUserId ?? "",
       limit: PROFILE_POSTS_LIMIT,
     }),
     [targetUserId],
@@ -141,7 +144,9 @@ export const ProfileScreen = () => {
         });
       }
       await Promise.all([
-        utils.getUserProfile.invalidate({ userId: targetUserId }),
+        targetUserId
+          ? utils.getUserProfile.invalidate({ userId: targetUserId })
+          : Promise.resolve(),
         me?.id
           ? utils.getUserProfile.invalidate({ userId: me.id })
           : Promise.resolve(),
@@ -152,7 +157,9 @@ export const ProfileScreen = () => {
   const setUserContentBlock = trpc.setUserContentBlock.useMutation({
     onSuccess: async () => {
       await Promise.all([
-        utils.getUserProfile.invalidate({ userId: targetUserId }),
+        targetUserId
+          ? utils.getUserProfile.invalidate({ userId: targetUserId })
+          : Promise.resolve(),
         utils.getPosts.invalidate(),
         utils.getSubscribedPosts.invalidate(),
         utils.getRatedPosts.invalidate(),
@@ -205,6 +212,11 @@ export const ProfileScreen = () => {
   });
 
   const toggleLike = (postId: string, currentLikeState: boolean) => {
+    if (!me?.id) {
+      openAuthScreen();
+      return;
+    }
+
     setPostLike.mutate({
       postId,
       isLikedByMe: !currentLikeState,
@@ -349,6 +361,17 @@ export const ProfileScreen = () => {
     );
   }
 
+  if (!targetUserId) {
+    return (
+      <AppScreen contentStyle={styles.guestProfileContainer}>
+        <GuestModeNotice
+          message="Свой профиль и настройки доступны после входа."
+          title="Профиль закрыт"
+        />
+      </AppScreen>
+    );
+  }
+
   if (profileQuery.error || postsQuery.error || !profileQuery.data?.profile) {
     return (
       <View style={styles.centered}>
@@ -411,7 +434,7 @@ export const ProfileScreen = () => {
         ) : null}
       </View>
 
-      {!profile.isMe ? (
+      {me?.id && !profile.isMe ? (
         <TouchableOpacity
           style={[
             styles.followButton,
@@ -675,6 +698,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: 8,
+  },
+  guestProfileContainer: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 14,
   },
   header: {
     alignItems: "center",

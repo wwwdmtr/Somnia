@@ -7,4 +7,8 @@ import type { NavigatorScreenParams } from "@react-navigation/native";
 export type RootStackParamList = {
   [ScreenName.RootTabs]: NavigatorScreenParams<RootTabParamList>;
   [ScreenName.AdminStack]: NavigatorScreenParams<AdminStackParamList>;
+  [ScreenName.Greetings]: undefined;
+  [ScreenName.Onboarding]: undefined;
+  [ScreenName.SignIn]: undefined;
+  [ScreenName.SignUp]: undefined;
 };

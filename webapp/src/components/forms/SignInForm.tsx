@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { zSignInTrpcInput } from "@somnia/shared/src/router/signIn/input";
 import { useFormik } from "formik";
 import React from "react";
@@ -7,6 +8,8 @@ import { StyleSheet } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
+import ScreenName from "../../constants/ScreenName";
+import TabName from "../../constants/TabName";
 import { getErrorMessage, useAppFeedback } from "../../lib/appFeedback";
 import { mixpanelTrackSignIn } from "../../lib/mixpanel";
 import { setToken } from "../../lib/tokenStorage";
@@ -15,9 +18,13 @@ import { webInputFocusReset } from "../../theme/inputFocus";
 import { COLORS, typography } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
 
+import type { RootStackParamList } from "../../navigation/RootStackParamList";
+import type { NavigationProp } from "@react-navigation/native";
+
 type SignInFormValues = z.infer<typeof zSignInTrpcInput>;
 
 export const SignInForm = () => {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const trpcUtils = trpc.useUtils();
   const feedback = useAppFeedback();
 
@@ -53,6 +60,9 @@ export const SignInForm = () => {
         trpcUtils.invalidate();
         resetForm();
         feedback.hideFeedback();
+        navigation.navigate(ScreenName.RootTabs, {
+          screen: TabName.FeedTab,
+        });
       } catch (error) {
         feedback.showError(
           getErrorMessage(error, "Не удалось войти"),

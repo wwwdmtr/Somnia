@@ -18,6 +18,7 @@ import { AddCommunityPostForm } from "../../components/forms/AddCommunityPostFor
 import { AddPostForm } from "../../components/forms/AddPostForm";
 import { CreateCommunityForm } from "../../components/forms/CreateCommunityForm";
 import { AppScreen } from "../../components/layout/AppScreen";
+import { GuestModeNotice } from "../../components/ui/GuestModeNotice";
 import { SHELL_CONTENT_WIDTH } from "../../constants/layout";
 import { useFeedbackOnError } from "../../lib/appFeedback";
 import { getAvatarSource } from "../../lib/avatar";
@@ -62,7 +63,9 @@ export const AddPostScreen = () => {
     });
 
   const { data, isLoading, error, refetch } =
-    trpc.getMyPublishingIdentities.useQuery();
+    trpc.getMyPublishingIdentities.useQuery(undefined, {
+      enabled: Boolean(me?.id),
+    });
   useFeedbackOnError(error, "Ошибка загрузки профилей публикации");
 
   const managedCommunities = data?.communities ?? EMPTY_COMMUNITIES;
@@ -108,6 +111,17 @@ export const AddPostScreen = () => {
 
     return "Новый пост";
   }, [composerMode, selectedPublisher.type, selectedCommunity]);
+
+  if (!me?.id) {
+    return (
+      <AppScreen contentStyle={styles.guestContainer}>
+        <GuestModeNotice
+          message="Создание постов и сообществ доступно после входа."
+          title="Публикация закрыта"
+        />
+      </AppScreen>
+    );
+  }
 
   return (
     <AppScreen contentStyle={styles.container}>
@@ -324,6 +338,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: 8,
+  },
+  guestContainer: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 14,
   },
   header: {
     alignItems: "center",

@@ -40,6 +40,7 @@ import { copyCurrentPageUrlToClipboard } from "../../lib/clipboard";
 import { useMe } from "../../lib/ctx";
 import { usePostLikeMutation } from "../../lib/postLikeMutation";
 import { trpc } from "../../lib/trpc";
+import { useOpenAuthScreen } from "../../lib/useOpenAuthScreen";
 import { typography, COLORS } from "../../theme/typography";
 
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -133,6 +134,7 @@ export const PostScreen = () => {
   const navigation = useNavigation<PostScreenNavProp>();
   const utils = trpc.useUtils();
   const me = useMe();
+  const openAuthScreen = useOpenAuthScreen();
   const insets = useSafeAreaInsets();
   const [expandedComments, setExpandedComments] = useState<Set<string>>(
     new Set(),
@@ -462,13 +464,18 @@ export const PostScreen = () => {
     if (!data?.post) {
       return;
     }
+    if (!me?.id) {
+      openAuthScreen();
+      return;
+    }
+
     const post = data.post;
 
     setPostLike.mutate({
       postId: post.id,
       isLikedByMe: !post.isLikedByMe,
     });
-  }, [data, setPostLike]);
+  }, [data, me?.id, openAuthScreen, setPostLike]);
 
   const openImageViewer = useCallback((images: string[], index: number) => {
     setImageViewerState({
@@ -670,19 +677,21 @@ export const PostScreen = () => {
             </Text>
 
             <View style={styles.commentActions}>
-              <TouchableOpacity
-                onPress={() =>
-                  handleReplyToComment(comment.id, comment.author.nickname)
-                }
-                style={styles.replyButton}
-              >
-                <Ionicons
-                  name="arrow-undo-outline"
-                  size={16}
-                  color={COLORS.white85}
-                />
-                <Text style={typography.caption_white85}>Ответить</Text>
-              </TouchableOpacity>
+              {me?.id ? (
+                <TouchableOpacity
+                  onPress={() =>
+                    handleReplyToComment(comment.id, comment.author.nickname)
+                  }
+                  style={styles.replyButton}
+                >
+                  <Ionicons
+                    name="arrow-undo-outline"
+                    size={16}
+                    color={COLORS.white85}
+                  />
+                  <Text style={typography.caption_white85}>Ответить</Text>
+                </TouchableOpacity>
+              ) : null}
 
               {hasReplies && (
                 <TouchableOpacity
@@ -737,24 +746,26 @@ export const PostScreen = () => {
                   {reply.content}
                 </Text>
 
-                <TouchableOpacity
-                  onPress={() =>
-                    handleReplyToComment(
-                      reply.id,
-                      reply.author.nickname,
-                      true,
-                      comment.id,
-                    )
-                  }
-                  style={styles.replyButton}
-                >
-                  <Ionicons
-                    name="arrow-undo-outline"
-                    size={14}
-                    color={COLORS.white85}
-                  />
-                  <Text style={typography.caption_white85}>Ответить</Text>
-                </TouchableOpacity>
+                {me?.id ? (
+                  <TouchableOpacity
+                    onPress={() =>
+                      handleReplyToComment(
+                        reply.id,
+                        reply.author.nickname,
+                        true,
+                        comment.id,
+                      )
+                    }
+                    style={styles.replyButton}
+                  >
+                    <Ionicons
+                      name="arrow-undo-outline"
+                      size={14}
+                      color={COLORS.white85}
+                    />
+                    <Text style={typography.caption_white85}>Ответить</Text>
+                  </TouchableOpacity>
+                ) : null}
               </View>
             ))}
         </View>
@@ -1203,15 +1214,17 @@ export const PostScreen = () => {
         }
       />
 
-      <View style={styles.commentFormWrapper}>
-        <AddCommentForm
-          postId={post.id}
-          parentId={replyingTo?.commentId}
-          replyToNickname={replyingTo?.nickname}
-          onSuccess={handleCommentSuccess}
-          onCancelReply={cancelReply}
-        />
-      </View>
+      {me?.id ? (
+        <View style={styles.commentFormWrapper}>
+          <AddCommentForm
+            postId={post.id}
+            parentId={replyingTo?.commentId}
+            replyToNickname={replyingTo?.nickname}
+            onSuccess={handleCommentSuccess}
+            onCancelReply={cancelReply}
+          />
+        </View>
+      ) : null}
 
       <Modal
         visible={isActionsMenuOpen}

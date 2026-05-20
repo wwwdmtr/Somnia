@@ -1,6 +1,7 @@
 export enum ScreenName {
   RootTabs = "RootTabs",
   AdminStack = "AdminStack",
+  Greetings = "Greetings",
   Feed = "Feed",
   Post = "Post",
   AddPost = "AddPost",

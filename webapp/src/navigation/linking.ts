@@ -8,7 +8,8 @@ export const linking = {
   prefixes: [env.WEBAPP_URL],
   config: {
     screens: {
-      [ScreenName.Onboarding]: "",
+      [ScreenName.Greetings]: "greetings",
+      [ScreenName.Onboarding]: "onboarding",
       [ScreenName.SignIn]: "sign-in",
       [ScreenName.SignUp]: "sign-up",
       [ScreenName.RootTabs]: {
