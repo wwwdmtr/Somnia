@@ -47,6 +47,7 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "picocolors": "^1.1.1",
+    "redis": "^5.12.1",
     "serialize-error": "8.1.0",
     "superjson": "^2.2.5",
     "triple-beam": "^1.4.1",

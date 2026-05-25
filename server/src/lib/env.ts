@@ -53,6 +53,7 @@ const zEnv = z.object({
   ADMIN_EMAIL: z.string().trim(),
   WEBAPP_URL: z.string().trim().min(1),
   SERVER_URL: z.string().trim().min(1),
+  REDIS_URL: z.string().trim().min(1).optional(),
   DEBUG: z
     .string()
     .optional()

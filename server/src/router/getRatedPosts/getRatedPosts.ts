@@ -1,5 +1,6 @@
 import _ from "lodash";
 
+import { createCacheKey, getOrSetJsonCache } from "../../lib/cache";
 import { getBlockedCommunityIds } from "../../lib/communityModeration";
 import { trpcLoggedProcedure } from "../../lib/trpc";
 import {
@@ -14,131 +15,146 @@ export const getRatedPostsTrpcRoute = trpcLoggedProcedure
   .input(zGetRatedPostsTrpcInput)
   .query(async ({ ctx, input }) => {
     const userId = ctx.me?.id;
+    const rawSearch = input.search?.trim();
+
+    const loadBasePosts = async () => {
+      let dateFrom: Date | undefined;
+
+      if (input.period) {
+        const now = new Date();
+
+        switch (input.period) {
+          case "day":
+            dateFrom = new Date(now.setDate(now.getDate() - 1));
+            break;
+          case "week":
+            dateFrom = new Date(now.setDate(now.getDate() - 7));
+            break;
+          case "month":
+            dateFrom = new Date(now.setMonth(now.getMonth() - 1));
+            break;
+          case "all":
+          default:
+            dateFrom = undefined;
+            break;
+        }
+      }
+
+      const normalizedSearch = rawSearch
+        ? rawSearch.replace(/\s+/g, " & ")
+        : undefined;
+
+      const shouldUseFts =
+        !!rawSearch && rawSearch.length >= 3 && !/^\d+$/.test(rawSearch);
+
+      const where = {
+        deletedAt: null,
+        ...(dateFrom ? { createdAt: { gte: dateFrom } } : {}),
+
+        ...(rawSearch
+          ? {
+              OR: [
+                {
+                  title: {
+                    contains: rawSearch,
+                    mode: "insensitive" as const,
+                  },
+                },
+                {
+                  description: {
+                    contains: rawSearch,
+                    mode: "insensitive" as const,
+                  },
+                },
+                { text: { contains: rawSearch, mode: "insensitive" as const } },
+
+                ...(shouldUseFts
+                  ? ([
+                      { title: { search: normalizedSearch! } },
+                      { description: { search: normalizedSearch! } },
+                      { text: { search: normalizedSearch! } },
+                    ] as const)
+                  : []),
+              ],
+            }
+          : {}),
+      };
+
+      const rawPosts = await ctx.prisma.post.findMany({
+        take: input.limit + 1,
+        ...(input.cursor ? { cursor: { seq: input.cursor }, skip: 1 } : {}),
+
+        where,
+
+        orderBy: {
+          postLikes: {
+            _count: "desc",
+          },
+        },
+
+        select: {
+          id: true,
+          seq: true,
+          title: true,
+          description: true,
+          text: true,
+          images: true,
+          createdAt: true,
+          publisherType: true,
+          publisherCommunity: {
+            select: {
+              id: true,
+              name: true,
+              avatar: true,
+              isVerified: true,
+            },
+          },
+
+          author: {
+            select: { id: true, nickname: true, avatar: true },
+          },
+
+          _count: {
+            select: {
+              postLikes: true,
+              comments: {
+                where: { deletedAt: null },
+              },
+            },
+          },
+        },
+      });
+
+      let nextCursor: number | null = null;
+      if (rawPosts.length > input.limit) {
+        rawPosts.pop();
+        nextCursor = rawPosts[rawPosts.length - 1]?.seq ?? null;
+      }
+
+      return { rawPosts, nextCursor };
+    };
+
+    const { rawPosts, nextCursor } = await getOrSetJsonCache({
+      redis: ctx.redis,
+      key: createCacheKey("getRatedPosts:base", [
+        input.period ?? "all",
+        rawSearch?.toLowerCase() ?? "",
+        input.cursor ?? "first",
+        input.limit,
+      ]),
+      ttlSeconds: 60,
+      load: loadBasePosts,
+    });
+
     const managedCommunityIds = new Set<string>();
+    let likedPostIds = new Set<string>();
     let blockedCommunityIdsByCommunity = new Set<string>();
     let blockedCommunityIdsByMe = new Set<string>();
     let blockedUserIdsByMe = new Set<string>();
     let blockedUserIdsByThem = new Set<string>();
 
-    let dateFrom: Date | undefined;
-
-    if (input.period) {
-      const now = new Date();
-
-      switch (input.period) {
-        case "day":
-          dateFrom = new Date(now.setDate(now.getDate() - 1));
-          break;
-        case "week":
-          dateFrom = new Date(now.setDate(now.getDate() - 7));
-          break;
-        case "month":
-          dateFrom = new Date(now.setMonth(now.getMonth() - 1));
-          break;
-        case "all":
-        default:
-          dateFrom = undefined;
-          break;
-      }
-    }
-
-    const rawSearch = input.search?.trim();
-    const normalizedSearch = rawSearch
-      ? rawSearch.replace(/\s+/g, " & ")
-      : undefined;
-
-    const shouldUseFts =
-      !!rawSearch && rawSearch.length >= 3 && !/^\d+$/.test(rawSearch);
-
-    const where = {
-      deletedAt: null,
-      ...(dateFrom ? { createdAt: { gte: dateFrom } } : {}),
-
-      ...(rawSearch
-        ? {
-            OR: [
-              { title: { contains: rawSearch, mode: "insensitive" as const } },
-              {
-                description: {
-                  contains: rawSearch,
-                  mode: "insensitive" as const,
-                },
-              },
-              { text: { contains: rawSearch, mode: "insensitive" as const } },
-
-              ...(shouldUseFts
-                ? ([
-                    { title: { search: normalizedSearch! } },
-                    { description: { search: normalizedSearch! } },
-                    { text: { search: normalizedSearch! } },
-                  ] as const)
-                : []),
-            ],
-          }
-        : {}),
-    };
-
-    const rawPosts = await ctx.prisma.post.findMany({
-      take: input.limit + 1,
-      ...(input.cursor ? { cursor: { seq: input.cursor }, skip: 1 } : {}),
-
-      where,
-
-      orderBy: {
-        postLikes: {
-          _count: "desc",
-        },
-      },
-
-      select: {
-        id: true,
-        seq: true,
-        title: true,
-        description: true,
-        text: true,
-        images: true,
-        createdAt: true,
-        publisherType: true,
-        publisherCommunity: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-            isVerified: true,
-          },
-        },
-
-        author: {
-          select: { id: true, nickname: true, avatar: true },
-        },
-
-        _count: {
-          select: {
-            postLikes: true,
-            comments: {
-              where: { deletedAt: null },
-            },
-          },
-        },
-
-        ...(userId
-          ? {
-              postLikes: {
-                where: { userId },
-                select: { id: true },
-              },
-            }
-          : {}),
-      },
-    });
-
-    let nextCursor: number | null = null;
-    if (rawPosts.length > input.limit) {
-      rawPosts.pop();
-      nextCursor = rawPosts[rawPosts.length - 1]?.seq ?? null;
-    }
-
     if (userId) {
+      const postIds = rawPosts.map((post) => post.id);
       const authorIds = Array.from(
         new Set(
           rawPosts
@@ -162,6 +178,7 @@ export const getRatedPostsTrpcRoute = trpcLoggedProcedure
         blockedByMe,
         blockedUsersByMe,
         blockedUsersByThem,
+        likedPosts,
       ] = await Promise.all([
         communityIds.length > 0
           ? ctx.prisma.communityMember.findMany({
@@ -199,12 +216,26 @@ export const getRatedPostsTrpcRoute = trpcLoggedProcedure
           userId,
           targetUserIds: authorIds,
         }),
+        postIds.length > 0
+          ? ctx.prisma.postLike.findMany({
+              where: {
+                userId,
+                postId: {
+                  in: postIds,
+                },
+              },
+              select: {
+                postId: true,
+              },
+            })
+          : [],
       ]);
 
       memberships.forEach((membership) => {
         managedCommunityIds.add(membership.communityId);
       });
 
+      likedPostIds = new Set(likedPosts.map((like) => like.postId));
       blockedCommunityIdsByCommunity = blockedByCommunity;
       blockedCommunityIdsByMe = blockedByMe;
       blockedUserIdsByMe = blockedUsersByMe;
@@ -245,11 +276,11 @@ export const getRatedPostsTrpcRoute = trpcLoggedProcedure
             managedCommunityIds.has(post.publisherCommunity.id));
 
         return {
-          ..._.omit(post, ["_count", "postLikes", "author"]),
+          ..._.omit(post, ["_count", "author"]),
           ...(canSeeCommunityAuthor ? { author: post.author } : {}),
           likesCount: post._count.postLikes,
           commentsCount: post._count.comments,
-          isLikedByMe: userId ? post.postLikes.length > 0 : false,
+          isLikedByMe: userId ? likedPostIds.has(post.id) : false,
         };
       });
 
