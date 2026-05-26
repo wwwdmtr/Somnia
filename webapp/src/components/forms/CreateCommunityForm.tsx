@@ -1,4 +1,4 @@
-import { zCreateCommunityTrpcInput } from "@somnia/shared/src/router/createCommunity/input";
+import { zCreateCommunityTrpcInput } from "@somnia/shared/src/router/communities/createCommunity/input";
 import { useFormik } from "formik";
 import React, { useState } from "react";
 import { Image, Text, TextInput, View, Platform } from "react-native";

@@ -3,7 +3,7 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { zGetRatedPostsTrpcInput } from "@somnia/shared/src/router/getRatedPosts/input";
+import { zGetRatedPostsTrpcInput } from "@somnia/shared/src/router/posts/getRatedPosts/input";
 import { StatusBar } from "expo-status-bar";
 import { useFormik } from "formik";
 import React, { useEffect, useMemo, useRef, useState } from "react";

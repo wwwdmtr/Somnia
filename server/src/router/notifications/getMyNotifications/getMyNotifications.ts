@@ -1,0 +1,75 @@
+import { notifyExpiredCommunityBlacklistEntriesForUser } from "../../../lib/communityModeration";
+import { trpcLoggedProcedure } from "../../../lib/trpc";
+
+import { zGetMyNotificationsTrpcInput } from "./input";
+
+export const getMyNotificationsTrpcRoute = trpcLoggedProcedure
+  .input(zGetMyNotificationsTrpcInput)
+  .query(async ({ ctx, input }) => {
+    if (!ctx.me) {
+      throw new Error("Unauthorized");
+    }
+
+    await notifyExpiredCommunityBlacklistEntriesForUser({
+      prisma: ctx.prisma,
+      userId: ctx.me.id,
+    });
+
+    const rawNotifications = await ctx.prisma.notification.findMany({
+      where: {
+        recipientId: ctx.me.id,
+      },
+      take: input.limit + 1,
+      ...(input.cursor && {
+        cursor: { id: input.cursor },
+        skip: 1,
+      }),
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: {
+        id: true,
+        type: true,
+        createdAt: true,
+        readAt: true,
+        details: true,
+        postId: true,
+        commentId: true,
+        actor: {
+          select: {
+            id: true,
+            nickname: true,
+            name: true,
+          },
+        },
+        post: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        comment: {
+          select: {
+            id: true,
+            content: true,
+            parentId: true,
+          },
+        },
+        community: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    let nextCursor: string | null = null;
+    if (rawNotifications.length > input.limit) {
+      rawNotifications.pop();
+      nextCursor = rawNotifications[rawNotifications.length - 1]?.id ?? null;
+    }
+
+    return {
+      notifications: rawNotifications,
+      nextCursor,
+    };
+  });

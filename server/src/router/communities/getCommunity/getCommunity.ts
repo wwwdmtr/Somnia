@@ -1,0 +1,151 @@
+import {
+  getActiveCommunityBlacklistEntry,
+  isCommunityManagerRole,
+  notifyExpiredCommunityBlacklistEntriesForUser,
+} from "../../../lib/communityModeration";
+import { ExpectedError } from "../../../lib/error";
+import { trpcLoggedProcedure } from "../../../lib/trpc";
+import { isCommunityBlockedByUser } from "../../../lib/userContentBlock";
+
+import { zGetCommunityTrpcInput } from "./input";
+
+export const getCommunityTrpcRoute = trpcLoggedProcedure
+  .input(zGetCommunityTrpcInput)
+  .query(async ({ ctx, input }) => {
+    if (ctx.me) {
+      await notifyExpiredCommunityBlacklistEntriesForUser({
+        prisma: ctx.prisma,
+        userId: ctx.me.id,
+      });
+    }
+
+    const community = await ctx.prisma.community.findUnique({
+      where: { id: input.id },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        avatar: true,
+        isVerified: true,
+        createdAt: true,
+        ownerId: true,
+        owner: {
+          select: {
+            id: true,
+            nickname: true,
+            avatar: true,
+          },
+        },
+        _count: {
+          select: {
+            subscriptions: true,
+            posts: {
+              where: {
+                deletedAt: null,
+                publisherType: "COMMUNITY",
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!community) {
+      throw new ExpectedError("Сообщество не найдено");
+    }
+
+    const meMember = ctx.me
+      ? await ctx.prisma.communityMember.findUnique({
+          where: {
+            communityId_userId: {
+              communityId: input.id,
+              userId: ctx.me.id,
+            },
+          },
+          select: {
+            role: true,
+          },
+        })
+      : null;
+    const isManagedCommunity = isCommunityManagerRole(meMember?.role ?? null);
+
+    if (ctx.me && !isManagedCommunity) {
+      const [blacklistEntry, isBlockedByMe] = await Promise.all([
+        getActiveCommunityBlacklistEntry({
+          prisma: ctx.prisma,
+          communityId: input.id,
+          userId: ctx.me.id,
+        }),
+        isCommunityBlockedByUser({
+          prisma: ctx.prisma,
+          userId: ctx.me.id,
+          communityId: input.id,
+        }),
+      ]);
+
+      if (blacklistEntry) {
+        throw new ExpectedError(
+          "Вы добавлены в черный список этого сообщества",
+        );
+      }
+
+      if (isBlockedByMe) {
+        throw new ExpectedError("Сообщество недоступно");
+      }
+    }
+
+    const isSubscribedByMe = ctx.me
+      ? !!(await ctx.prisma.communitySubscription.findUnique({
+          where: {
+            communityId_userId: {
+              communityId: input.id,
+              userId: ctx.me.id,
+            },
+          },
+          select: {
+            id: true,
+          },
+        })) || isManagedCommunity
+      : false;
+    const isBlockedByMe = ctx.me
+      ? Boolean(
+          await ctx.prisma.userBlockedCommunity.findUnique({
+            where: {
+              userId_communityId: {
+                userId: ctx.me.id,
+                communityId: input.id,
+              },
+            },
+            select: {
+              id: true,
+            },
+          }),
+        )
+      : false;
+    const latestVerificationRequest =
+      ctx.me && community.ownerId === ctx.me.id
+        ? await ctx.prisma.communityVerificationRequest.findFirst({
+            where: {
+              communityId: community.id,
+            },
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            select: {
+              id: true,
+              createdAt: true,
+              status: true,
+            },
+          })
+        : null;
+
+    return {
+      community: {
+        ...community,
+        membersCount: community._count.subscriptions,
+        postsCount: community._count.posts,
+        myRole: meMember?.role ?? null,
+        isSubscribedByMe,
+        isBlockedByMe,
+        latestVerificationRequest,
+      },
+    };
+  });

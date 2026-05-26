@@ -1,4 +1,4 @@
-import { zUpdatePostTrpcInput } from "@somnia/shared/src/router/updatePost/input";
+import { zUpdatePostTrpcInput } from "@somnia/shared/src/router/posts/updatePost/input";
 import { useFormik } from "formik";
 import React, { useState } from "react";
 import { View, TextInput, Text, Platform } from "react-native";

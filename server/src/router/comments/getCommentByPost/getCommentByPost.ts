@@ -1,0 +1,145 @@
+import {
+  getActiveCommunityBlacklistEntry,
+  getCommunityMembershipRole,
+  isCommunityManagerRole,
+} from "../../../lib/communityModeration";
+import { ExpectedError } from "../../../lib/error";
+import { trpcLoggedProcedure } from "../../../lib/trpc";
+import {
+  hasUserBlockRelation,
+  isCommunityBlockedByUser,
+} from "../../../lib/userContentBlock";
+import { isUserAdmin } from "../../../utils/can";
+
+import { zGetCommentsByPostTrpcInput } from "./input";
+
+export const getCommentsByPostTrpcRoute = trpcLoggedProcedure
+  .input(zGetCommentsByPostTrpcInput)
+  .query(async ({ ctx, input }) => {
+    const post = await ctx.prisma.post.findUnique({
+      where: { id: input.postId },
+      select: {
+        id: true,
+        authorId: true,
+        deletedAt: true,
+        publisherType: true,
+        publisherCommunityId: true,
+      },
+    });
+
+    if (!post) {
+      throw new Error("Post not found");
+    }
+    if (post.deletedAt && !isUserAdmin(ctx.me)) {
+      throw new Error("Post not found");
+    }
+
+    if (
+      ctx.me?.id &&
+      post.publisherType === "USER" &&
+      post.authorId !== ctx.me.id
+    ) {
+      const blocked = await hasUserBlockRelation({
+        prisma: ctx.prisma,
+        firstUserId: ctx.me.id,
+        secondUserId: post.authorId,
+      });
+
+      if (blocked) {
+        throw new ExpectedError("Пост пользователя недоступен");
+      }
+    }
+
+    if (
+      ctx.me?.id &&
+      post.publisherType === "COMMUNITY" &&
+      post.publisherCommunityId
+    ) {
+      const role = await getCommunityMembershipRole({
+        prisma: ctx.prisma,
+        communityId: post.publisherCommunityId,
+        userId: ctx.me.id,
+      });
+
+      if (!isCommunityManagerRole(role)) {
+        const [blacklistEntry, isBlockedByMe] = await Promise.all([
+          getActiveCommunityBlacklistEntry({
+            prisma: ctx.prisma,
+            communityId: post.publisherCommunityId,
+            userId: ctx.me.id,
+          }),
+          isCommunityBlockedByUser({
+            prisma: ctx.prisma,
+            userId: ctx.me.id,
+            communityId: post.publisherCommunityId,
+          }),
+        ]);
+
+        if (blacklistEntry || isBlockedByMe) {
+          throw new ExpectedError("Пост сообщества недоступен");
+        }
+      }
+    }
+
+    const rawComments = await ctx.prisma.comment.findMany({
+      where: {
+        postId: input.postId,
+        parentId: null,
+      },
+      take: input.limit + 1,
+      ...(input.cursor && {
+        cursor: { id: input.cursor },
+        skip: 1,
+      }),
+      include: {
+        author: {
+          select: {
+            id: true,
+            nickname: true,
+            name: true,
+            avatar: true,
+          },
+        },
+        replies: {
+          where: { deletedAt: null },
+          include: {
+            author: {
+              select: {
+                id: true,
+                nickname: true,
+                name: true,
+                avatar: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "asc" },
+        },
+        _count: {
+          select: {
+            replies: {
+              where: { deletedAt: null },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    let nextCursor: string | null = null;
+    if (rawComments.length > input.limit) {
+      rawComments.pop();
+      nextCursor = rawComments[rawComments.length - 1]?.id ?? null;
+    }
+
+    const comments = rawComments.map((comment) => ({
+      id: comment.id,
+      content: comment.content,
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+      author: comment.author,
+      repliesCount: comment._count.replies,
+      replies: comment.replies,
+    }));
+
+    return { comments, nextCursor };
+  });

@@ -1,4 +1,4 @@
-import { zUpdateCommunityTrpcInput } from "@somnia/shared/src/router/updateCommunity/input";
+import { zUpdateCommunityTrpcInput } from "@somnia/shared/src/router/communities/updateCommunity/input";
 import { TRPCClientError } from "@trpc/client";
 import { useFormik } from "formik";
 import React from "react";
