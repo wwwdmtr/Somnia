@@ -267,19 +267,23 @@ export const AllPostsScreen = () => {
         <Text style={typography.h4_white_85}>
           {me?.nickname ?? "Гостевой режим"}
         </Text>
-        <TouchableOpacity
-          onPress={handleOpenNotifications}
-          style={styles.notificationsButton}
-        >
-          <Ionicons
-            name={
-              hasUnreadNotifications ? "notifications" : "notifications-outline"
-            }
-            size={22}
-            color={COLORS.white85}
-          />
-          {hasUnreadNotifications && <View style={styles.unreadDot} />}
-        </TouchableOpacity>
+        {isAuthorized ? (
+          <TouchableOpacity
+            onPress={handleOpenNotifications}
+            style={styles.notificationsButton}
+          >
+            <Ionicons
+              name={
+                hasUnreadNotifications
+                  ? "notifications"
+                  : "notifications-outline"
+              }
+              size={22}
+              color={COLORS.white85}
+            />
+            {hasUnreadNotifications && <View style={styles.unreadDot} />}
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       <View style={styles.header}>

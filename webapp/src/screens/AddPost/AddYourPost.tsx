@@ -43,24 +43,36 @@ type PublisherSelection =
       type: "community";
     };
 
-type ComposerMode = "post" | "createCommunity";
-const EMPTY_COMMUNITIES: Array<{
+type CreationTarget = "post" | "community" | "event";
+type ManagedCommunity = {
   avatar: string | null;
   id: string;
   name: string;
   role: "OWNER" | "MODERATOR";
-}> = [];
+};
+type SelectedCommunity = Pick<ManagedCommunity, "avatar" | "id" | "name">;
+
+const EMPTY_COMMUNITIES: ManagedCommunity[] = [];
+const CREATION_TARGET_LABELS: Record<CreationTarget, string> = {
+  post: "Пост",
+  community: "Сообщество",
+  event: "Событие",
+};
+const CREATION_TARGETS: CreationTarget[] = ["post", "community", "event"];
 const MODAL_OVERLAY_BACKGROUND = COLORS.modalOverlay;
 
 export const AddPostScreen = () => {
   const navigation = useNavigation<AddPostNavProp>();
   const me = useMe();
   const [isPublisherPickerOpen, setIsPublisherPickerOpen] = useState(false);
-  const [composerMode, setComposerMode] = useState<ComposerMode>("post");
+  const [selectedCreationTarget, setSelectedCreationTarget] =
+    useState<CreationTarget>("post");
   const [selectedPublisher, setSelectedPublisher] =
     useState<PublisherSelection>({
       type: "user",
     });
+  const [recentlyCreatedCommunity, setRecentlyCreatedCommunity] =
+    useState<SelectedCommunity | null>(null);
 
   const { data, isLoading, error, refetch } =
     trpc.getMyPublishingIdentities.useQuery(undefined, {
@@ -77,9 +89,12 @@ export const AddPostScreen = () => {
     return (
       managedCommunities.find(
         (community) => community.id === selectedPublisher.communityId,
-      ) ?? null
+      ) ??
+      (recentlyCreatedCommunity?.id === selectedPublisher.communityId
+        ? recentlyCreatedCommunity
+        : null)
     );
-  }, [managedCommunities, selectedPublisher]);
+  }, [managedCommunities, recentlyCreatedCommunity, selectedPublisher]);
 
   const actorName =
     data?.me.name?.trim() ||
@@ -100,25 +115,34 @@ export const AddPostScreen = () => {
     selectedPublisher.type === "community" && selectedCommunity
       ? selectedCommunity.avatar
       : (data?.me.avatar ?? me?.avatar);
-  const screenTitle = useMemo(() => {
-    if (composerMode === "createCommunity") {
-      return "Создание сообщества";
-    }
-
-    if (selectedPublisher.type === "community" && selectedCommunity) {
-      return "Пост в сообщество";
-    }
-
-    return "Новый пост";
-  }, [composerMode, selectedPublisher.type, selectedCommunity]);
+  const currentPublisherCaption =
+    selectedPublisher.type === "community" ? "Сообщество" : "Ваш профиль";
 
   if (!me?.id) {
     return (
       <AppScreen contentStyle={styles.guestContainer}>
-        <GuestModeNotice
-          message="Создание постов и сообществ доступно после входа."
-          title="Публикация закрыта"
-        />
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.goBackWrapper}
+          >
+            <Image source={require("../../assets/Icons/navIcons/goBack.png")} />
+            <Text style={typography.body_white85}>Назад</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.creationHeader}>
+          <Text style={[typography.h2_white85, styles.screenTitle]}>
+            Создание
+          </Text>
+        </View>
+
+        <View style={styles.guestNoticeWrapper}>
+          <GuestModeNotice
+            message="Создание постов и сообществ доступно после входа."
+            title="Публикация закрыта"
+          />
+        </View>
       </AppScreen>
     );
   }
@@ -135,31 +159,75 @@ export const AddPostScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.addDreamHeader}>
+      <View style={styles.creationHeader}>
         <Text style={[typography.h2_white85, styles.screenTitle]}>
-          {screenTitle}
+          Создание
         </Text>
 
-        <TouchableOpacity
-          style={styles.publisherSwitch}
-          onPress={() => setIsPublisherPickerOpen(true)}
-        >
-          {isLoading ? (
-            <ActivityIndicator color={COLORS.white85} size="small" />
-          ) : (
-            <>
-              <Image
-                source={getAvatarSource(currentPublisherAvatar, "small")}
-                style={styles.publisherAvatar}
-              />
-              <Text style={styles.publisherText} numberOfLines={1}>
-                {currentPublisherLabel}
-              </Text>
-              <Ionicons name="chevron-down" size={18} color={COLORS.white85} />
-            </>
-          )}
-        </TouchableOpacity>
+        <View style={styles.creationTabsRow}>
+          {CREATION_TARGETS.map((target) => {
+            const isActive = selectedCreationTarget === target;
+
+            return (
+              <TouchableOpacity
+                key={target}
+                style={styles.creationTab}
+                onPress={() => setSelectedCreationTarget(target)}
+              >
+                <Text
+                  style={
+                    isActive
+                      ? styles.creationTabTextActive
+                      : styles.creationTabText
+                  }
+                >
+                  {CREATION_TARGET_LABELS[target]}
+                </Text>
+                <View
+                  style={[
+                    styles.creationTabIndicator,
+                    isActive && styles.creationTabIndicatorActive,
+                  ]}
+                />
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
+
+      {selectedCreationTarget === "post" ? (
+        <View style={styles.publisherBlock}>
+          <Text style={styles.publisherLabel}>Куда опубликовать</Text>
+          <TouchableOpacity
+            style={styles.publisherSwitch}
+            onPress={() => setIsPublisherPickerOpen(true)}
+          >
+            {isLoading ? (
+              <ActivityIndicator color={COLORS.white85} size="small" />
+            ) : (
+              <>
+                <Image
+                  source={getAvatarSource(currentPublisherAvatar, "small")}
+                  style={styles.publisherAvatar}
+                />
+                <View style={styles.publisherTextWrap}>
+                  <Text style={styles.publisherText} numberOfLines={1}>
+                    {currentPublisherLabel}
+                  </Text>
+                  <Text style={styles.publisherCaption} numberOfLines={1}>
+                    {currentPublisherCaption}
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-down"
+                  size={18}
+                  color={COLORS.white85}
+                />
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       <ScrollView
         style={styles.formScroll}
@@ -167,11 +235,11 @@ export const AddPostScreen = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {composerMode === "createCommunity" ? (
+        {selectedCreationTarget === "community" ? (
           <CreateCommunityForm
-            onCancel={() => setComposerMode("post")}
             onCreated={(community) => {
-              setComposerMode("post");
+              setRecentlyCreatedCommunity(community);
+              setSelectedCreationTarget("post");
               setSelectedPublisher({
                 type: "community",
                 communityId: community.id,
@@ -179,6 +247,18 @@ export const AddPostScreen = () => {
               void refetch();
             }}
           />
+        ) : selectedCreationTarget === "event" ? (
+          <View style={styles.eventPlaceholder}>
+            <Ionicons
+              name="calendar-outline"
+              size={28}
+              color={COLORS.white85}
+            />
+            <Text style={styles.eventPlaceholderTitle}>События</Text>
+            <Text style={styles.eventPlaceholderText}>
+              Создание событий появится позже.
+            </Text>
+          </View>
         ) : selectedPublisher.type === "community" && selectedCommunity ? (
           <AddCommunityPostForm
             communityId={selectedCommunity.id}
@@ -208,7 +288,6 @@ export const AddPostScreen = () => {
               style={styles.publisherOption}
               onPress={() => {
                 setSelectedPublisher({ type: "user" });
-                setComposerMode("post");
                 setIsPublisherPickerOpen(false);
               }}
             >
@@ -243,7 +322,6 @@ export const AddPostScreen = () => {
                       type: "community",
                       communityId: community.id,
                     });
-                    setComposerMode("post");
                     setIsPublisherPickerOpen(false);
                   }}
                 >
@@ -270,21 +348,6 @@ export const AddPostScreen = () => {
               );
             })}
 
-            <TouchableOpacity
-              style={styles.createCommunityOption}
-              onPress={() => {
-                setComposerMode("createCommunity");
-                setIsPublisherPickerOpen(false);
-              }}
-            >
-              <Ionicons
-                name="add-circle-outline"
-                size={18}
-                color={COLORS.white85}
-              />
-              <Text style={styles.createCommunityText}>Создать сообщество</Text>
-            </TouchableOpacity>
-
             {error ? (
               <Text style={styles.errorText}>{error.message}</Text>
             ) : null}
@@ -297,36 +360,69 @@ export const AddPostScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  addDreamHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 30,
-  },
   container: {
     flex: 1,
     padding: 14,
   },
-  createCommunityOption: {
+  creationHeader: {
+    gap: 14,
+    marginBottom: 18,
+    marginTop: 30,
+  },
+  creationTab: {
     alignItems: "center",
-    borderColor: COLORS.white25,
-    borderRadius: 16,
-    borderWidth: 1,
+    flex: 1,
+    gap: 6,
+    paddingBottom: 8,
+    paddingHorizontal: 8,
+  },
+  creationTabIndicator: {
+    backgroundColor: COLORS.transparent,
+    borderRadius: 999,
+    height: 3,
+    width: "100%",
+  },
+  creationTabIndicatorActive: {
+    backgroundColor: COLORS.brandBlueLight,
+  },
+  creationTabText: {
+    color: COLORS.white25,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  creationTabTextActive: {
+    color: COLORS.white85,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  creationTabsRow: {
+    alignItems: "center",
     flexDirection: "row",
     gap: 8,
-    marginTop: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  createCommunityText: {
-    color: COLORS.white85,
-    fontSize: 14,
-    lineHeight: 20,
   },
   errorText: {
     color: COLORS.white85,
     fontSize: 12,
     marginTop: 6,
+  },
+  eventPlaceholder: {
+    alignItems: "center",
+    backgroundColor: COLORS.postsCardBackground,
+    borderRadius: 24,
+    gap: 8,
+    marginTop: 28,
+    padding: 24,
+  },
+  eventPlaceholderText: {
+    color: COLORS.white25,
+    fontSize: 14,
+    lineHeight: 22,
+    textAlign: "center",
+  },
+  eventPlaceholderTitle: {
+    color: COLORS.white85,
+    fontSize: 20,
+    lineHeight: 28,
   },
   formScroll: {
     flex: 1,
@@ -341,8 +437,11 @@ const styles = StyleSheet.create({
   },
   guestContainer: {
     flex: 1,
-    justifyContent: "center",
     padding: 14,
+  },
+  guestNoticeWrapper: {
+    flex: 1,
+    justifyContent: "center",
   },
   header: {
     alignItems: "center",
@@ -399,6 +498,21 @@ const styles = StyleSheet.create({
     height: 28,
     width: 28,
   },
+  publisherBlock: {
+    gap: 8,
+    marginBottom: 10,
+  },
+  publisherCaption: {
+    color: COLORS.white25,
+    flexShrink: 1,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  publisherLabel: {
+    color: COLORS.white85,
+    fontSize: 16,
+    lineHeight: 24,
+  },
   publisherOption: {
     alignItems: "center",
     backgroundColor: COLORS.postsCardBackground,
@@ -411,25 +525,27 @@ const styles = StyleSheet.create({
   publisherSwitch: {
     alignItems: "center",
     backgroundColor: COLORS.postsCardBackground,
-    borderRadius: 99,
+    borderRadius: 20,
     flexDirection: "row",
-    flexShrink: 0,
     gap: 8,
-    maxWidth: "62%",
-    minHeight: 36,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    minHeight: 58,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    width: "100%",
   },
   publisherText: {
     color: COLORS.white85,
     flexShrink: 1,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  publisherTextWrap: {
+    flexShrink: 1,
+    gap: 1,
+    minWidth: 0,
   },
   screenTitle: {
-    flex: 1,
     flexShrink: 1,
-    marginRight: 12,
     minWidth: 0,
   },
 });

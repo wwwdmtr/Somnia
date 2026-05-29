@@ -3,7 +3,7 @@ import { useNavigation } from "@react-navigation/native";
 import { zSignUpTrpcInput } from "@somnia/shared/src/router/auth/signUp/input";
 import { useFormik } from "formik";
 import React from "react";
-import { View, TextInput, Text, Pressable, Platform } from "react-native";
+import { View, TextInput, Text, Pressable } from "react-native";
 import { StyleSheet } from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
@@ -15,7 +15,7 @@ import { mixpanelTrackSignUp } from "../../lib/mixpanel";
 import { setToken } from "../../lib/tokenStorage";
 import { trpc } from "../../lib/trpc";
 import { webInputFocusReset } from "../../theme/inputFocus";
-import { COLORS, typography } from "../../theme/typography";
+import { COLORS } from "../../theme/typography";
 import { AppButton } from "../ui/AppButton";
 
 import type { RootStackParamList } from "../../navigation/RootStackParamList";
@@ -92,9 +92,9 @@ export const SignUpForm = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={typography.caption_white85}>Имя пользователя</Text>
+      <Text style={styles.label}>ИМЯ ПОЛЬЗОВАТЕЛЯ</Text>
       <TextInput
-        placeholder="Имя пользователя"
+        placeholder=""
         placeholderTextColor={COLORS.white25}
         value={formik.values.nickname}
         onChangeText={(text) =>
@@ -110,28 +110,10 @@ export const SignUpForm = () => {
         autoCapitalize="none"
       />
 
-      <Text style={typography.caption_white85}>E-mail</Text>
-      <TextInput
-        placeholder="E-mail"
-        placeholderTextColor={COLORS.white25}
-        value={formik.values.email}
-        onChangeText={(text) =>
-          formik.setFieldValue("email", text.toLowerCase())
-        }
-        onBlur={() => formik.setFieldTouched("email")}
-        style={[
-          styles.input,
-          formik.touched.email && formik.errors.email
-            ? styles.inputError
-            : null,
-        ]}
-        autoCapitalize="none"
-      />
-
-      <Text style={typography.caption_white85}>Пароль</Text>
+      <Text style={styles.label}>ПАРОЛЬ</Text>
       <View style={styles.passwordContainer}>
         <TextInput
-          placeholder="Пароль"
+          placeholder=""
           placeholderTextColor={COLORS.white25}
           secureTextEntry={!isPasswordVisible}
           value={formik.values.password}
@@ -159,10 +141,10 @@ export const SignUpForm = () => {
         </Pressable>
       </View>
 
-      <Text style={typography.caption_white85}>Пароль</Text>
+      <Text style={styles.label}>ПОВТОРИТЕ ПАРОЛЬ</Text>
       <View style={styles.passwordContainer}>
         <TextInput
-          placeholder="Пароль"
+          placeholder=""
           placeholderTextColor={COLORS.white25}
           secureTextEntry={!isRepeatPasswordVisible}
           value={formik.values.passwordConfirmation}
@@ -192,6 +174,24 @@ export const SignUpForm = () => {
         </Pressable>
       </View>
 
+      <Text style={styles.label}>E-MAIL</Text>
+      <TextInput
+        placeholder=""
+        placeholderTextColor={COLORS.white25}
+        value={formik.values.email}
+        onChangeText={(text) =>
+          formik.setFieldValue("email", text.toLowerCase())
+        }
+        onBlur={() => formik.setFieldTouched("email")}
+        style={[
+          styles.input,
+          formik.touched.email && formik.errors.email
+            ? styles.inputError
+            : null,
+        ]}
+        autoCapitalize="none"
+      />
+
       {(formik.touched.nickname && formik.errors.nickname && (
         <Text style={styles.errorText}>{formik.errors.nickname}</Text>
       )) ||
@@ -211,8 +211,9 @@ export const SignUpForm = () => {
       {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
 
       <AppButton
-        title={formik.isSubmitting ? "Регистрация..." : "Регистрация"}
+        title={formik.isSubmitting ? "РЕГИСТРАЦИЯ..." : "РЕГИСТРАЦИЯ"}
         onPress={() => formik.handleSubmit()}
+        TextStyle={styles.startButtonText}
         style={styles.startButton}
       />
     </View>
@@ -221,49 +222,58 @@ export const SignUpForm = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    paddingBottom: 120,
+    width: "100%",
   },
   errorText: {
     color: COLORS.white100,
     fontSize: 12,
-    marginBottom: 4,
+    lineHeight: 18,
+    marginBottom: 12,
   },
   input: {
-    backgroundColor: COLORS.inputBackgroundColor,
-    borderColor: COLORS.inputBorderColor,
+    backgroundColor: COLORS.authInputBackground,
+    borderColor: COLORS.authInputBorder,
     borderRadius: 99,
     borderWidth: 1,
     color: COLORS.white100,
-    ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
+    fontSize: 16,
+    height: 45,
     ...webInputFocusReset,
-    marginBottom: 28,
-    marginTop: 12,
-    padding: 11,
+    marginBottom: 22,
+    marginTop: 6,
+    paddingHorizontal: 20,
   },
   inputError: {
     borderColor: COLORS.inputErrorBorderColor,
+  },
+  label: {
+    color: COLORS.white85,
+    fontFamily: "SFProText-Semibold",
+    fontSize: 12,
+    lineHeight: 18,
+    opacity: 0.82,
   },
   passwordContainer: {
     justifyContent: "center",
     position: "relative",
   },
-
   passwordIcon: {
-    bottom: 7,
-    height: "100%",
+    height: 45,
     justifyContent: "center",
     position: "absolute",
     right: 16,
+    top: 6,
   },
   passwordInput: {
     paddingRight: 48,
   },
   startButton: {
-    bottom: 1,
-    height: 40,
-    left: 0,
-    position: "absolute" as const,
-    right: 0,
+    backgroundColor: COLORS.authPrimaryButton,
+    height: 45,
+    marginTop: 10,
+  },
+  startButtonText: {
+    fontFamily: "SFProText-Semibold",
+    fontSize: 13,
   },
 });

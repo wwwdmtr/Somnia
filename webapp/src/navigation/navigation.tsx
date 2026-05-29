@@ -25,9 +25,8 @@ import { UpdateCommunityScreen } from "../screens/Community/UpdateCommunityScree
 import { AllPostsScreen } from "../screens/Feed/FeedScreen";
 import { GreetingsScreen } from "../screens/Greetings/GreetingsScreen";
 import { NotificationsScreen } from "../screens/Notifications/NotificationsScreen";
+import { AuthScreen } from "../screens/Onboarding/AuthScreen";
 import { OnboardingScreen } from "../screens/Onboarding/OnboardingScreen";
-import { SignInScreen } from "../screens/Onboarding/SignInScreen";
-import { SignUpScreen } from "../screens/Onboarding/SignUpScreen";
 import { PostScreen } from "../screens/Post/PostScreen";
 import { UpdatePostScreen } from "../screens/Post/UpdatePostModalScreen";
 import { ProfileScreen } from "../screens/Profile/ProfileScreen";
@@ -445,12 +444,12 @@ function RootStackNav({ canOpenAdmin }: { canOpenAdmin: boolean }) {
       />
       <RootStack.Screen
         name={ScreenName.SignIn}
-        component={SignInScreen}
+        component={AuthScreen}
         options={{ headerShown: false }}
       />
       <RootStack.Screen
         name={ScreenName.SignUp}
-        component={SignUpScreen}
+        component={AuthScreen}
         options={{ headerShown: false }}
       />
     </RootStack.Navigator>

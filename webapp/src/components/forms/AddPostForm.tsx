@@ -1,8 +1,15 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { zCreatePostTrpcInput } from "@somnia/shared/src/router/posts/createPost/input";
 import { useFormik } from "formik";
 import React, { useState } from "react";
-import { View, TextInput, Text, Platform } from "react-native";
+import {
+  View,
+  TextInput,
+  Text,
+  Platform,
+  TouchableOpacity,
+} from "react-native";
 import { z } from "zod";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
@@ -68,6 +75,7 @@ export const AddPostForm = ({
   const prepareCloudinaryUpload = trpc.prepareCloudinaryUpload.useMutation();
   const cleanupPostImages = trpc.cleanupPostImages.useMutation();
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [isTitleFieldVisible, setIsTitleFieldVisible] = useState(false);
   const [measuredTextHeight, setMeasuredTextHeight] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pendingImages, setPendingImages] = useState<PickedPostImageFile[]>([]);
@@ -157,6 +165,7 @@ export const AddPostForm = ({
         });
         feedback.showSuccess("Пост опубликован");
         setPendingImages([]);
+        setIsTitleFieldVisible(false);
         resetForm();
         if (onSuccess) {
           onSuccess();
@@ -211,22 +220,49 @@ export const AddPostForm = ({
         <Text style={styles.contextTitle}>{contextTitle}</Text>
       ) : null}
 
-      <TextInput
-        placeholder="Придумайте заголовок ..."
-        placeholderTextColor={COLORS.white25}
-        value={formik.values.title}
-        onChangeText={(text) => {
-          setSubmitError(null);
-          formik.setFieldValue("title", text);
-        }}
-        onBlur={() => formik.setFieldTouched("title")}
-        style={[
-          styles.input,
-          formik.touched.title && formik.errors.title
-            ? styles.inputError
-            : null,
-        ]}
-      />
+      {isTitleFieldVisible ? (
+        <View style={styles.titleFieldWrapper}>
+          <TextInput
+            placeholder="Придумайте заголовок ..."
+            placeholderTextColor={COLORS.white25}
+            value={formik.values.title}
+            onChangeText={(text) => {
+              setSubmitError(null);
+              formik.setFieldValue("title", text);
+            }}
+            onBlur={() => formik.setFieldTouched("title")}
+            style={[
+              styles.input,
+              formik.touched.title && formik.errors.title
+                ? styles.inputError
+                : null,
+            ]}
+          />
+          <TouchableOpacity
+            style={styles.removeTitleButton}
+            onPress={() => {
+              setSubmitError(null);
+              setIsTitleFieldVisible(false);
+              formik.setFieldValue("title", "");
+              formik.setFieldTouched("title", false, false);
+            }}
+          >
+            <Ionicons name="close" size={18} color={COLORS.white85} />
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <TouchableOpacity
+          style={styles.addTitleButton}
+          onPress={() => setIsTitleFieldVisible(true)}
+        >
+          <Ionicons
+            name="add-circle-outline"
+            size={18}
+            color={COLORS.white85}
+          />
+          <Text style={styles.addTitleButtonText}>Добавить заголовок</Text>
+        </TouchableOpacity>
+      )}
 
       {formik.touched.title && formik.errors.title && (
         <Text style={styles.errorText}>{formik.errors.title}</Text>
@@ -246,7 +282,7 @@ export const AddPostForm = ({
           {formik.values.text || " "}
         </Text>
         <TextInput
-          placeholder="Добавьте описание ..."
+          placeholder="Добавьте текст ..."
           placeholderTextColor={COLORS.white25}
           value={formik.values.text}
           onChangeText={(text) => {
@@ -314,6 +350,21 @@ export const AddPostForm = ({
 };
 
 const styles = {
+  addTitleButton: {
+    alignItems: "center" as const,
+    backgroundColor: COLORS.postsCardBackground,
+    borderRadius: 32,
+    flexDirection: "row" as const,
+    gap: 8,
+    height: 48,
+    justifyContent: "center" as const,
+    paddingHorizontal: 16,
+  },
+  addTitleButtonText: {
+    color: COLORS.white85,
+    fontSize: 16,
+    lineHeight: 24,
+  },
   container: {
     gap: 14,
     marginTop: 28,
@@ -333,6 +384,16 @@ const styles = {
     ...(Platform.OS === "web" ? { fontSize: 16 } : {}),
     ...webInputFocusReset,
     flexShrink: 0,
+    paddingRight: 52,
+  },
+  removeTitleButton: {
+    alignItems: "center" as const,
+    height: 40,
+    justifyContent: "center" as const,
+    position: "absolute" as const,
+    right: 10,
+    top: 10,
+    width: 40,
   },
   textArea: {
     backgroundColor: COLORS.postsCardBackground,
@@ -357,6 +418,9 @@ const styles = {
     top: 0,
   },
   textAreaWrapper: {
+    position: "relative" as const,
+  },
+  titleFieldWrapper: {
     position: "relative" as const,
   },
   inputError: {
