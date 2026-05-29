@@ -2,6 +2,7 @@
 import "react-native-gesture-handler";
 import {
   createNavigationContainerRef,
+  DefaultTheme,
   NavigationContainer,
 } from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
@@ -25,6 +26,13 @@ const MOBILE_STANDALONE_SCREEN_WIDTH_LIMIT = 480;
 const WEB_SHELL_BORDER_RADIUS_BREAKPOINT = 1250;
 const WEB_SHELL_BORDER_RADIUS = 20;
 const navigationRef = createNavigationContainerRef<ParamListBase>();
+const NAVIGATION_THEME = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: COLORS.navBarBackground,
+  },
+};
 
 function isStandaloneWebApp() {
   const maybeWindow = (globalThis as { window?: Window }).window;
@@ -147,6 +155,7 @@ export default function App() {
       <NavigationContainer
         ref={navigationRef}
         linking={linking}
+        theme={NAVIGATION_THEME}
         onReady={() => {
           const currentScreenName = navigationRef.getCurrentRoute()?.name;
 

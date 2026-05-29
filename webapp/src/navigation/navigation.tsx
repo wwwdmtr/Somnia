@@ -9,8 +9,14 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { isUserAdmin } from "@somnia/shared/src/utils/can";
 import { useFonts } from "expo-font";
 import React from "react";
-import { Text, useWindowDimensions } from "react-native";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+} from "react-native";
 
+import { AppScreen } from "../components/layout/AppScreen";
 import ScreenName from "../constants/ScreenName";
 import TabName from "../constants/TabName";
 import { useFeedbackOnError } from "../lib/appFeedback";
@@ -45,11 +51,20 @@ import { RootTabParamList } from "./RootTabParamList";
 import { SearchStackParamList } from "./SearchStackParamList";
 
 import type { BottomTabNavigationOptions } from "@react-navigation/bottom-tabs";
+import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
+
+const NAVIGATOR_SCENE_STYLE = {
+  backgroundColor: COLORS.navBarBackground,
+};
+
+const STACK_SCREEN_OPTIONS = {
+  contentStyle: NAVIGATOR_SCENE_STYLE,
+} satisfies NativeStackNavigationOptions;
 
 const FeedStack = createNativeStackNavigator<FeedStackParamList>();
 function FeedStackNav() {
   return (
-    <FeedStack.Navigator>
+    <FeedStack.Navigator screenOptions={STACK_SCREEN_OPTIONS}>
       <FeedStack.Screen
         name={ScreenName.Feed}
         component={AllPostsScreen}
@@ -100,7 +115,7 @@ function FeedStackNav() {
 const AddPostStack = createNativeStackNavigator<AddPostStackParamList>();
 function AddPostStackNav() {
   return (
-    <AddPostStack.Navigator>
+    <AddPostStack.Navigator screenOptions={STACK_SCREEN_OPTIONS}>
       <AddPostStack.Screen
         name={ScreenName.AddPost}
         component={AddPostScreen}
@@ -113,7 +128,7 @@ function AddPostStackNav() {
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 function ProfileStackNav() {
   return (
-    <ProfileStack.Navigator>
+    <ProfileStack.Navigator screenOptions={STACK_SCREEN_OPTIONS}>
       <ProfileStack.Screen
         name={ScreenName.Profile}
         component={ProfileScreen}
@@ -164,7 +179,7 @@ function ProfileStackNav() {
 const SearchStack = createNativeStackNavigator<SearchStackParamList>();
 function SearchStackNav() {
   return (
-    <SearchStack.Navigator>
+    <SearchStack.Navigator screenOptions={STACK_SCREEN_OPTIONS}>
       <SearchStack.Screen
         name={ScreenName.Search}
         component={SearchScreen}
@@ -210,7 +225,7 @@ function SearchStackNav() {
 
 function AdminStackNav() {
   return (
-    <AdminStack.Navigator>
+    <AdminStack.Navigator screenOptions={STACK_SCREEN_OPTIONS}>
       <AdminStack.Screen
         name={ScreenName.AdminHome}
         component={AdminScreen}
@@ -342,6 +357,7 @@ export function AppNav() {
     <Tab.Navigator
       initialRouteName={TabName.FeedTab}
       safeAreaInsets={{ bottom: 0 }}
+      sceneContainerStyle={NAVIGATOR_SCENE_STYLE}
       screenOptions={({ route }) => {
         return {
           headerShown: false,
@@ -407,11 +423,19 @@ export function RootNavigation() {
   });
 
   if (!fontsLoaded) {
-    return <Text>Loading...</Text>;
+    return (
+      <AppScreen contentStyle={styles.loadingScreen}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </AppScreen>
+    );
   }
 
   if (isLoading) {
-    return null;
+    return (
+      <AppScreen contentStyle={styles.loadingScreen}>
+        <ActivityIndicator color={COLORS.white100} />
+      </AppScreen>
+    );
   }
 
   return <RootStackNav canOpenAdmin={isUserAdmin(me)} />;
@@ -419,7 +443,7 @@ export function RootNavigation() {
 
 function RootStackNav({ canOpenAdmin }: { canOpenAdmin: boolean }) {
   return (
-    <RootStack.Navigator>
+    <RootStack.Navigator screenOptions={STACK_SCREEN_OPTIONS}>
       <RootStack.Screen
         name={ScreenName.RootTabs}
         component={AppNav}
@@ -455,3 +479,13 @@ function RootStackNav({ canOpenAdmin }: { canOpenAdmin: boolean }) {
     </RootStack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingScreen: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingText: {
+    color: COLORS.white85,
+  },
+});

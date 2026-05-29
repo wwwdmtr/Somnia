@@ -319,19 +319,19 @@ export const NotificationsScreen = () => {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
+      <AppScreen contentStyle={styles.centered}>
         <ActivityIndicator color={COLORS.white100} />
-      </View>
+      </AppScreen>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
+      <AppScreen contentStyle={styles.centered}>
         <Text style={typography.body_white85}>
           Ошибка загрузки уведомлений: {error.message}
         </Text>
-      </View>
+      </AppScreen>
     );
   }
 

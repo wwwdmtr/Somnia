@@ -108,19 +108,19 @@ export const UserConnectionsScreen = () => {
 
   if (followsQuery.isLoading && !followsQuery.data) {
     return (
-      <View style={styles.centered}>
+      <AppScreen contentStyle={styles.centered}>
         <ActivityIndicator color={COLORS.white85} size="large" />
-      </View>
+      </AppScreen>
     );
   }
 
   if (followsQuery.error) {
     return (
-      <View style={styles.centered}>
+      <AppScreen contentStyle={styles.centered}>
         <Text style={typography.body_white85}>
           {followsQuery.error.message}
         </Text>
-      </View>
+      </AppScreen>
     );
   }
 

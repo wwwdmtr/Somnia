@@ -116,25 +116,25 @@ export const UpdatePostScreen = () => {
 
   if (isLoading) {
     return (
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <Text>Loading...</Text>
-      </ScrollView>
+      <AppScreen contentStyle={styles.centered}>
+        <Text style={typography.body_white85}>Loading...</Text>
+      </AppScreen>
     );
   }
 
   if (error) {
     return (
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <Text>Error: {error.message}</Text>
-      </ScrollView>
+      <AppScreen contentStyle={styles.centered}>
+        <Text style={typography.body_white85}>Error: {error.message}</Text>
+      </AppScreen>
     );
   }
 
   if (!data?.post) {
     return (
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <Text>Dream not found</Text>
-      </ScrollView>
+      <AppScreen contentStyle={styles.centered}>
+        <Text style={typography.body_white85}>Dream not found</Text>
+      </AppScreen>
     );
   }
 
@@ -214,6 +214,11 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: "center",
     width: 44,
+  },
+  centered: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
   },
   container: {
     flex: 1,

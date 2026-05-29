@@ -4,7 +4,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { zGetRatedPostsTrpcInput } from "@somnia/shared/src/router/posts/getRatedPosts/input";
-import { StatusBar } from "expo-status-bar";
 import { useFormik } from "formik";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -558,12 +557,11 @@ export const SearchScreen = () => {
 
   if (activeError) {
     return (
-      <View style={styles.centered}>
+      <AppScreen contentStyle={styles.centered}>
         <Text style={typography.body_white85}>
           Ошибка: {activeError.message ?? "Неизвестная ошибка"}
         </Text>
-        <StatusBar style="auto" />
-      </View>
+      </AppScreen>
     );
   }
 
@@ -588,7 +586,6 @@ export const SearchScreen = () => {
       {isInitialLoading ? (
         <View style={styles.centered}>
           <Text style={typography.body_white85}>Загрузка...</Text>
-          <StatusBar style="auto" />
         </View>
       ) : isPostsTarget ? (
         <FlatList

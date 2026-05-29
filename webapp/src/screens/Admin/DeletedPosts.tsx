@@ -95,27 +95,27 @@ export const DeletedPostsScreen = () => {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
+      <AppScreen contentStyle={styles.centered}>
         <Text style={typography.body_white85}>Loading...</Text>
-      </View>
+      </AppScreen>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
+      <AppScreen contentStyle={styles.centered}>
         <Text style={typography.body_white85}>
           Error: {error.message ?? "Unknown error"}
         </Text>
-      </View>
+      </AppScreen>
     );
   }
 
   if (!canAccessDeletedPosts) {
     return (
-      <View style={styles.centered}>
+      <AppScreen contentStyle={styles.centered}>
         <Text style={typography.body_white85}>Недостаточно прав доступа</Text>
-      </View>
+      </AppScreen>
     );
   }
 

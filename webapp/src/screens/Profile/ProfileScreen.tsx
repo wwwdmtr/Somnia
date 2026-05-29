@@ -8,7 +8,6 @@ import {
 } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { isUserAdmin } from "@somnia/shared/src/utils/can";
-import { StatusBar } from "expo-status-bar";
 import { useMemo, useState } from "react";
 import {
   Alert,
@@ -354,10 +353,9 @@ export const ProfileScreen = () => {
     (postsQuery.isLoading && !postsQuery.data)
   ) {
     return (
-      <View style={styles.centered}>
+      <AppScreen contentStyle={styles.centered}>
         <ActivityIndicator color={COLORS.white85} size="large" />
-        <StatusBar style="auto" />
-      </View>
+      </AppScreen>
     );
   }
 
@@ -374,14 +372,13 @@ export const ProfileScreen = () => {
 
   if (profileQuery.error || postsQuery.error || !profileQuery.data?.profile) {
     return (
-      <View style={styles.centered}>
+      <AppScreen contentStyle={styles.centered}>
         <Text style={typography.body_white85}>
           {profileQuery.error?.message ??
             postsQuery.error?.message ??
             "Не удалось загрузить профиль"}
         </Text>
-        <StatusBar style="auto" />
-      </View>
+      </AppScreen>
     );
   }
 

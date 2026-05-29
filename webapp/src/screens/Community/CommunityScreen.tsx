@@ -235,19 +235,19 @@ export const CommunityScreen = () => {
 
   if (communityQuery.isLoading) {
     return (
-      <View style={styles.centered}>
+      <AppScreen contentStyle={styles.centered}>
         <ActivityIndicator color={COLORS.white85} size="large" />
-      </View>
+      </AppScreen>
     );
   }
 
   if (communityQuery.error || !communityQuery.data?.community) {
     return (
-      <View style={styles.centered}>
+      <AppScreen contentStyle={styles.centered}>
         <Text style={typography.body_white85}>
           {communityQuery.error?.message ?? "Сообщество не найдено"}
         </Text>
-      </View>
+      </AppScreen>
     );
   }
 

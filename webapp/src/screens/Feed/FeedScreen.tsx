@@ -4,7 +4,6 @@ import {
   useIsFocused,
   useNavigation,
 } from "@react-navigation/native";
-import { StatusBar } from "expo-status-bar";
 import { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
@@ -359,19 +358,19 @@ export const AllPostsScreen = () => {
 
   if (activeIsLoading) {
     return (
-      <View style={styles.centered}>
-        <Text>Loading...</Text>
-        <StatusBar style="auto" />
-      </View>
+      <AppScreen contentStyle={styles.centered}>
+        <Text style={typography.body_white85}>Loading...</Text>
+      </AppScreen>
     );
   }
 
   if (activeError) {
     return (
-      <View style={styles.centered}>
-        <Text>Error: {activeError.message ?? "Unknown error"}</Text>
-        <StatusBar style="auto" />
-      </View>
+      <AppScreen contentStyle={styles.centered}>
+        <Text style={typography.body_white85}>
+          Error: {activeError.message ?? "Unknown error"}
+        </Text>
+      </AppScreen>
     );
   }
 
